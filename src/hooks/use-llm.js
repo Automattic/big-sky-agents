@@ -16,6 +16,9 @@ const useLLM = ( { token, service } ) => {
 		if ( llm && llm.service === service && llm.apiKey === token ) {
 			return;
 		}
+		if ( ! token ) {
+			return;
+		}
 		// eslint-disable-next-line no-console
 		console.log( '🤖 Creating LLM', service, token );
 		setLlm(

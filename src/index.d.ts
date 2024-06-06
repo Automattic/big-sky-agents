@@ -83,7 +83,6 @@ interface Formatter {
 /**
  * Agent
  */
-
 interface Agent {
 	getId(): string;
 	call( toolName: string, args: any ): string;
@@ -95,38 +94,9 @@ interface Agent {
 	onStart(): void;
 }
 
-// interface StandardAgent extends Agent {
-// 	askUser( options: { question: string; choices: any[] } ): void;
-// 	informUser( message: string ): void;
-// 	setGoal( goal: string ): void;
-// }
-
-// export const StandardAgent;
-
-/**
- * LLM
- */
-// const useLLM: ( options: {
-// 	token: string | undefined;
-// 	service: string;
-// } ) => any;
-
-/**
- * Chat
- */
-// const useSimpleChat: ( options: ChatOptions ) => Chat;
-
-// declare module './hooks/use-llm.js';
-// declare module './hooks/agents/use-simple-chat.js';
-// declare module './hooks/agents/use-simple-toolkit.js';
-// declare module './agents/standard-agent.js';
-// declare module './components/agent-ui.jsx';
-// declare module './components/agents-demo-page-jetpack.jsx';
-
 /**
  * Agent Toolkit
  */
-
 interface ToolkitCallbacks {
 	[ toolName: string ]: ( args: any ) => string;
 }
@@ -141,8 +111,6 @@ interface AgentToolkit {
 	callbacks: ToolkitCallbacks;
 }
 
-// const useAgentToolkit: () => AgentToolkit;
-
 /**
  * Agent UI
  */
@@ -151,7 +119,3 @@ type AgentUIProps = {
 	agent: Agent;
 	toolkit: AgentToolkit;
 };
-// interface AgentUIComponent extends React.FC<AgentUIProps> {}
-// type AgentUIComponent = React.FC<AgentUIProps>;
-// const AgentUI: ( props: AgentUIProps ) => ReactNode;
-// }

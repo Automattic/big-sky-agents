@@ -6,6 +6,7 @@ This is an NPM package intended to power AI experiences across Automattic.
 
 Links:
  * [Package Homepage](https://github.com/Automattic/big-sky-agents/pkgs/npm/big-sky-agents)
+ * [Complete React Example](https://github.com/Automattic/big-sky-agents-react) - an example of using this library in a standalone React app
 
 ## Prerequisites
 
