@@ -78,7 +78,7 @@ const useAgentExecutor = ( {
 				}
 
 				if ( tool_call.error ) {
-					console.error( '⚙️ Tool call error', tool_call.error );
+					// console.error( '⚙️ Tool call error', tool_call.error );
 					throw new Error( tool_call.error );
 				}
 
@@ -99,7 +99,7 @@ const useAgentExecutor = ( {
 	 */
 	useEffect( () => {
 		if ( agent && ! running && ! started ) {
-			console.warn( '🧠 Starting agent', agent, started );
+			// console.warn( '🧠 Starting agent', agent, started );
 			setStarted( true );
 			agent.onStart();
 		}
