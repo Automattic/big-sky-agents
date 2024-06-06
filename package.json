@@ -1,7 +1,11 @@
 {
 	"name": "@automattic/big-sky-agents",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "The Big Sky Agent Framework",
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:Automattic/big-sky-agents.git"
+	},
 	"author": "Automattic",
 	"license": "GPL-2.0-or-later",
 	"main": "dist/cjs/index.js",
@@ -21,6 +25,7 @@
 		"@babel/eslint-parser": "^7.24.7",
 		"@babel/plugin-syntax-import-assertions": "^7.24.7",
 		"@chromatic-com/storybook": "^1.5.0",
+		"@emotion/is-prop-valid": "^1.2.2",
 		"@mdx-js/react": "^3.0.1",
 		"@rollup/plugin-babel": "^6.0.4",
 		"@rollup/plugin-commonjs": "^26.0.1",
@@ -86,5 +91,8 @@
 	"peerDependencies": {
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1"
+	},
+	"publishConfig": {
+		"registry": "https://npm.pkg.github.com"
 	}
 }

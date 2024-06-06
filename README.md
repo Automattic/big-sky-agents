@@ -4,6 +4,36 @@
 
 This is an NPM package intended to power AI experiences across Automattic.
 
+Links:
+ * [Package Homepage](https://github.com/Automattic/big-sky-agents/pkgs/npm/big-sky-agents)
+
+## Prerequisites
+
+Since this package is published privately on Github, you will need to perform the following steps before integrating it with your app:
+
+1. Create a Github (Personal Access Token)[https://github.com/settings/tokens]. Be sure to select a "Classic" token, not a fine-grained one. Select "No Expiration" unless you want your dev environment to break by surprise in the future.
+
+2. Select at least the "read:packages" scope. If you want to use this token to publish the package, then also select the "write:packages" scope.
+
+3. Log into NPM on the command line:
+
+```bash
+npm login --scope=@automattic --auth-type=legacy --registry=https://npm.pkg.github.com
+Username: gravityrail
+Password: # a spinner will appear here, just paste your token
+```
+
+## Publishing the package
+
+```bash
+npm publish
+```
+
+## Adding to a project
+
+Because this is a private Github repo, you have to add the dependency like this:
+
+
 ## Developing
 
 These instructions show you how to incorporate this package into another project for development.
