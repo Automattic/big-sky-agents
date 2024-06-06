@@ -1,0 +1,349 @@
+body.toplevel_page_big_sky_agents {
+  background-color: #07c;
+  padding-right: 20px;
+  background-image: url(./agent-bg.jpg);
+  background-size: cover;
+  background-position: center;
+}
+body.toplevel_page_big_sky_agents .agents-demo-page {
+  padding-top: 32px;
+}
+body.toplevel_page_big_sky_agents .big-sky__agent-debug {
+  position: fixed;
+  bottom: 38px;
+}
+body.toplevel_page_big_sky_agents #wpbody-content > .notice {
+  display: none;
+}.big-sky__agent-debug {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  background-color: #fff;
+  padding: 8px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.big-sky__page-list {
+  background: #CCE5F4;
+  min-width: 200px;
+  max-width: 300px;
+  height: 100%;
+}
+
+.big-sky__oval-speech,
+.big-sky__oval-thought {
+  position: relative;
+  padding: 8px;
+  margin: 1em auto 16px;
+  text-align: left;
+  color: #000;
+  background: #fff;
+  border-radius: 50px;
+}
+
+/* creates smaller curve */
+.big-sky__oval-speech::after {
+  content: "";
+  position: absolute;
+  top: -30px;
+  left: 70px;
+  border: 15px solid transparent;
+  border-bottom-color: #eee;
+  border-left: 5px;
+  display: block;
+  width: 0;
+}
+
+/* creates the larger circle */
+.big-sky__oval-thought::before {
+  content: "";
+  position: absolute;
+  z-index: 10;
+  bottom: -18px;
+  left: 40px;
+  width: 30px;
+  height: 30px;
+  background: #fff;
+  border-radius: 25px;
+}
+
+/* creates the smaller circle */
+.big-sky__oval-thought::after {
+  content: "";
+  position: absolute;
+  z-index: 10;
+  bottom: -25px;
+  left: 35px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.wp-block[data-type="big-sky/section"],
+.wp-block[data-type="big-sky/page"] {
+  margin-top: 8px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  padding: 10px;
+}
+.wp-block[data-type="big-sky/section"] h4,
+.wp-block[data-type="big-sky/page"] h4 {
+  margin: 4px 0;
+}
+.wp-block[data-type="big-sky/section"] p,
+.wp-block[data-type="big-sky/page"] p {
+  margin: 4px 0;
+  color: #666;
+}
+.wp-block[data-type="big-sky/section"] span,
+.wp-block[data-type="big-sky/page"] span {
+  color: #666;
+  font-size: 10px;
+  text-transform: uppercase;
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+}
+
+.big-sky__page-list-wrapper {
+  flex: 0.5 0.5 0%;
+}
+.big-sky__page-list-wrapper .page-list {
+  background: #CCE5F4;
+  min-width: 200px;
+  max-width: 300px;
+  height: 100%;
+}
+
+.big-sky__current-preview-wrapper {
+  flex: 1 1 0%;
+}
+
+.big-sky__agent-column {
+  flex: 1 1 0%;
+  max-width: 400px;
+}
+
+.big-sky__agent-controls {
+  margin: 8px 0;
+}
+.big-sky__agent-controls label {
+  width: 60px;
+}
+.big-sky__agent-controls .big-sky__agent-running-indicator {
+  margin-left: 8px;
+}
+.big-sky__agent-controls .big-sky__goal-indicator {
+  margin-left: 8px;
+}
+
+.big-sky__agent-name {
+  position: absolute;
+  top: -5px;
+  right: 0;
+  font-size: 10px;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.big-sky__agent-page-spec .big-sky__page-description {
+  font-size: 14px;
+  color: #666;
+  padding: 8px 0;
+}
+.big-sky__agent-page-spec .big-sky__page-editor .big-sky__no-blocks {
+  padding: 8px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.big-sky__site-spec-preview [role=listitem] .big-sky__site-spec-value {
+  font-size: larger;
+  margin: 4px 0;
+}
+
+.big-sky__agent-site-spec {
+  min-width: 200px;
+  height: 100%;
+}
+.big-sky__agent-site-spec .big-sky__site-spec-label {
+  font-size: larger;
+  margin: 4px 0;
+}
+.big-sky__agent-site-spec .big-sky__site-spec-label .big-sky__empty {
+  font-size: smaller;
+  opacity: 0.5;
+}
+.big-sky__agent-site-spec .big-sky__site-spec-tabs [role=tablist] {
+  margin-bottom: 4px;
+}
+
+.big-sky__agent-ui-content {
+  position: relative;
+}
+.big-sky__agent-ui-content .big-sky__agent-thought {
+  padding-left: 35px;
+  padding-right: 20px;
+  margin: 20px 0;
+  margin-bottom: 45px;
+}
+.big-sky__agent-ui-content .big-sky__agent-thought p {
+  margin: 0;
+  padding: 0;
+  font-size: larger;
+  line-height: 1.4;
+}
+.big-sky__agent-ui-content .big-sky__agent-action {
+  width: 100%;
+}
+.big-sky__agent-ui-content .big-sky__agent-action.big-sky__agent-action-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  position: relative;
+}
+.big-sky__agent-ui-content .big-sky__agent-action.big-sky__agent-action-disabled::after {
+  content: "";
+  z-index: 999;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 4px solid rgb(0, 0, 0);
+  border-top-color: #fff;
+  animation: spin 1s infinite linear;
+}
+@keyframes spin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+.big-sky__agent-ui-content .big-sky__agent-question {
+  margin: 30px 0 10px 0;
+  padding-left: 45px;
+  padding-right: 20px;
+}
+.big-sky__agent-ui-content .big-sky__agent-question::before {
+  background: url(./bot.svg) no-repeat;
+  content: "";
+  display: block;
+  height: 109px;
+  position: absolute;
+  width: 150px;
+  top: -35px;
+  left: -10px;
+  z-index: 1;
+}
+.big-sky__agent-ui-content .big-sky__agent-question p {
+  margin: 0;
+  padding: 8px;
+  font-size: larger;
+  line-height: 1.4;
+}
+.big-sky__agent-ui-content .big-sky__tool-notices {
+  opacity: 0.5;
+  transition: opacity 0.2s ease-in-out;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  mask-image: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgb(0, 0, 0) 20%);
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: center;
+}
+.big-sky__agent-ui-content .big-sky__tool-notices:hover {
+  opacity: 0.8;
+}
+.big-sky__agent-ui-content .big-sky__tool-notices::-webkit-scrollbar {
+  display: none;
+}
+.big-sky__agent-ui-content .big-sky__tool-notices .big-sky__tool-notice {
+  background: rgba(0, 0, 102, 0.85);
+  border-radius: 8px;
+  margin-top: 16px;
+  padding: 6px 10px;
+}
+.big-sky__agent-ui-content .big-sky__tool-notices .big-sky__tool-notice p {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.big-sky__agent-ui-content .big-sky__tool-notices .big-sky__tool-notice.big-sky__tool-notice-pending {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+.big-sky__agent-ui-content .big-sky__agent-thinking {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  top: 35px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 35px;
+}
+.big-sky__agent-ui-content .big-sky__agent-thinking::before {
+  background: url(./bot.svg) no-repeat;
+  content: "";
+  display: block;
+  height: 109px;
+  position: absolute;
+  width: 150px;
+  top: -35px;
+  left: -10px;
+  z-index: 1;
+}
+.big-sky__agent-ui-content .big-sky__agent-thinking.big-sky__agent-thinking-running {
+  background: linear-gradient(90deg, #007bff, #fff);
+  background-size: 200% 200%;
+  animation: innerPulse 2s infinite;
+}
+@keyframes innerPulse {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.big-sky__agent-ui-content .big-sky__agent-thinking.big-sky__agent-thinking-tool-running .big-sky__agent-thinking-tool-running {
+  box-shadow: 0 0 10px #ff0;
+  animation: outerPulse 2s infinite;
+}
+@keyframes outerPulse {
+  0% {
+    box-shadow: 0 0 10px #ff0;
+  }
+  50% {
+    box-shadow: none;
+  }
+  100% {
+    box-shadow: 0 0 10px #ff0;
+  }
+}
+.big-sky__agent-ui-content .big-sky__agent-input {
+  margin: 0 auto;
+}
+.big-sky__agent-ui-content .big-sky__agent-input input {
+  font-size: x-large;
+}
+.big-sky__agent-ui-content .big-sky__agent-input .big-sky__agent-input__choices {
+  margin-top: 5px;
+}
+.big-sky__agent-ui-content .big-sky__agent-input .big-sky__agent-input__choices button {
+  border-radius: 8px;
+  padding-right: 8px;
+}

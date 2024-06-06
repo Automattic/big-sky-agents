@@ -1,0 +1,392 @@
+// @use "sass:color";
+// @import "node_modules/@wordpress/base-styles/variables";
+// @import "node_modules/@wordpress/base-styles/color";
+
+@mixin big-sky__agent-icon {
+
+	&::before {
+		background: url(./bot.svg) no-repeat;
+		content: "";
+		display: block;
+		height: 109px;
+		position: absolute;
+		width: 150px;
+		top: -35px;
+		left: -10px;
+		z-index: 1;
+	}
+}
+
+.big-sky__agent-debug {
+	position: absolute;
+	right: 16px;
+	bottom: 16px;
+	background-color: #fff;
+	padding: 8px;
+	box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.big-sky__page-list {
+	background: #CCE5F4;
+	min-width: 200px;
+	max-width: 300px;
+	height: 100%;
+}
+
+// see: https://nicolasgallagher.com/pure-css-speech-bubbles/demo/
+.big-sky__oval-speech,
+.big-sky__oval-thought {
+	position: relative;
+	padding: 8px;
+	margin: 1em auto 16px;
+	text-align: left;
+	color: #000;
+	background: #fff;
+	border-radius: 50px;
+}
+
+/* creates smaller curve */
+.big-sky__oval-speech::after {
+	content: "";
+	position: absolute;
+	top: -30px;
+	left: 70px;
+	border: 15px solid transparent;
+	border-bottom-color: #eee;
+	border-left: 5px;
+	display: block;
+	width: 0;
+}
+
+/* creates the larger circle */
+.big-sky__oval-thought::before {
+	content: "";
+	position: absolute;
+	z-index: 10;
+	bottom: -18px;
+	left: 40px;
+	width: 30px;
+	height: 30px;
+	background: #fff;
+	border-radius: 25px;
+}
+
+/* creates the smaller circle */
+.big-sky__oval-thought::after {
+	content: "";
+	position: absolute;
+	z-index: 10;
+	bottom: -25px;
+	left: 35px;
+	width: 12px;
+	height: 12px;
+	background: #fff;
+	border-radius: 6px;
+}
+
+// select .wp-block where data-type=big-sky/placeholder
+.wp-block[data-type="big-sky/section"],
+.wp-block[data-type="big-sky/page"] {
+	margin-top: 8px;
+	background: #f9f9f9;
+	border: 1px solid #ddd;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	padding: 10px;
+
+	h4 {
+		margin: 4px 0;
+	}
+
+	p {
+		margin: 4px 0;
+		color: #666;
+	}
+
+	// gray capitalized small text pinned to the bottom right corner
+	span {
+		color: #666;
+		font-size: 10px;
+		text-transform: uppercase;
+		position: absolute;
+		bottom: 4px;
+		right: 4px;
+	}
+}
+
+.big-sky__page-list-wrapper {
+	flex: 0.5 0.5 0%;
+
+	.page-list {
+		background: #CCE5F4;
+		min-width: 200px;
+		max-width: 300px;
+		height: 100%;
+	}
+}
+
+.big-sky__current-preview-wrapper {
+	flex: 1 1 0%;
+}
+
+.big-sky__agent-column {
+	flex: 1 1 0%;
+	max-width: 400px;
+}
+
+.big-sky__agent-controls {
+	margin: 8px 0;
+
+	label {
+		width: 60px;
+	}
+
+	.big-sky__agent-running-indicator {
+		margin-left: 8px;
+	}
+
+	.big-sky__goal-indicator {
+		margin-left: 8px;
+	}
+}
+
+.big-sky__agent-name {
+	position: absolute;
+	top: -5px;
+	right: 0;
+	font-size: 10px;
+	color: #fff;
+	text-transform: uppercase;
+}
+
+.big-sky__agent-page-spec {
+
+	.big-sky__page-description {
+		font-size: 14px;
+		color: #666;
+		padding: 8px 0;
+	}
+
+	.big-sky__page-editor {
+
+		.big-sky__no-blocks {
+			padding: 8px;
+			background: #f9f9f9;
+			border: 1px solid #ddd;
+			box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+		}
+	}
+}
+
+.big-sky__site-spec-preview {
+
+	[role="listitem"] .big-sky__site-spec-value {
+		font-size: larger;
+		margin: 4px 0;
+	}
+}
+
+.big-sky__agent-site-spec {
+	min-width: 200px;
+	height: 100%;
+
+	.big-sky__site-spec-label {
+		font-size: larger;
+		margin: 4px 0;
+
+		.big-sky__empty {
+			// small and 0.5 opacity
+			font-size: smaller;
+			opacity: 0.5;
+		}
+	}
+
+	.big-sky__site-spec-tabs [role="tablist"] {
+		margin-bottom: 4px;
+	}
+}
+
+.big-sky__agent-ui-content {
+	position: relative;
+
+	.big-sky__agent-thought {
+		// max-width: 400px;
+		padding-left: 35px;
+		padding-right: 20px;
+		margin: 20px 0;
+		margin-bottom: 45px;
+
+		p {
+			margin: 0;
+			padding: 0;
+			font-size: larger;
+			line-height: 1.4;
+		}
+	}
+
+	.big-sky__agent-action {
+		width: 100%;
+
+		&.big-sky__agent-action-disabled {
+			opacity: 0.5;
+			pointer-events: none;
+			position: relative;
+
+			&::after {
+				content: "";
+				z-index: 999;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				border: 4px solid rgba(0, 0, 0, 1);
+				border-top-color: #fff;
+				animation: spin 1s infinite linear;
+			}
+		}
+
+		@keyframes spin {
+
+			0% {
+				transform: translate(-50%, -50%) rotate(0deg);
+			}
+
+			100% {
+				transform: translate(-50%, -50%) rotate(360deg);
+			}
+		}
+	}
+
+	.big-sky__agent-question {
+
+		@include big-sky__agent-icon;
+		margin: 30px 0 10px 0;
+		padding-left: 45px;
+		padding-right: 20px;
+
+		p {
+			margin: 0;
+			padding: 8px;
+			font-size: larger;
+			line-height: 1.4;
+		}
+	}
+
+	.big-sky__tool-notices {
+		opacity: 0.5;
+		transition: opacity 0.2s ease-in-out;
+
+		&:hover {
+			opacity: 0.8;
+		}
+		overflow-y: scroll;
+		overscroll-behavior: contain;
+		-ms-overflow-style: none; /* IE and Edge */
+		scrollbar-width: none; /* Firefox */
+
+		&::-webkit-scrollbar {
+			display: none;
+		}
+		mask-image: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 20%);
+		display: flex;
+		justify-content: flex-start;
+		flex-direction: column;
+		align-items: center;
+
+		.big-sky__tool-notice {
+			background: rgba(#006, 0.85);
+			border-radius: 8px;
+			margin-top: 16px;
+			padding: 6px 10px;
+
+			p {
+				margin: 0;
+				padding: 0;
+				font-size: 14px;
+				line-height: 1.4;
+			}
+
+			&.big-sky__tool-notice-pending {
+				background: rgba(#000, 0.1);
+				color: #000;
+			}
+		}
+	}
+
+	.big-sky__agent-thinking {
+
+		@include big-sky__agent-icon;
+		position: relative;
+		width: 70px;
+		height: 70px;
+		top: 35px;
+		border-radius: 50%;
+		background-color: rgba(#fff, 0.5);
+		margin-bottom: 35px;
+
+		&.big-sky__agent-thinking-running {
+			background: linear-gradient(90deg, #007bff, #fff);
+			background-size: 200% 200%;
+			animation: innerPulse 2s infinite;
+
+			@keyframes innerPulse {
+
+				0% {
+					background-position: 0% 50%;
+				}
+
+				50% {
+					background-position: 100% 50%;
+				}
+
+				100% {
+					background-position: 0% 50%;
+				}
+			}
+		}
+
+		&.big-sky__agent-thinking-tool-running {
+
+			.big-sky__agent-thinking-tool-running {
+				box-shadow: 0 0 10px #ff0;
+				animation: outerPulse 2s infinite;
+
+				@keyframes outerPulse {
+
+					0% {
+						box-shadow: 0 0 10px #ff0;
+					}
+
+					50% {
+						box-shadow: none;
+					}
+
+					100% {
+						box-shadow: 0 0 10px #ff0;
+					}
+				}
+			}
+		}
+	}
+
+	.big-sky__agent-input {
+		// max-width: 500px;
+		margin: 0 auto;
+		// margin-top: 20px;
+
+		input {
+			font-size: x-large;
+		}
+
+		.big-sky__agent-input__choices {
+			margin-top: 5px;
+
+			button {
+				border-radius: 8px;
+				padding-right: 8px;
+			}
+		}
+	}
+}

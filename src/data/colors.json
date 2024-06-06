@@ -1,0 +1,265 @@
+[
+	{
+		"name": "Ash",
+		"colors": [ "Light Gray", "Black" ],
+		"categories": [ "professional", "corporate", "minimalist", "business" ]
+	},
+	{
+		"name": "Bisque",
+		"colors": [
+			"White",
+			"Light Beige",
+			"Olive Green",
+			"Dark Teal",
+			"Deep Green"
+		],
+		"categories": [ "wellness", "eco", "nature", "business" ]
+	},
+	{
+		"name": "Blueberry",
+		"colors": [
+			"White",
+			"Light Blue",
+			"Dark Blue",
+			"Deep Blue",
+			"Charcoal"
+		],
+		"categories": [ "business", "professional", "trustworthy", "business" ]
+	},
+	{
+		"name": "Chestnut",
+		"colors": [
+			"Light Cream",
+			"Pale Peach",
+			"Vibrant Orange",
+			"Forest Green",
+			"Dark Brown"
+		],
+		"categories": [ "artisanal", "gourmet", "rustic", "business" ]
+	},
+	{
+		"name": "Cinnabar",
+		"colors": [ "White", "Light Gray", "Peach", "Bright Red", "Black" ],
+		"categories": [ "lifestyle", "creative", "vibrant", "business" ]
+	},
+	{
+		"name": "Cornflower",
+		"colors": [
+			"White",
+			"Light Gray",
+			"Medium Gray",
+			"Steel Blue",
+			"Black"
+		],
+		"categories": [ "professional", "serene", "corporate", "business" ]
+	},
+	{
+		"name": "Gateau",
+		"colors": [ "White", "Cream", "Taupe", "Bright Pink", "Magenta" ],
+		"categories": [ "fashion", "elegant", "vibrant", "business" ]
+	},
+	{
+		"name": "Galactic",
+		"colors": [
+			"Pale Lavender",
+			"Light Blue",
+			"Dark Teal",
+			"Deep Blue",
+			"Lavender"
+		],
+		"categories": [ "wellness", "creative", "serene", "business" ]
+	},
+	{
+		"name": "Hunter",
+		"colors": [ "White", "Off White", "Dark Teal", "Dark Brown", "Black" ],
+		"categories": [ "corporate", "elegant", "professional", "business" ]
+	},
+	{
+		"name": "Ink",
+		"colors": [
+			"White",
+			"Dark Teal",
+			"Pale Blue",
+			"Pale Pink",
+			"Light Pink"
+		],
+		"categories": [ "lifestyle", "beauty", "feminine", "blog" ]
+	},
+	{
+		"name": "Lime",
+		"colors": [
+			"White",
+			"Pale Blue",
+			"Lime Green",
+			"Lime Green",
+			"Navy Blue"
+		],
+		"categories": [ "creative", "innovative", "vibrant", "business" ]
+	},
+	{
+		"name": "Mist",
+		"colors": [ "Light Gray", "Dark Teal", "Forest Green" ],
+		"categories": [ "corporate", "sleek", "professional", "business" ]
+	},
+	{
+		"name": "Noir",
+		"colors": [ "White", "Black" ],
+		"categories": [ "luxury", "sophisticated", "minimalist", "portfolio" ]
+	},
+	{
+		"name": "Pearl",
+		"colors": [
+			"Navy Blue",
+			"White",
+			"Royal Blue",
+			"Dark Blue",
+			"Light Gray"
+		],
+		"categories": [ "corporate", "professional", "reliable", "business" ]
+	},
+	{
+		"name": "Pine",
+		"colors": [
+			"Light Gray",
+			"Light Yellow",
+			"Forest Green",
+			"Deep Green"
+		],
+		"categories": [ "modern", "innovative", "fresh", "business" ]
+	},
+	{
+		"name": "Plum",
+		"colors": [ "White", "White", "Teal Blue", "Beige", "Dark Purple" ],
+		"categories": [ "creative", "sophisticated", "playful", "portfolio" ]
+	},
+	{
+		"name": "Regalia",
+		"colors": [
+			"Light Gray",
+			"Bright Red",
+			"Dark Teal",
+			"Royal Blue",
+			"Black"
+		],
+		"categories": [ "bold", "dynamic", "professional", "business" ]
+	},
+	{
+		"name": "Rosewood",
+		"colors": [ "White", "White", "Warm Brown", "Light Brown" ],
+		"categories": [ "lifestyle", "elegant", "refined", "business" ]
+	},
+	{
+		"name": "Saffron",
+		"colors": [
+			"Pale Yellow",
+			"Bright Yellow",
+			"Light Pink",
+			"Light Green",
+			"Black"
+		],
+		"categories": [ "friendly", "playful", "sophisticated", "ecommerce" ]
+	},
+	{
+		"name": "Shale",
+		"colors": [
+			"Light Lavender",
+			"Lavender",
+			"Light Blue",
+			"Dark Gray",
+			"Black"
+		],
+		"categories": [ "beauty", "elegant", "feminine", "blog" ]
+	},
+	{
+		"name": "Tangerine",
+		"colors": [
+			"White",
+			"Black",
+			"Light Peach",
+			"Bright Orange",
+			"Dark Orange"
+		],
+		"categories": [ "energetic", "cozy", "vibrant", "business" ]
+	},
+	{
+		"name": "Taupe",
+		"colors": [
+			"White",
+			"Beige",
+			"Light Brown",
+			"Dark Brown",
+			"Dark Brown"
+		],
+		"categories": [ "luxury", "elegant", "sophisticated", "business" ]
+	},
+	{
+		"name": "Umber",
+		"colors": [
+			"Light Gray",
+			"Light Brown",
+			"Dark Brown",
+			"Dark Brown",
+			"Dark Brown"
+		],
+		"categories": [ "earthy", "rustic", "natural", "business" ]
+	},
+	{
+		"name": "Coral",
+		"colors": [
+			"White",
+			"Light Coral",
+			"Vibrant Orange",
+			"Bright Red",
+			"Deep Red"
+		],
+		"categories": [ "youthful", "fashion", "vibrant", "ecommerce" ]
+	},
+	{
+		"name": "Eclipse",
+		"colors": [
+			"Light Gray",
+			"Medium Gray",
+			"Slate Blue",
+			"Dark Blue",
+			"Black"
+		],
+		"categories": [
+			"corporate",
+			"professional",
+			"sophisticated",
+			"business"
+		]
+	},
+	{
+		"name": "Mauve",
+		"colors": [
+			"Light Pink",
+			"Lavender",
+			"Medium Purple",
+			"Dark Purple",
+			"Dark Brown"
+		],
+		"categories": [ "serene", "tranquil", "rustic", "portfolio" ]
+	},
+	{
+		"name": "Mocha",
+		"colors": [
+			"Pale Yellow",
+			"Light Brown",
+			"Dark Brown",
+			"Dark Brown",
+			"Medium Brown"
+		],
+		"categories": [ "cozy", "rustic", "welcoming", "business" ]
+	},
+	{
+		"name": "Onyx",
+		"colors": [ "White", "Light Gray", "Gray", "Dark Gray", "Black" ],
+		"categories": [ "modern", "luxury", "sleek", "portfolio" ]
+	},
+	{
+		"name": "Salmon",
+		"colors": [ "White", "Light Coral", "Coral", "Dark Red", "Deep Red" ],
+		"categories": [ "modern", "warm", "sleek", "business" ]
+	}
+]

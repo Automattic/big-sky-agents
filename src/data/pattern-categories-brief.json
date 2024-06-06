@@ -1,0 +1,67 @@
+[
+	{
+		"title": "Headers",
+		"description": "The header section of a website.",
+		"slug": "header"
+	},
+	{
+		"title": "Introduction",
+		"description": "Prominent area at the top of a website.",
+		"slug": "intro"
+	},
+	{
+		"title": "About",
+		"description": "Section providing details about a company, product, or service.",
+		"slug": "about"
+	},
+	{
+		"title": "Testimonials",
+		"description": "Statements from satisfied customers, clients, or users.",
+		"slug": "testimonials"
+	},
+	{
+		"title": "Pricing Tiers",
+		"description": "Display various pricing plans or options for products or services.",
+		"slug": "pricing"
+	},
+	{
+		"title": "Services Offered",
+		"description": "List of services provided by a business.",
+		"slug": "services"
+	},
+	{
+		"title": "Contact Forms",
+		"description": "Interactive elements for submitting questions or feedback.",
+		"slug": "contact"
+	},
+	{
+		"title": "Subscription Forms",
+		"description": "Forms for recurring payments, memberships, or services.",
+		"slug": "subscribe"
+	},
+	{
+		"title": "Image Galleries",
+		"description": "Showcase collections of images.",
+		"slug": "gallery"
+	},
+	{
+		"title": "Menu",
+		"description": "Showcase food offerings at a restaurant, cafe, or eatery.",
+		"slug": "menu"
+	},
+	{
+		"title": "Event Listings",
+		"description": "Promote and provide details about upcoming events.",
+		"slug": "events"
+	},
+	{
+		"title": "Blog Posts",
+		"description": "Articles or entries published on a website's blog.",
+		"slug": "posts"
+	},
+	{
+		"title": "Footers",
+		"description": "Sections located at the bottom of a website.",
+		"slug": "footer"
+	}
+]

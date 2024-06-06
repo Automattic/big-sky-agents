@@ -1,0 +1,67 @@
+[
+	{
+		"title": "Headers",
+		"description": "The header section is typically located at the top of a website and contains essential information such as the brand's name, logo, navigation menu, and sometimes search functionality.",
+		"slug": "header"
+	},
+	{
+		"title": "Introduction",
+		"description": "Introduction sections are large, prominent areas at the top of a website that showcase key messages, images, or videos. They are designed to capture visitors' attention and encourage them to explore further.",
+		"slug": "intro"
+	},
+	{
+		"title": "About",
+		"description": "Informational sections provide details about a company, product, or service. They often mostly include text, to educate visitors and answer common questions.",
+		"slug": "about"
+	},
+	{
+		"title": "Testimonials",
+		"description": "Testimonials are statements from satisfied customers, clients, or users that highlight the benefits of a product or service.",
+		"slug": "testimonials"
+	},
+	{
+		"title": "Pricing Tiers",
+		"description": "Pricing tiers are used to display various pricing plans or options for products or services. They help customers compare features and costs, making it easier to choose the right plan for their needs.",
+		"slug": "pricing"
+	},
+	{
+		"title": "Services Offered",
+		"description": "Service offerings list the various services provided by a business, such as consulting, coaching, or training.",
+		"slug": "services"
+	},
+	{
+		"title": "Contact Forms",
+		"description": "Contact forms are interactive elements that allow users to submit questions, requests, or feedback to a website's owner or administrator.",
+		"slug": "contact"
+	},
+	{
+		"title": "Subscription Forms",
+		"description": "Subscription forms are used for recurring payments, memberships, or services. They require users to input their information and agree to terms and conditions before committing to a subscription.",
+		"slug": "newsletter"
+	},
+	{
+		"title": "Image Galleries",
+		"description": "Image galleries showcase collections of images that can be browsed, viewed, and sometimes downloaded or shared.",
+		"slug": "gallery"
+	},
+	{
+		"title": "Menu",
+		"description": "Menus showcase the food offerings available at a restaurant, cafe, or eatery. They often include categories, descriptions, and prices for each item.",
+		"slug": "menu"
+	},
+	{
+		"title": "Event Listings",
+		"description": "Event listings promote and provide details about upcoming events, conferences, meetings, or webinars.",
+		"slug": "events"
+	},
+	{
+		"title": "Blog Posts",
+		"description": "Blog posts are articles or entries published on a website's blog, often featuring news, updates, insights, or educational content.",
+		"slug": "posts"
+	},
+	{
+		"title": "Footers",
+		"description": "Footers are sections located at the bottom of a website, often containing important information such as copyright details, terms and conditions, and contact information.",
+		"slug": "footer"
+	}
+]

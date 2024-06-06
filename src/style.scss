@@ -1,0 +1,10 @@
+.site-spec-modal {
+	background-color: #07c;
+	// min-height: 80%;
+	overflow: hidden;
+}
+
+// hack to make the block inserter appear on top of the modal
+body.modal-open .components-popover.block-editor-inserter__popover {
+	z-index: 1000000;
+}

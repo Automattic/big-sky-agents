@@ -1,0 +1,24 @@
+// @import "node_modules/@wordpress/block-library/build-style/common";
+// @import "node_modules/@wordpress/block-library/build-style/style";
+// @import "node_modules/@wordpress/block-library/build-style/editor";
+
+body.toplevel_page_big_sky_agents {
+	background-color: #07c;
+	padding-right: 20px;
+	background-image: url(./agent-bg.jpg);
+	background-size: cover;
+	background-position: center;
+
+	.agents-demo-page {
+		padding-top: 32px;
+	}
+
+	.big-sky__agent-debug {
+		position: fixed;
+		bottom: 38px;
+	}
+
+	#wpbody-content > .notice {
+		display: none;
+	}
+}
