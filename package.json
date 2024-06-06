@@ -1,6 +1,6 @@
 {
 	"name": "@automattic/big-sky-agents",
-	"version": "1.0.8",
+	"version": "1.0.9",
 	"description": "The Big Sky Agent Framework",
 	"repository": {
 		"type": "git",
@@ -19,7 +19,8 @@
 		"dev": "rollup -c -w",
 		"test": "jest",
 		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build"
+		"build-storybook": "storybook build",
+		"prepare": "npm run build"
 	},
 	"devDependencies": {
 		"@babel/eslint-parser": "^7.24.7",
