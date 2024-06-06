@@ -1,3 +1,5 @@
+export type { default as LLM, LLMModel, LLMService } from './agents/llm.d.ts';
+
 export declare function useAgentExecutor( options: {
 	agent: Agent;
 	chat: Chat;

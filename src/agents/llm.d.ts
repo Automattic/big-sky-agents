@@ -25,24 +25,6 @@ declare const LLMModel: {
 	getDefault: (service?: string | null) => string;
 };
 
-declare function getServiceChatCompletionUrl(service: string): string;
-
-declare function formatHistory(history: any[], model: string): any[];
-
-declare function getDefaultTemperature(service: string, model: string): number;
-
-declare function getDefaultMaxTokens(service: string, model: string): number;
-
-declare const DEFAULT_SYSTEM_PROMPT: string;
-
-declare function formatMessages(
-	history: any[],
-	systemPrompt: string,
-	agentLoopPrompt: string,
-	maxHistoryLength: number,
-	model: string
-): any[];
-
 declare class LLM {
 	constructor(options: { apiKey?: string; service?: string });
 	getDefaultModel(): string;
@@ -66,5 +48,5 @@ declare class LLM {
 		tool_choice?: string | null;
 	}): Promise<any>;
 }
-
-export { LLMService, LLMModel, LLM };
+export default LLM;
+export { LLMService, LLMModel };
