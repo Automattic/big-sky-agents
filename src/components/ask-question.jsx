@@ -160,14 +160,6 @@ function AskUserQuestion( {
 				{ question && <CardHeader>{ question }</CardHeader> }
 				<CardBody>
 					<InputControl
-						// prefix={
-						// 	<InputControlPrefixWrapper>
-						// 		{ ' ' }
-						// 		<RiveComponent
-						// 			style={ { width: '32px', height: '32px' } }
-						// 		/>{ ' ' }
-						// 	</InputControlPrefixWrapper>
-						// }
 						size="__unstable-large"
 						label={ question }
 						placeholder={ placeholder }
@@ -182,7 +174,6 @@ function AskUserQuestion( {
 					/>
 					<DropZone
 						onFilesDrop={ addFiles }
-						// onHTMLDrop={ function noRefCheck() {} }
 					/>
 					{ files && files.length > 0 && (
 						<ItemGroup isBordered isSeparated>

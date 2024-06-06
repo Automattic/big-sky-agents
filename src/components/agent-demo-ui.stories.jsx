@@ -18,5 +18,5 @@ const Template = (args) => <AgentsDemoUI {...args} />;
 export const AgentsDemoUIOpenAI = Template.bind({});
 
 AgentsDemoUIOpenAI.args = {
-  token: "your-api-key",
+  token: import.meta.env.STORYBOOK_OPENAI_API_KEY,
 };

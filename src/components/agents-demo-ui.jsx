@@ -28,7 +28,7 @@ import './agents-demo-ui.scss';
  *
  * This component displays the user interface for the Agents Demo, which allows users to interact with agents and preview generated content.
  */
-const AgentsDemoUI = ( { token } ) => {
+const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
 	const [ previewVisible, setPreviewVisible ] = useState( false );
 	const [ model, setModel ] = useState( LLMModel.getDefault() );
@@ -37,6 +37,7 @@ const AgentsDemoUI = ( { token } ) => {
 	);
 	const [ temperature, setTemperature ] = useState( 0.2 );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
+	const [ token, setToken ] = useState( originalToken );
 
 	const llm = useLLM( { token, service } );
 
@@ -140,18 +141,19 @@ const AgentsDemoUI = ( { token } ) => {
 						chat={ chat }
 					/>
 					<LLMControls
+						token={ token }
 						model={ model }
 						service={ service }
 						temperature={ temperature }
-						onChanged={ (
-							newService,
-							newModel,
-							newTemperature
-						) => {
-							setService( newService );
-							setModel( newModel );
-							setTemperature( newTemperature );
+						onTokenChanged={ ( newToken ) => {
+							setToken( newToken );
+							if ( typeof onTokenChanged === 'function' ) {
+								onTokenChanged( newToken );
+							}
 						} }
+						onModelChanged={ setModel }
+						onServiceChanged={ setService }
+						onTemperatureChanged={ setTemperature }
 					/>
 				</div>
 			) }

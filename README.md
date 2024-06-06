@@ -61,7 +61,14 @@ npm link @automattic/big-sky-agents
 
 ## Storybook
 
-You can interact with the components in Storybook.
+You can interact with the components in Storybook. For convenience, you can set the API key in .env like this:
+
+
+```bash
+STORYBOOK_OPENAI_API_KEY="sk-..."
+```
+
+Then run Storybook:
 
 ```bash
 npm run storybook
