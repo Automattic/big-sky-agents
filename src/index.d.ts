@@ -78,8 +78,34 @@ interface Chat {
 	onReset: () => void;
 }
 
-interface Formatter {
+/**
+ * Formatter and Prompt Templates
+ */
+export interface Formatter {
 	format( values: any ): string;
+}
+
+export interface StringPromptTemplate extends Formatter {
+	constructor( options: {
+		inputVariables: string[];
+		template: string;
+		engine: any;
+		formatters?: any;
+	} );
+	validate( engine: any, inputVariables: string[] ): void;
+}
+
+export interface FStringPromptTemplate extends StringPromptTemplate {
+	constructor( options: {
+		template: string;
+	} );
+}
+
+export interface DotPromptTemplate extends StringPromptTemplate {
+	constructor( options: {
+		template: string;
+		inputVariables: string[];
+	} );
 }
 
 /**
@@ -94,6 +120,12 @@ interface Agent {
 	getSystemPrompt(): Formatter;
 	getNextStepPrompt(): Formatter;
 	onStart(): void;
+}
+
+export interface StandardAgent extends Agent {
+	askUser( options: { question: string, choices: string[] } ): void;
+	informUser( message: string ): void;
+	setGoal( goal: any ): void;
 }
 
 /**
