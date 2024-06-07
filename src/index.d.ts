@@ -81,11 +81,11 @@ interface Chat {
 /**
  * Formatter and Prompt Templates
  */
-export interface Formatter {
+export declare class Formatter {
 	format( values: any ): string;
 }
 
-export interface StringPromptTemplate extends Formatter {
+export declare class StringPromptTemplate extends Formatter {
 	constructor( options: {
 		inputVariables: string[];
 		template: string;
@@ -95,13 +95,13 @@ export interface StringPromptTemplate extends Formatter {
 	validate( engine: any, inputVariables: string[] ): void;
 }
 
-export interface FStringPromptTemplate extends StringPromptTemplate {
+export declare class FStringPromptTemplate extends StringPromptTemplate {
 	constructor( options: {
 		template: string;
 	} );
 }
 
-export interface DotPromptTemplate extends StringPromptTemplate {
+export declare class DotPromptTemplate extends StringPromptTemplate {
 	constructor( options: {
 		template: string;
 		inputVariables: string[];
@@ -111,7 +111,7 @@ export interface DotPromptTemplate extends StringPromptTemplate {
 /**
  * Agent
  */
-interface Agent {
+declare class Agent {
 	getId(): string;
 	call( toolName: string, args: any ): string;
 	userSay( message: string, file_urls?: string[] ): void;
@@ -122,7 +122,7 @@ interface Agent {
 	onStart(): void;
 }
 
-export interface StandardAgent extends Agent {
+export class StandardAgent extends Agent {
 	askUser( options: { question: string, choices: string[] } ): void;
 	informUser( message: string ): void;
 	setGoal( goal: any ): void;
@@ -153,3 +153,5 @@ type AgentUIProps = {
 	agent: Agent;
 	toolkit: AgentToolkit;
 };
+
+export declare function AgentUI( props: AgentUIProps ): JSX.Element;
