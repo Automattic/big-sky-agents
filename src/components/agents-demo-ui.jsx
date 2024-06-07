@@ -38,6 +38,7 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	const [ temperature, setTemperature ] = useState( 0.2 );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 	const [ token, setToken ] = useState( originalToken );
+	const feature = 'big-sky';
 
 	// const chat = useSimpleChat( {
 	// 	chatModel,
@@ -46,7 +47,7 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	// } );
 	// const toolkit = useSimpleToolkit( { pageId: selectedPageId } );
 
-	const chat = useReduxChat( { token, service, model, temperature } );
+	const chat = useReduxChat( { token, service, model, temperature, feature } );
 	const toolkit = useReduxToolkit( { token, pageId: selectedPageId } );
 
 	const agent = useCurrentAgent( {

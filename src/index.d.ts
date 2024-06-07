@@ -31,7 +31,8 @@ interface ChatOptions {
   token: string | undefined;
   service: ChatModelService;
   model: ChatModelType;
-  temperature: number;
+  temperature?: number;
+  feature?: string;
 }
 
 export interface Message {

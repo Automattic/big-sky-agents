@@ -2,7 +2,7 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { store as agentStore } from '../store/index.js';
 import { useCallback } from 'react';
 
-const useReduxChat = ( { token, service, model, temperature } ) => {
+const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 	const {
 		setStarted,
 		clearError,
@@ -70,19 +70,21 @@ const useReduxChat = ( { token, service, model, temperature } ) => {
 				nextStepPrompt,
 				service,
 				apiKey: token,
+				feature,
 			} );
 		},
 		[
-			token,
+			model,
+			temperature,
 			service,
+			token,
 			enabled,
 			running,
 			error,
 			pendingToolRequests,
 			assistantMessage,
 			runChatCompletion,
-			model,
-			temperature,
+			feature,
 		]
 	);
 

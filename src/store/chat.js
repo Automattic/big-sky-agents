@@ -33,16 +33,20 @@ export const controls = {
 		nextStepPrompt,
 		service,
 		apiKey,
+		maxTokens,
+		feature,
 	} ) {
 		const chatModel = new ChatModel( { apiKey, service } );
-		return await chatModel.run(
+		return await chatModel.run( {
 			model,
 			history,
 			tools,
 			systemPrompt,
 			nextStepPrompt,
-			temperature
-		);
+			temperature,
+			maxTokens,
+			feature,
+		} );
 	},
 };
 
@@ -52,24 +56,26 @@ export const controls = {
  * @param {Object}        request
  * @param {string}        request.model
  * @param {number}        request.temperature
- * @param {number}        request.max_tokens
+ * @param {number}        request.maxTokens
  * @param {Array<Object>} request.history
  * @param {Array<Object>} request.tools
  * @param {Object}        request.systemPrompt
  * @param {Object}        request.nextStepPrompt
  * @param {string}        request.service
  * @param {string}        request.apiKey
+ * @param {string}        request.feature
  */
 function* runChatCompletion( {
 	model,
 	temperature,
-	max_tokens,
+	maxTokens,
 	history,
 	tools,
 	systemPrompt,
 	nextStepPrompt,
 	service,
 	apiKey,
+	feature,
 } ) {
 	yield { type: 'CHAT_BEGIN_REQUEST' };
 	try {
@@ -77,13 +83,14 @@ function* runChatCompletion( {
 			type: 'CHAT_CALL',
 			model,
 			temperature,
-			max_tokens,
+			maxTokens,
 			history,
 			tools,
 			systemPrompt,
 			nextStepPrompt,
 			service,
 			apiKey,
+			feature,
 		};
 
 		// we need to do a silly hack because gpt-4o repeats call IDs

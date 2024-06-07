@@ -18,7 +18,7 @@ const formatToolResultContent = ( result ) => {
 		: `${ result }`;
 };
 
-const useSimpleChat = ( { token, service, model, temperature } ) => {
+const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 	const [ started, setStarted ] = useState( false );
 	const [ running, setRunning ] = useState( false );
 	const [ error, setError ] = useState();
@@ -176,6 +176,7 @@ const useSimpleChat = ( { token, service, model, temperature } ) => {
 					messages,
 					pendingToolRequests,
 					assistantMessage,
+					feature,
 				} );
 				return;
 			}
@@ -183,14 +184,15 @@ const useSimpleChat = ( { token, service, model, temperature } ) => {
 			runningRef.current = true;
 			setRunning( true );
 			chatModel
-				.run(
+				.run( {
 					model,
 					messages,
 					tools,
 					systemPrompt,
 					nextStepPrompt,
-					temperature
-				)
+					temperature,
+					feature,
+				} )
 				.then( ( message ) => {
 					runningRef.current = false;
 					setRunning( false );
@@ -225,6 +227,7 @@ const useSimpleChat = ( { token, service, model, temperature } ) => {
 			pendingToolRequests,
 			running,
 			temperature,
+			feature,
 		]
 	);
 

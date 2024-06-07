@@ -257,7 +257,7 @@ class ChatModel {
 	 * @param {string}        params.systemPrompt    The system prompt
 	 * @param {string}        params.agentLoopPrompt The agent loop prompt
 	 * @param {number}        params.temperature     The temperature to use
-	 * @param {number}        params.max_tokens      The maximum number of tokens to generate
+	 * @param {number}        params.maxTokens      The maximum number of tokens to generate
 	 * @param {string}        params.feature         The WPCOM feature slug for this product (WPCOM endpoints only)
 	 * @return {Promise<Object>} The response message
 	 */
@@ -268,7 +268,7 @@ class ChatModel {
 		systemPrompt,
 		agentLoopPrompt,
 		temperature,
-		max_tokens,
+		maxTokens,
 		feature,
 	} ) {
 		if ( ! messages || ! messages.length ) {
@@ -285,7 +285,7 @@ class ChatModel {
 		);
 		temperature =
 			temperature ?? getDefaultTemperature( this.service, model );
-		max_tokens = max_tokens ?? getDefaultMaxTokens( this.service, model );
+		const max_tokens = maxTokens ?? getDefaultMaxTokens( this.service, model );
 
 		const response = await this.call( {
 			model,

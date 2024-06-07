@@ -42,7 +42,7 @@ declare class ChatModel {
 		systemPrompt: string;
 		agentLoopPrompt?: string;
 		temperature?: number;
-		max_tokens?: number;
+		maxTokens?: number;
 		feature?: string;
 	} ): Promise< any >;
 	call( options: {
