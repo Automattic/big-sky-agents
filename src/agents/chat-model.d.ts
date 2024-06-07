@@ -1,5 +1,6 @@
 declare const ChatModelService: {
-	WPCOM: 'wpcom';
+	WPCOM_JETPACK_AI: 'wpcom-jetpack-ai',
+	WPCOM_OPENAI: 'wpcom-openai', // the wpcom OpenAI proxy
 	OPENAI: 'openai';
 	GROQ: 'groq';
 	OLLAMA: 'ollama';
@@ -49,4 +50,4 @@ declare class ChatModel {
 	}): Promise<any>;
 }
 export default ChatModel;
-export { ChatModelService as ChatModelService, ChatModelType as ChatModelType };
+export { ChatModelService, ChatModelType };

@@ -1,5 +1,7 @@
+// TODO: extract all this to a JSON configuration file
 export const ChatModelService = {
-	WPCOM: 'wpcom',
+	WPCOM_JETPACK_AI: 'wpcom-jetpack-ai',
+	WPCOM_OPENAI: 'wpcom-openai', // the wpcom OpenAI proxy
 	OPENAI: 'openai',
 	GROQ: 'groq',
 	OLLAMA: 'ollama',
@@ -7,7 +9,8 @@ export const ChatModelService = {
 	LOCALAI: 'localai',
 	getAvailable: () => {
 		const services = [
-			ChatModelService.WPCOM,
+			ChatModelService.WPCOM_JETPACK_AI,
+			ChatModelService.WPCOM_OPENAI,
 			ChatModelService.OLLAMA,
 			ChatModelService.LMSTUDIO,
 			ChatModelService.LOCALAI,
@@ -50,7 +53,7 @@ export const ChatModelType = {
 	getAvailable: ( service ) => {
 		if ( service === ChatModelService.GROQ ) {
 			return [ ChatModelType.LLAMA3_70B_8192 ];
-		} else if ( service === ChatModelService.WPCOM ) {
+		} else if ( [ ChatModelService.WPCOM_JETPACK_AI, ChatModelService.WPCOM_OPENAI ].includes( service ) ) {
 			return [
 				ChatModelType.GPT_4O,
 				ChatModelType.GPT_4_TURBO,
@@ -73,9 +76,7 @@ export const ChatModelType = {
 		}
 		if ( service === ChatModelService.GROQ ) {
 			return ChatModelType.LLAMA3_70B_8192;
-		} else if ( service === ChatModelService.OPENAI ) {
-			return ChatModelType.GPT_4O;
-		} else if ( service === ChatModelService.WPCOM ) {
+		} else if ( [ ChatModelService.WPCOM_JETPACK_AI, ChatModelService.WPCOM_OPENAI, ChatModelService.OPENAI ].includes( service ) ) {
 			return ChatModelType.GPT_4O;
 		} else if ( service === ChatModelService.OLLAMA ) {
 			return ChatModelType.GEMMA_7b_INSTRUCT;
@@ -87,18 +88,22 @@ export const ChatModelType = {
 };
 
 function getServiceChatCompletionUrl( service ) {
-	if ( service === ChatModelService.GROQ ) {
-		return 'https://api.groq.com/openai/v1/chat/completions';
-	} else if ( service === ChatModelService.OPENAI ) {
-		return 'https://api.openai.com/v1/chat/completions';
-	} else if ( service === ChatModelService.OLLAMA ) {
-		return 'http://127.0.0.1:11434/api/chat';
-	} else if ( service === ChatModelService.LMSTUDIO ) {
-		return 'http://127.0.0.1:1234/v1/chat/completions';
-	} else if ( service === ChatModelService.LOCALAI ) {
-		return 'http://127.0.0.1:1234/v1/chat/completions';
+	switch (service) {
+		case ChatModelService.GROQ:
+			return 'https://api.groq.com/openai/v1/chat/completions';
+		case ChatModelService.OPENAI:
+			return 'https://api.openai.com/v1/chat/completions';
+		case ChatModelService.OLLAMA:
+			return 'http://127.0.0.1:11434/api/chat';
+		case ChatModelService.LMSTUDIO:
+			return 'http://127.0.0.1:1234/v1/chat/completions';
+		case ChatModelService.LOCALAI:
+			return 'http://127.0.0.1:1234/v1/chat/completions';
+		case ChatModelService.WPCOM_OPENAI:
+			return 'https://public-api.wordpress.com/wpcom/v2/openai-proxy/v1/chat/completions';
+		default:
+			return 'https://public-api.wordpress.com/wpcom/v2/jetpack-ai-query';
 	}
-	return 'https://public-api.wordpress.com/wpcom/v2/jetpack-ai-query';
 }
 
 // reformat the history based on what the model supports
@@ -314,7 +319,7 @@ class ChatModel {
 			};
 		}
 
-		if ( ChatModelService.WPCOM === this.service ) {
+		if ( [ ChatModelService.WPCOM_JETPACK_AI, ChatModelService.WPCOM_OPENAI ].includes( this.service ) ) {
 			params.feature = 'big-sky';
 		}
 
