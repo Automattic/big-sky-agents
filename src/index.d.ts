@@ -99,6 +99,7 @@ export declare class FStringPromptTemplate extends StringPromptTemplate {
 	constructor( options: {
 		template: string;
 	} );
+	static fromString( tmpl: string, options: any ): FStringPromptTemplate;
 }
 
 export declare class DotPromptTemplate extends StringPromptTemplate {
@@ -158,11 +159,11 @@ type AgentUIProps = {
 type LLMControlsProps = {
 	model: string,
 	service: string,
-	temperature: string,
+	temperature: number,
 	token: string,
 	onServiceChanged: ( service: string ) => void,
 	onModelChanged: ( model: string ) => void,
-	onTemperatureChanged: ( temperature: string ) => void,
+	onTemperatureChanged: ( temperature: number ) => void,
 	onTokenChanged: ( token: string ) => void,
 }
 
