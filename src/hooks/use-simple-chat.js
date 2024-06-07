@@ -8,7 +8,7 @@ import { useCallback, useRef, useState } from 'react';
  */
 // import { store as agentStore } from '../../store/index.js';
 
-import uuidv4 from '../../utils/uuid.js';
+import uuidv4 from '../utils/uuid.js';
 
 const formatToolResultContent = ( result ) => {
 	if ( typeof result === 'undefined' ) {

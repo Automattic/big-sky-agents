@@ -15,12 +15,12 @@ import AgentControls from './agent-controls.jsx';
 import { ChatModelType, ChatModelService } from '../agents/chat-model.js';
 import PageList from './page-list.jsx';
 import useChatModel from '../hooks/use-chat-model.js';
-import useReduxToolkit from '../hooks/agents/use-redux-toolkit.js';
-import useCurrentAgent from '../hooks/agents/use-current-agent.js';
-import useAgentExecutor from '../hooks/agents/use-agent-executor.js';
+import useReduxToolkit from '../hooks/use-redux-toolkit.js';
+import useCurrentAgent from '../hooks/use-current-agent.js';
+import useAgentExecutor from '../hooks/use-agent-executor.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
-import useReduxChat from '../hooks/agents/use-redux-chat.js';
+import useReduxChat from '../hooks/use-redux-chat.js';
 import './agents-demo-ui.scss';
 
 /**
@@ -42,7 +42,7 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	const chatModel = useChatModel( { token, service } );
 
 	// const chat = useSimpleChat( {
-	// 	llm,
+	// 	chatModel,
 	// 	model,
 	// 	temperature,
 	// } );

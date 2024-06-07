@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 /**
  * Internal dependencies
  */
-import { store as agentStore } from '../../store/index.js';
+import { store as agentStore } from '../store/index.js';
 import {
 	AddPageSectionTool,
 	AddSitePageTool,
@@ -22,7 +22,7 @@ import {
 	SiteTitleTool,
 	SiteTopicTool,
 	SiteTypeTool,
-} from '../../agents/tools/site-tools.js';
+} from '../agents/tools/site-tools.js';
 
 const useReduxSiteToolkit = ( { pageId } ) => {
 	const {

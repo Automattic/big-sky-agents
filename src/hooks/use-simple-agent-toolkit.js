@@ -8,14 +8,14 @@ import { useCallback, useMemo, useState } from 'react';
  */
 import InformTool, {
 	INFORM_TOOL_NAME,
-} from '../../agents/tools/inform-user.js';
-import AskUserTool from '../../agents/tools/ask-user.js';
+} from '../agents/tools/inform-user.js';
+import AskUserTool from '../agents/tools/ask-user.js';
 import createSetAgentTool, {
 	SET_AGENT_TOOL_NAME,
-} from '../../agents/tools/set-agent.js';
+} from '../agents/tools/set-agent.js';
 import SetGoalTool, {
 	SET_AGENT_GOAL_TOOL_NAME,
-} from '../../agents/tools/set-goal.js';
+} from '../agents/tools/set-goal.js';
 
 const useSimpleAgentToolkit = ({ agents }) => {
 	const [ agentId, setAgent ] = useState();
