@@ -40,7 +40,7 @@ const useSimpleToolkit = ( { pageId, token } ) => {
 		callbacks: siteSpecCallbacks,
 	} = useSimpleSiteToolkit( { pageId } );
 
-	// analyze sites using a remote browser and vision LLM
+	// analyze sites using a remote browser and vision model
 	const {
 		tools: analyzeSiteTools,
 		values: analyzeSiteValues,

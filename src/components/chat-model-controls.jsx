@@ -11,9 +11,9 @@ import {
 /**
  * Internal dependencies
  */
-import { LLMModel, LLMService } from "../agents/llm.js";
+import { ChatModelType, ChatModelService } from "../agents/chat-model.js";
 
-const LLMControls = ({
+const ChatModelControls = ({
   model,
   service,
   temperature,
@@ -29,7 +29,7 @@ const LLMControls = ({
         <SelectControl
           label="Service"
           value={service}
-          options={LLMService.getAvailable().map((serviceSlug) => {
+          options={ChatModelService.getAvailable().map((serviceSlug) => {
             return {
               label: serviceSlug,
               value: serviceSlug,
@@ -37,9 +37,9 @@ const LLMControls = ({
           })}
           onChange={(newService) => {
             // if the current model isn't in the list of models for the service, reset to the default for the service
-            if (!LLMModel.getAvailable(newService).includes(model)) {
+            if (!ChatModelType.getAvailable(newService).includes(model)) {
               onServiceChanged(newService);
-              onModelChanged(LLMModel.getDefault(newService));
+              onModelChanged(ChatModelType.getDefault(newService));
             } else {
               onServiceChanged(newService);
             }
@@ -47,8 +47,8 @@ const LLMControls = ({
         />
         <SelectControl
           label="Model"
-          value={model ?? LLMModel.getDefault(service)}
-          options={LLMModel.getAvailable(service).map((modelSlug) => {
+          value={model ?? ChatModelType.getDefault(service)}
+          options={ChatModelType.getAvailable(service).map((modelSlug) => {
             return {
               label: modelSlug,
               value: modelSlug,
@@ -83,4 +83,4 @@ const LLMControls = ({
   );
 };
 
-export default LLMControls;
+export default ChatModelControls;

@@ -10,11 +10,11 @@ import { Flex } from '@wordpress/components';
 import SiteSpecPreview from './site-spec-preview.jsx';
 import PageSpecPreview from './page-spec-preview.jsx';
 import AgentUI from './agent-ui.jsx';
-import LLMControls from './llm-controls.jsx';
+import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
-import { LLMModel, LLMService } from '../agents/llm.js';
+import { ChatModelType, ChatModelService } from '../agents/chat-model.js';
 import PageList from './page-list.jsx';
-import useLLM from '../hooks/use-llm.js';
+import useChatModel from '../hooks/use-chat-model.js';
 import useReduxToolkit from '../hooks/agents/use-redux-toolkit.js';
 import useCurrentAgent from '../hooks/agents/use-current-agent.js';
 import useAgentExecutor from '../hooks/agents/use-agent-executor.js';
@@ -31,15 +31,15 @@ import './agents-demo-ui.scss';
 const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
 	const [ previewVisible, setPreviewVisible ] = useState( false );
-	const [ model, setModel ] = useState( LLMModel.getDefault() );
+	const [ model, setModel ] = useState( ChatModelType.getDefault() );
 	const [ service, setService ] = useState(
-		LLMService.getDefault()
+		ChatModelService.getDefault()
 	);
 	const [ temperature, setTemperature ] = useState( 0.2 );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 	const [ token, setToken ] = useState( originalToken );
 
-	const llm = useLLM( { token, service } );
+	const chatModel = useChatModel( { token, service } );
 
 	// const chat = useSimpleChat( {
 	// 	llm,
@@ -48,7 +48,7 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	// } );
 	// const toolkit = useSimpleToolkit( { pageId: selectedPageId } );
 
-	const chat = useReduxChat( { llm, model, temperature } );
+	const chat = useReduxChat( { chatModel, model, temperature } );
 	const toolkit = useReduxToolkit( { token, pageId: selectedPageId } );
 
 	const agent = useCurrentAgent( {
@@ -140,7 +140,7 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 						agent={ agent }
 						chat={ chat }
 					/>
-					<LLMControls
+					<ChatModelControls
 						token={ token }
 						model={ model }
 						service={ service }

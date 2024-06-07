@@ -19,7 +19,7 @@ const formatToolResultContent = ( result ) => {
 		: `${ result }`;
 };
 
-const useSimpleChat = ( { llm, model, temperature } ) => {
+const useSimpleChat = ( { chatModel, model, temperature } ) => {
 	const [ started, setStarted ] = useState( false );
 	const [ running, setRunning ] = useState( false );
 	const [ error, setError ] = useState();
@@ -121,7 +121,7 @@ const useSimpleChat = ( { llm, model, temperature } ) => {
 	const userSay = useCallback( ( content, image_urls = [] ) => {
 		console.log( '🤖 User Message', content );
 		if ( image_urls?.length ) {
-			// TODO: check LLMModel.isMultimodal( model )
+			// TODO: check ChatModelType.isMultimodal( model )
 			setHistory( ( messages ) => [
 				...messages,
 				{
@@ -152,7 +152,7 @@ const useSimpleChat = ( { llm, model, temperature } ) => {
 	const runAgent = useCallback(
 		( messages, tools, systemPrompt, nextStepPrompt ) => {
 			if (
-				! llm || // no LLM
+				! chatModel || // no Chat Model
 				! enabled || // disabled
 				running || // already running
 				error || // error
@@ -162,7 +162,7 @@ const useSimpleChat = ( { llm, model, temperature } ) => {
 				assistantMessage // the assistant has a question for the user
 			) {
 				console.warn( 'not running agent', {
-					llm,
+					chatModel,
 					error,
 					enabled,
 					running,
@@ -175,7 +175,7 @@ const useSimpleChat = ( { llm, model, temperature } ) => {
 
 			runningRef.current = true;
 			setRunning( true );
-			llm.run(
+			chatModel.run(
 				model,
 				messages,
 				tools,
@@ -212,7 +212,7 @@ const useSimpleChat = ( { llm, model, temperature } ) => {
 			assistantMessage,
 			enabled,
 			error,
-			llm,
+			chatModel,
 			model,
 			pendingToolRequests,
 			running,

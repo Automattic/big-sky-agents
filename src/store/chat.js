@@ -1,5 +1,5 @@
 import uuidv4 from '../utils/uuid.js';
-import LLM from '../agents/llm.js';
+import ChatModel from '../agents/chat-model.js';
 
 const initialState = {
 	history: [],
@@ -24,7 +24,7 @@ export const controls = {
 	async RESOLVE_TOOL_CALL_RESULT( { promise } ) {
 		return await promise;
 	},
-	async LLM_CALL( {
+	async CHAT_CALL( {
 		history,
 		model,
 		temperature,
@@ -34,8 +34,8 @@ export const controls = {
 		service,
 		apiKey,
 	} ) {
-		const llm = new LLM( { apiKey, service } );
-		return await llm.run(
+		const chatModel = new ChatModel( { apiKey, service } );
+		return await chatModel.run(
 			model,
 			history,
 			tools,
@@ -47,7 +47,7 @@ export const controls = {
 };
 
 /**
- * Make an LLM call
+ * Make a Chat Completion call
  *
  * @param {Object}        request
  * @param {string}        request.model
@@ -71,10 +71,10 @@ function* runChatCompletion( {
 	service,
 	apiKey,
 } ) {
-	yield { type: 'LLM_BEGIN_REQUEST' };
+	yield { type: 'CHAT_BEGIN_REQUEST' };
 	try {
 		const assistantMessage = yield {
-			type: 'LLM_CALL',
+			type: 'CHAT_CALL',
 			model,
 			temperature,
 			max_tokens,
@@ -94,10 +94,10 @@ function* runChatCompletion( {
 			} );
 		}
 		yield actions.addMessage( assistantMessage );
-		yield { type: 'LLM_END_REQUEST' };
+		yield { type: 'CHAT_END_REQUEST' };
 	} catch ( error ) {
-		console.error( 'LLM error', error );
-		return { type: 'LLM_ERROR', error: error.message };
+		console.error( 'Chat error', error );
+		return { type: 'CHAT_ERROR', error: error.message };
 	}
 }
 
@@ -202,11 +202,11 @@ const addMessage = ( state, message ) => {
 
 export const reducer = ( state = initialState, action ) => {
 	switch ( action.type ) {
-		case 'LLM_BEGIN_REQUEST':
+		case 'CHAT_BEGIN_REQUEST':
 			return { ...state, running: true };
-		case 'LLM_END_REQUEST':
+		case 'CHAT_END_REQUEST':
 			return { ...state, running: false };
-		case 'LLM_ERROR':
+		case 'CHAT_ERROR':
 			return { ...state, running: false, error: action.error };
 		case 'TOOL_BEGIN_REQUEST':
 			return {
@@ -305,7 +305,7 @@ export const selectors = {
 
 export const actions = {
 	clearError: () => ( {
-		type: 'LLM_ERROR',
+		type: 'CHAT_ERROR',
 		error: null,
 	} ),
 	setToolCallResult,

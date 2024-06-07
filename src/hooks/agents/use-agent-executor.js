@@ -70,7 +70,7 @@ const useAgentExecutor = ( {
 	useEffect( () => {
 		// process tool calls for any tools with callbacks
 		// note that tools without callbacks will be processed outside this loop,
-		// and will need responses before the LLM can run again
+		// and will need responses before the ChatModel can run again
 		if ( ! running && pendingToolRequests.length > 0 ) {
 			pendingToolRequests.forEach( ( tool_call ) => {
 				if ( tool_call.inProgress ) {

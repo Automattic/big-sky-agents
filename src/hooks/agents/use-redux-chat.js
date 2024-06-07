@@ -2,7 +2,7 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { store as agentStore } from '../../store/index.js';
 import { useCallback } from 'react';
 
-const useReduxChat = ( { llm, model, temperature } ) => {
+const useReduxChat = ( { chatModel, model, temperature } ) => {
 	const {
 		setStarted,
 		clearError,
@@ -41,7 +41,7 @@ const useReduxChat = ( { llm, model, temperature } ) => {
 	const runAgent = useCallback(
 		( messages, tools, systemPrompt, nextStepPrompt ) => {
 			if (
-				! llm || // no LLM
+				! chatModel || // no ChatModel
 				! enabled || // disabled
 				running || // already running
 				error || // there's an error
@@ -50,7 +50,7 @@ const useReduxChat = ( { llm, model, temperature } ) => {
 				assistantMessage // the assistant has a question for the user
 			) {
 				// console.warn( 'not running agent', {
-				// 	llm,
+				// 	chatModel,
 				// 	error,
 				// 	enabled,
 				// 	running,
@@ -67,12 +67,12 @@ const useReduxChat = ( { llm, model, temperature } ) => {
 				tools,
 				systemPrompt,
 				nextStepPrompt,
-				service: llm.getService(),
-				apiKey: llm.getApiKey(),
+				service: chatModel.getService(),
+				apiKey: chatModel.getApiKey(),
 			} );
 		},
 		[
-			llm,
+			chatModel,
 			enabled,
 			running,
 			error,

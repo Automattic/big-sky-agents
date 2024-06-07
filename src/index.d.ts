@@ -1,4 +1,5 @@
-export type { default as LLM, LLMModel, LLMService } from './agents/llm.d.ts';
+export type { default as ChatModel, ChatModelType, ChatModelService } from './agents/chat-model';
+import ChatModel from './agents/chat-model';
 
 export declare function useAgentExecutor( options: {
 	agent: Agent;
@@ -6,7 +7,7 @@ export declare function useAgentExecutor( options: {
 	toolkit: AgentToolkit;
 } ): void;
 
-export declare function useLLM( options: {
+export declare function useChatModel( options: {
 	token: string | undefined;
 	service: string;
 } ): any;
@@ -22,7 +23,7 @@ export declare function useReduxAgentToolkit( options: {
 } ): AgentToolkit;
 
 interface ChatOptions {
-	llm: any;
+	chatModel: ChatModel;
 	model: string;
 	temperature: number;
 }
@@ -156,7 +157,7 @@ type AgentUIProps = {
 	toolkit: AgentToolkit;
 };
 
-type LLMControlsProps = {
+type ChatModelControlsProps = {
 	model: string,
 	service: string,
 	temperature: number,
@@ -169,4 +170,4 @@ type LLMControlsProps = {
 
 export declare function AgentUI( props: AgentUIProps ): JSX.Element;
 export declare function AgentControls( props: AgentUIProps ): JSX.Element;
-export declare function LLMControls( props: LLMControlsProps ): JSX.Element;
+export declare function ChatModelControls( props: ChatModelControlsProps ): JSX.Element;

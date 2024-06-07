@@ -10,7 +10,7 @@ const systemPrompt = FStringPromptTemplate.fromString(
 );
 
 const nextStepPrompt = FStringPromptTemplate.fromString(
-	`Please attempt to finish complete the goal: {agentGoal}.`
+	`Please attempt to complete the goal: {agent.goal}.`
 );
 
 class StandardAgent extends Agent {

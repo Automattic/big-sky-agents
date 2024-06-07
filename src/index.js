@@ -4,10 +4,10 @@
 export { default as useAgentExecutor } from './hooks/agents/use-agent-executor.js';
 
 /**
- * LLM and hooks
+ * ChatModel and hooks
  */
-export { default as LLM, LLMModel, LLMService } from './agents/llm.js';
-export { default as useLLM } from './hooks/use-llm.js';
+export { default as ChatModel, ChatModelType, ChatModelService } from './agents/chat-model.js';
+export { default as useChatModel } from './hooks/use-chat-model.js';
 
 /**
  * Simple chat, toolkit, and agent toolkit
@@ -28,7 +28,7 @@ export { default as useReduxAgentToolkit } from './hooks/agents/use-redux-agent-
  */
 export { default as AgentUI } from './components/agent-ui.jsx';
 export { default as AgentControls } from './components/agent-controls.jsx';
-export { default as LLMControls } from './components/llm-controls.jsx';
+export { default as ChatModelControls } from './components/chat-model-controls.jsx';
 export { default as AgentsDemoPageJetpack } from './components/agents-demo-page-jetpack.jsx';
 export { default as AgentsDemoPageStandalone } from './components/agents-demo-page-standalone.jsx';
 

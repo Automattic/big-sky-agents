@@ -77,7 +77,7 @@ npm run storybook
 
 ## LocalAI
 
-Using LocalAI, you can run the LLM inference locally on your machine. This is useful for debugging, experimentation, testing, and just privacy in general.
+Using LocalAI, you can run the Chat Completion inference locally on your machine. This is useful for debugging, experimentation, testing, and just privacy in general.
 
 Make sure your .env has an entry for `HUGGINGFACEHUB_API_TOKEN`.
 
@@ -140,7 +140,7 @@ The Big Sky Agent Framework currently has the following features:
         -   Tools: setSiteTitle, setSiteDescription, etc.
     -   URL Analyzer Toolkit
         -   Values:  which can extract colors, fonts, layouts, images, business type, metadata and content from any web page.
--   LLMs. Integrates with a wide range of proprietary and open-weights LLMS, including:
+-   Chat Models. Integrates with a wide range of proprietary and open-weights conversational LLMs, including:
     -   OpenAI 4o (with multimodal support)
     -   Our own self-hosted Llama3 70b
     -   [Groq](https://href.li/?https://groq.com/) (LLama 70b)

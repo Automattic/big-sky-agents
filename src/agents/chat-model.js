@@ -1,4 +1,4 @@
-export const LLMService = {
+export const ChatModelService = {
 	WPCOM: 'wpcom',
 	OPENAI: 'openai',
 	GROQ: 'groq',
@@ -7,29 +7,29 @@ export const LLMService = {
 	LOCALAI: 'localai',
 	getAvailable: () => {
 		const services = [
-			LLMService.WPCOM,
-			LLMService.OLLAMA,
-			LLMService.LMSTUDIO,
-			LLMService.LOCALAI,
-			LLMService.OPENAI,
-			LLMService.GROQ
+			ChatModelService.WPCOM,
+			ChatModelService.OLLAMA,
+			ChatModelService.LMSTUDIO,
+			ChatModelService.LOCALAI,
+			ChatModelService.OPENAI,
+			ChatModelService.GROQ
 		];
 		return services;
 	},
 	getDefault: () => {
-		return LLMService.OPENAI;
+		return ChatModelService.OPENAI;
 	},
 	getDefaultApiKey: ( service ) => {
-		if ( service === LLMService.GROQ && typeof process !== 'undefined' ) {
+		if ( service === ChatModelService.GROQ && typeof process !== 'undefined' ) {
 			return process.env.GROQ_API_KEY;
-		} else if ( service === LLMService.OPENAI && typeof process !== 'undefined' ) {
+		} else if ( service === ChatModelService.OPENAI && typeof process !== 'undefined' ) {
 			return process.env.OPENAI_API_KEY;
 		}
 		return null;
 	},
 };
 
-export const LLMModel = {
+export const ChatModelType = {
 	GPT_4_TURBO: 'gpt-4-turbo',
 	GPT_4O: 'gpt-4o-2024-05-13',
 	LLAMA3_70B_8192: 'llama3-70b-8192',
@@ -38,64 +38,64 @@ export const LLMModel = {
 	PHI_3_MEDIUM: 'legraphista/Phi-3-medium-128k-instruct-IMat-GGUF',
 	MISTRAL_03: 'mistral-0.3',
 	HERMES_2_PRO_MISTRAL: 'hermes-2-pro-mistral',
-	isMultimodal: ( model ) => model === LLMModel.GPT_4O,
+	isMultimodal: ( model ) => model === ChatModelType.GPT_4O,
 	supportsToolMessages: ( model ) =>
 		[
-			LLMModel.GPT_4O,
-			LLMModel.GPT_4_TURBO,
-			LLMModel.LLAMA3_70B_8192,
-			LLMModel.MISTRAL_03,
-			LLMModel.HERMES_2_PRO_MISTRAL,
+			ChatModelType.GPT_4O,
+			ChatModelType.GPT_4_TURBO,
+			ChatModelType.LLAMA3_70B_8192,
+			ChatModelType.MISTRAL_03,
+			ChatModelType.HERMES_2_PRO_MISTRAL,
 		].includes( model ),
 	getAvailable: ( service ) => {
-		if ( service === LLMService.GROQ ) {
-			return [ LLMModel.LLAMA3_70B_8192 ];
-		} else if ( service === LLMService.WPCOM ) {
+		if ( service === ChatModelService.GROQ ) {
+			return [ ChatModelType.LLAMA3_70B_8192 ];
+		} else if ( service === ChatModelService.WPCOM ) {
 			return [
-				LLMModel.GPT_4O,
-				LLMModel.GPT_4_TURBO,
-				LLMModel.LLAMA3_70B_8192_WPCOM,
+				ChatModelType.GPT_4O,
+				ChatModelType.GPT_4_TURBO,
+				ChatModelType.LLAMA3_70B_8192_WPCOM,
 			];
-		} else if ( service === LLMService.OLLAMA ) {
+		} else if ( service === ChatModelService.OLLAMA ) {
 			// TODO: obtain dynamically
-			return [ LLMModel.GEMMA_7b_INSTRUCT ];
-		} else if ( service === LLMService.LOCALAI ) {
+			return [ ChatModelType.GEMMA_7b_INSTRUCT ];
+		} else if ( service === ChatModelService.LOCALAI ) {
 			// TODO: obtain dynamically
-			return [ LLMModel.MISTRAL_03, LLMModel.HERMES_2_PRO_MISTRAL ];
-		} else if ( service === LLMService.LMSTUDIO ) {
-			return [ LLMModel.PHI_3_MEDIUM ];
+			return [ ChatModelType.MISTRAL_03, ChatModelType.HERMES_2_PRO_MISTRAL ];
+		} else if ( service === ChatModelService.LMSTUDIO ) {
+			return [ ChatModelType.PHI_3_MEDIUM ];
 		}
-		return [ LLMModel.GPT_4_TURBO, LLMModel.GPT_4O ];
+		return [ ChatModelType.GPT_4_TURBO, ChatModelType.GPT_4O ];
 	},
 	getDefault( service = null ) {
 		if ( ! service ) {
-			service = LLMService.getDefault();
+			service = ChatModelService.getDefault();
 		}
-		if ( service === LLMService.GROQ ) {
-			return LLMModel.LLAMA3_70B_8192;
-		} else if ( service === LLMService.OPENAI ) {
-			return LLMModel.GPT_4O;
-		} else if ( service === LLMService.WPCOM ) {
-			return LLMModel.GPT_4O;
-		} else if ( service === LLMService.OLLAMA ) {
-			return LLMModel.GEMMA_7b_INSTRUCT;
-		} else if ( service === LLMService.LOCALAI ) {
-			return LLMModel.HERMES_2_PRO_MISTRAL;
+		if ( service === ChatModelService.GROQ ) {
+			return ChatModelType.LLAMA3_70B_8192;
+		} else if ( service === ChatModelService.OPENAI ) {
+			return ChatModelType.GPT_4O;
+		} else if ( service === ChatModelService.WPCOM ) {
+			return ChatModelType.GPT_4O;
+		} else if ( service === ChatModelService.OLLAMA ) {
+			return ChatModelType.GEMMA_7b_INSTRUCT;
+		} else if ( service === ChatModelService.LOCALAI ) {
+			return ChatModelType.HERMES_2_PRO_MISTRAL;
 		}
-		return LLMModel.GPT_4O;
+		return ChatModelType.GPT_4O;
 	},
 };
 
 function getServiceChatCompletionUrl( service ) {
-	if ( service === LLMService.GROQ ) {
+	if ( service === ChatModelService.GROQ ) {
 		return 'https://api.groq.com/openai/v1/chat/completions';
-	} else if ( service === LLMService.OPENAI ) {
+	} else if ( service === ChatModelService.OPENAI ) {
 		return 'https://api.openai.com/v1/chat/completions';
-	} else if ( service === LLMService.OLLAMA ) {
+	} else if ( service === ChatModelService.OLLAMA ) {
 		return 'http://127.0.0.1:11434/api/chat';
-	} else if ( service === LLMService.LMSTUDIO ) {
+	} else if ( service === ChatModelService.LMSTUDIO ) {
 		return 'http://127.0.0.1:1234/v1/chat/completions';
-	} else if ( service === LLMService.LOCALAI ) {
+	} else if ( service === ChatModelService.LOCALAI ) {
 		return 'http://127.0.0.1:1234/v1/chat/completions';
 	}
 	return 'https://public-api.wordpress.com/wpcom/v2/jetpack-ai-query';
@@ -104,8 +104,8 @@ function getServiceChatCompletionUrl( service ) {
 // reformat the history based on what the model supports
 const formatHistory = ( history, model ) => {
 	const maxImageURLLength = 200; // typically they are base64-encoded so very large
-	const isMultimodal = LLMModel.isMultimodal( model );
-	const supportsToolMessages = LLMModel.supportsToolMessages( model );
+	const isMultimodal = ChatModelType.isMultimodal( model );
+	const supportsToolMessages = ChatModelType.supportsToolMessages( model );
 
 	// if it's not multimodal, convert any multipart "content" properties to a simple string containing a list of image URLs.
 	if ( ! isMultimodal ) {
@@ -145,7 +145,7 @@ const formatHistory = ( history, model ) => {
 };
 
 function getDefaultTemperature( service, model ) {
-	if ( service === LLMService.GROQ && model === LLMService.LLAMA3_70B_8192 ) {
+	if ( service === ChatModelService.GROQ && model === ChatModelService.LLAMA3_70B_8192 ) {
 		// arbitrary difference for testing
 		return 0.1;
 	}
@@ -153,7 +153,7 @@ function getDefaultTemperature( service, model ) {
 }
 
 function getDefaultMaxTokens( service, model ) {
-	if ( service === LLMService.GROQ && model === LLMService.LLAMA3_70B_8192 ) {
+	if ( service === ChatModelService.GROQ && model === ChatModelService.LLAMA3_70B_8192 ) {
 		return 8192;
 	}
 	return 4096;
@@ -196,14 +196,14 @@ function formatMessages(
 	return messages;
 }
 
-class LLM {
+class ChatModel {
 	constructor( { apiKey, service } ) {
-		this.service = service ?? LLMService.getDefault();
-		this.apiKey = apiKey ?? LLMService.getDefaultApiKey( this.service );
+		this.service = service ?? ChatModelService.getDefault();
+		this.apiKey = apiKey ?? ChatModelService.getDefaultApiKey( this.service );
 	}
 
 	getDefaultModel() {
-		return LLMModel.getDefault( this.service );
+		return ChatModelType.getDefault( this.service );
 	}
 
 	getApiKey() {
@@ -240,7 +240,7 @@ class LLM {
 			throw new Error( 'Missing history' );
 		}
 
-		model = model ?? LLMModel.getDefault( this.service );
+		model = model ?? ChatModelType.getDefault( this.service );
 		messages = formatMessages(
 			messages,
 			systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
@@ -314,7 +314,7 @@ class LLM {
 			};
 		}
 
-		if ( LLMService.WPCOM === this.service ) {
+		if ( ChatModelService.WPCOM === this.service ) {
 			params.feature = 'big-sky';
 		}
 
@@ -358,7 +358,7 @@ class LLM {
 		}
 
 		if ( response.error ) {
-			console.error( 'LLM Error', response.error, params );
+			console.error( 'Chat Model Error', response.error, params );
 			throw new Error(
 				`${ response.error.type }: ${ response.error.message }`
 			);
@@ -377,4 +377,4 @@ class LLM {
 	}
 }
 
-export default LLM;
+export default ChatModel;

@@ -1,4 +1,4 @@
-declare const LLMService: {
+declare const ChatModelService: {
 	WPCOM: 'wpcom';
 	OPENAI: 'openai';
 	GROQ: 'groq';
@@ -10,7 +10,7 @@ declare const LLMService: {
 	getDefaultApiKey: (service: string) => string | null;
 };
 
-declare const LLMModel: {
+declare const ChatModelType: {
 	GPT_4_TURBO: 'gpt-4-turbo';
 	GPT_4O: 'gpt-4o-2024-05-13';
 	LLAMA3_70B_8192: 'llama3-70b-8192';
@@ -25,7 +25,7 @@ declare const LLMModel: {
 	getDefault: (service?: string | null) => string;
 };
 
-declare class LLM {
+declare class ChatModel {
 	constructor(options: { apiKey?: string; service?: string });
 	getDefaultModel(): string;
 	getApiKey(): string | null;
@@ -48,5 +48,5 @@ declare class LLM {
 		tool_choice?: string | null;
 	}): Promise<any>;
 }
-export default LLM;
-export { LLMService, LLMModel };
+export default ChatModel;
+export { ChatModelService as ChatModelService, ChatModelType as ChatModelType };
