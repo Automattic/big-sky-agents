@@ -47,7 +47,13 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	// } );
 	// const toolkit = useSimpleToolkit( { pageId: selectedPageId } );
 
-	const chat = useReduxChat( { token, service, model, temperature, feature } );
+	const chat = useReduxChat( {
+		token,
+		service,
+		model,
+		temperature,
+		feature,
+	} );
 	const toolkit = useReduxToolkit( { token, pageId: selectedPageId } );
 
 	const agent = useCurrentAgent( {
