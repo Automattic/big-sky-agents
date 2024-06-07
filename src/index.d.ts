@@ -112,6 +112,7 @@ export declare class DotPromptTemplate extends StringPromptTemplate {
  * Agent
  */
 declare class Agent {
+	constructor( chat: Chat, toolkit: AgentToolkit )
 	getId(): string;
 	call( toolName: string, args: any ): string;
 	userSay( message: string, file_urls?: string[] ): void;
