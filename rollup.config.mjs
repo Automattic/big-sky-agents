@@ -11,7 +11,6 @@ import packageJson from './package.json' assert { type: 'json' };
 export default [
 	{
 		input: 'src/index.js',
-		context: 'this',
 		output: [
 			{
 				file: packageJson.main,
