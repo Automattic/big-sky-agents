@@ -155,4 +155,17 @@ type AgentUIProps = {
 	toolkit: AgentToolkit;
 };
 
+type LLMControlsProps = {
+	model: string,
+	service: string,
+	temperature: string,
+	token: string,
+	onServiceChanged: ( service: string ) => void,
+	onModelChanged: ( model: string ) => void,
+	onTemperatureChanged: ( temperature: string ) => void,
+	onTokenChanged: ( token: string ) => void,
+}
+
 export declare function AgentUI( props: AgentUIProps ): JSX.Element;
+export declare function AgentControls( props: AgentUIProps ): JSX.Element;
+export declare function LLMControls( props: LLMControlsProps ): JSX.Element;

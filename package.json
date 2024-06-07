@@ -1,6 +1,6 @@
 {
 	"name": "@automattic/big-sky-agents",
-	"version": "1.0.11",
+	"version": "1.0.12",
 	"description": "The Big Sky Agent Framework",
 	"repository": {
 		"type": "git",
