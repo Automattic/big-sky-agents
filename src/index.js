@@ -6,7 +6,11 @@ export { default as useAgentExecutor } from './hooks/agents/use-agent-executor.j
 /**
  * ChatModel and hooks
  */
-export { default as ChatModel, ChatModelType, ChatModelService } from './agents/chat-model.js';
+export {
+	default as ChatModel,
+	ChatModelType,
+	ChatModelService,
+} from './agents/chat-model.js';
 export { default as useChatModel } from './hooks/use-chat-model.js';
 
 /**

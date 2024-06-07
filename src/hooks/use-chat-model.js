@@ -13,7 +13,11 @@ const useChatModel = ( { token, service } ) => {
 
 	useEffect( () => {
 		// when switching from something else to WPCOM, be sure to get the key
-		if ( chatModel && chatModel.service === service && chatModel.apiKey === token ) {
+		if (
+			chatModel &&
+			chatModel.service === service &&
+			chatModel.apiKey === token
+		) {
 			return;
 		}
 		if ( ! token ) {

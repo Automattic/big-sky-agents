@@ -10,7 +10,6 @@ import {
 	CheckboxControl,
 	DropZone,
 	__experimentalInputControl as InputControl,
-	__experimentalInputControlPrefixWrapper as InputControlPrefixWrapper,
 	__experimentalItem as Item,
 	__experimentalItemGroup as ItemGroup,
 	__experimentalVStack as VStack,
@@ -172,9 +171,7 @@ function AskUserQuestion( {
 							}
 						} }
 					/>
-					<DropZone
-						onFilesDrop={ addFiles }
-					/>
+					<DropZone onFilesDrop={ addFiles } />
 					{ files && files.length > 0 && (
 						<ItemGroup isBordered isSeparated>
 							{ files.map( ( { name, url }, index ) => (

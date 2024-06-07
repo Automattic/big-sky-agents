@@ -11,10 +11,10 @@ settings:
     jsdoc:
         mode: typescript
     import/internal-regex: null
-    import/resolver:
-        node: {}
-        webpack:
-            config: ./webpack.config.cjs
+    # import/resolver:
+    #     node: {}
+    #     webpack:
+    #         config: ./webpack.config.cjs
     languageOptions:
         ecmaVersion: 'latest'
         sourceType: module
@@ -23,7 +23,7 @@ rules:
     camelcase: off
     jest/expect-expect: off
     '@wordpress/dependency-group': off
-    '@wordpress/is-gutenberg-plugin': error
+    # '@wordpress/is-gutenberg-plugin': error
     '@wordpress/react-no-unsafe-timeout': error
     '@wordpress/i18n-text-domain':
         - error
@@ -61,10 +61,10 @@ rules:
     #           - name: react
     #             message: Please use React API through `@wordpress/element` instead.
     #             allowTypeImports: true
-    '@typescript-eslint/consistent-type-imports':
-        - error
-        - prefer: type-imports
-          disallowTypeAnnotations: false
+    # '@typescript-eslint/consistent-type-imports':
+    #     - error
+    #     - prefer: type-imports
+    #       disallowTypeAnnotations: false
     no-restricted-syntax:
         - error
         - selector: ImportDeclaration[source.value=/^@wordpress\\u002F.+\\u002F/]
@@ -87,4 +87,5 @@ rules:
           ignoreDeclarationSort: true
 overrides: []
 ignorePatterns:
-    - gutenberg/
+    - dist
+    - node_modules

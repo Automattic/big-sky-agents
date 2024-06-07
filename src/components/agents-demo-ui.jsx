@@ -12,9 +12,8 @@ import PageSpecPreview from './page-spec-preview.jsx';
 import AgentUI from './agent-ui.jsx';
 import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
-import { ChatModelType, ChatModelService } from '../agents/chat-model.js';
+import { ChatModelService, ChatModelType } from '../agents/chat-model.js';
 import PageList from './page-list.jsx';
-import useChatModel from '../hooks/use-chat-model.js';
 import useReduxToolkit from '../hooks/agents/use-redux-toolkit.js';
 import useCurrentAgent from '../hooks/agents/use-current-agent.js';
 import useAgentExecutor from '../hooks/agents/use-agent-executor.js';
@@ -27,19 +26,18 @@ import './agents-demo-ui.scss';
  * Renders the Agents Demo UI component.
  *
  * This component displays the user interface for the Agents Demo, which allows users to interact with agents and preview generated content.
+ * @param {Object}   root0                The component props.
+ * @param {string}   root0.token          The token to use for the chat model.
+ * @param {Function} root0.onTokenChanged Callback function to call when the token changes.
  */
 const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
 	const [ previewVisible, setPreviewVisible ] = useState( false );
 	const [ model, setModel ] = useState( ChatModelType.getDefault() );
-	const [ service, setService ] = useState(
-		ChatModelService.getDefault()
-	);
+	const [ service, setService ] = useState( ChatModelService.getDefault() );
 	const [ temperature, setTemperature ] = useState( 0.2 );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 	const [ token, setToken ] = useState( originalToken );
-
-	const chatModel = useChatModel( { token, service } );
 
 	// const chat = useSimpleChat( {
 	// 	llm,
@@ -48,7 +46,7 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	// } );
 	// const toolkit = useSimpleToolkit( { pageId: selectedPageId } );
 
-	const chat = useReduxChat( { chatModel, model, temperature } );
+	const chat = useReduxChat( { token, service, model, temperature } );
 	const toolkit = useReduxToolkit( { token, pageId: selectedPageId } );
 
 	const agent = useCurrentAgent( {
