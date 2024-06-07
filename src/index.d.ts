@@ -21,6 +21,8 @@ export declare function useReduxAgentToolkit( options: {
 	agents: AgentConfig[];
 } ): AgentToolkit;
 
+export { default as StandardAgent } from './agents/standard-agent.js';
+
 interface ChatOptions {
 	llm: any;
 	model: string;
@@ -99,7 +101,7 @@ export declare class FStringPromptTemplate extends StringPromptTemplate {
 	constructor( options: {
 		template: string;
 	} );
-	static fromString( tmpl: string, options: any ): FStringPromptTemplate;
+	static fromString( tmpl: string, options?: any ): FStringPromptTemplate;
 }
 
 export declare class DotPromptTemplate extends StringPromptTemplate {
@@ -124,11 +126,11 @@ declare class Agent {
 	onStart(): void;
 }
 
-export class StandardAgent extends Agent {
-	askUser( options: { question: string, choices: string[] } ): void;
-	informUser( message: string ): void;
-	setGoal( goal: any ): void;
-}
+// export class StandardAgent extends Agent {
+// 	askUser( options: { question: string, choices: string[] } ): void;
+// 	informUser( message: string ): void;
+// 	setGoal( goal: any ): void;
+// }
 
 /**
  * Agent Toolkit
