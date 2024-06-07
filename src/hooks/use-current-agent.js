@@ -3,13 +3,13 @@ import { useMemo } from 'react';
 /**
  * Internal dependencies
  */
-import WapuuAgent from '../../agents/wapuu-agent.js';
-import TutorAgent from '../../agents/tutor-agent.js';
-import DesignAgent from '../../agents/design-agent.js';
-import SiteSpecAgent from '../../agents/site-spec-agent.js';
-import PageSpecAgent from '../../agents/page-spec-agent.js';
-import WooAgent from '../../agents/woo-agent.js';
-import StatsAgent from '../../agents/stats-agent.js';
+import WapuuAgent from '../agents/wapuu-agent.js';
+import TutorAgent from '../agents/tutor-agent.js';
+import DesignAgent from '../agents/design-agent.js';
+import SiteSpecAgent from '../agents/site-spec-agent.js';
+import PageSpecAgent from '../agents/page-spec-agent.js';
+import WooAgent from '../agents/woo-agent.js';
+import StatsAgent from '../agents/stats-agent.js';
 import {
 	JETPACK_STATS_AGENT_ID,
 	WAPUU_AGENT_ID,
@@ -18,7 +18,7 @@ import {
 	WORDPRESS_PAGE_SPEC_AGENT_ID,
 	WORDPRESS_SITE_SPEC_AGENT_ID,
 	WORDPRESS_TUTOR_AGENT_ID,
-} from '../../agents/default-agents.js';
+} from '../agents/default-agents.js';
 
 const useCurrentAgent = ( { chat, toolkit } ) => {
 	return useMemo( () => {

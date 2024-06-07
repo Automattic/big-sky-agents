@@ -9,7 +9,7 @@ import { useCallback, useMemo } from 'react';
 import useSimpleSiteToolkit from './use-simple-site-toolkit.js';
 import useSimpleAgentToolkit from './use-simple-agent-toolkit.js';
 import useAnalyzeSiteToolkit from './use-analyze-site-toolkit.js';
-import agents from '../../agents/default-agents.js';
+import agents from '../agents/default-agents.js';
 
 /**
  * This attempts to provide all the "glue" between the Agents and the current environment.

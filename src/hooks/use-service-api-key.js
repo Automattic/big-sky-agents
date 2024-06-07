@@ -6,8 +6,8 @@ import { useEffect, useState } from 'react';
 /**
  * Internal dependencies
  */
-import useJetpackToken from '../use-jetpack-token.js';
-import { ChatModelService } from '../../agents/chat-model.js';
+import useJetpackToken from './use-jetpack-token.js';
+import { ChatModelService } from '../agents/chat-model.js';
 
 const useServiceAPIKey = ( service ) => {
 	const { token: jetpackToken, isLoading, error } = useJetpackToken();

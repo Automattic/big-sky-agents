@@ -21,9 +21,9 @@ import {
 	SiteTitleTool,
 	SiteTopicTool,
 	SiteTypeTool,
-} from '../../agents/tools/site-tools.js';
+} from '../agents/tools/site-tools.js';
 
-import uuidv4 from '../../utils/uuid.js';
+import uuidv4 from '../utils/uuid.js';
 
 const useSimpleSiteToolkit = ( /* { pageId } */ ) => {
 	const [ textColor, setTextColor ] = useState();

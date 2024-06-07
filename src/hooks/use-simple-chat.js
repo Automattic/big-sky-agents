@@ -6,10 +6,8 @@ import { useCallback, useRef, useState } from 'react';
 /**
  * Internal dependencies
  */
-// import { store as agentStore } from '../../store/index.js';
-
-import uuidv4 from '../../utils/uuid.js';
-import { useChatModel } from '../../index.js';
+import useChatModel from './use-chat-model.js';
+import uuidv4 from '../utils/uuid.js';
 
 const formatToolResultContent = ( result ) => {
 	if ( typeof result === 'undefined' ) {

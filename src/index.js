@@ -1,7 +1,7 @@
 /**
  * Run the agent
  */
-export { default as useAgentExecutor } from './hooks/agents/use-agent-executor.js';
+export { default as useAgentExecutor } from './hooks/use-agent-executor.js';
 
 /**
  * ChatModel and hooks
@@ -16,16 +16,16 @@ export { default as useChatModel } from './hooks/use-chat-model.js';
 /**
  * Simple chat, toolkit, and agent toolkit
  */
-export { default as useSimpleChat } from './hooks/agents/use-simple-chat.js';
-export { default as useSimpleToolkit } from './hooks/agents/use-simple-toolkit.js';
-export { default as useSimpleAgentToolkit } from './hooks/agents/use-simple-agent-toolkit.js';
+export { default as useSimpleChat } from './hooks/use-simple-chat.js';
+export { default as useSimpleToolkit } from './hooks/use-simple-toolkit.js';
+export { default as useSimpleAgentToolkit } from './hooks/use-simple-agent-toolkit.js';
 
 /**
  * Redux chat, toolkit, and agent toolkit
  */
-export { default as useReduxChat } from './hooks/agents/use-redux-chat.js';
-export { default as useReduxToolkit } from './hooks/agents/use-redux-toolkit.js';
-export { default as useReduxAgentToolkit } from './hooks/agents/use-redux-agent-toolkit.js';
+export { default as useReduxChat } from './hooks/use-redux-chat.js';
+export { default as useReduxToolkit } from './hooks/use-redux-toolkit.js';
+export { default as useReduxAgentToolkit } from './hooks/use-redux-agent-toolkit.js';
 
 /**
  * Components

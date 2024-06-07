@@ -1,5 +1,5 @@
 import { useDispatch, useSelect } from '@wordpress/data';
-import { store as agentStore } from '../../store/index.js';
+import { store as agentStore } from '../store/index.js';
 import { useCallback } from 'react';
 
 const useReduxChat = ( { token, service, model, temperature } ) => {
