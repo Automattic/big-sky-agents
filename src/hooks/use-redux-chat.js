@@ -64,7 +64,7 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 			runChatCompletion( {
 				model,
 				temperature,
-				history: messages,
+				messages,
 				tools,
 				systemPrompt,
 				nextStepPrompt,

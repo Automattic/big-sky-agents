@@ -25,7 +25,7 @@ export const controls = {
 		return await promise;
 	},
 	async CHAT_CALL( {
-		history,
+		messages,
 		model,
 		temperature,
 		tools,
@@ -39,7 +39,7 @@ export const controls = {
 		const chatModel = new ChatModel( { apiKey, service } );
 		return await chatModel.run( {
 			model,
-			history,
+			messages,
 			tools,
 			systemPrompt,
 			nextStepPrompt,
@@ -69,7 +69,7 @@ function* runChatCompletion( {
 	model,
 	temperature,
 	maxTokens,
-	history,
+	messages,
 	tools,
 	systemPrompt,
 	nextStepPrompt,
@@ -84,7 +84,7 @@ function* runChatCompletion( {
 			model,
 			temperature,
 			maxTokens,
-			history,
+			messages,
 			tools,
 			systemPrompt,
 			nextStepPrompt,
