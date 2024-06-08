@@ -356,6 +356,7 @@ class ChatModel {
 		const headers = {
 			Authorization: `Bearer ${ this.apiKey }`,
 			'Content-Type': 'application/json',
+			'Access-Control-Request-Headers': 'authorization,content-type,X-WPCOM-AI-Feature',
 		};
 
 		if (
@@ -365,7 +366,7 @@ class ChatModel {
 				ChatModelService.WPCOM_OPENAI,
 			].includes( this.service )
 		) {
-			params.feature = feature;
+			// params.feature = feature;
 			headers[ 'X-WPCOM-AI-Feature' ] = feature;
 		}
 
@@ -377,10 +378,7 @@ class ChatModel {
 			getServiceChatCompletionUrl( this.service ),
 			{
 				method: 'POST',
-				headers: {
-					Authorization: `Bearer ${ this.apiKey }`,
-					'Content-Type': 'application/json',
-				},
+				headers,
 				body: JSON.stringify( params ),
 			}
 		);
