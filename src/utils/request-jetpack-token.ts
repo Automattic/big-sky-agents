@@ -41,7 +41,6 @@ function isSimpleSite(): boolean {
 	return getSiteType() === 'simple';
 }
 
-
 /**
  * Request a token from the Jetpack site to use with the API
  *

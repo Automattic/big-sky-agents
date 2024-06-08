@@ -6,11 +6,7 @@ const AgentsDemoPageJetpack = () => {
 	const { token } = useJetpackToken();
 	return (
 		<div className="agents-demo-page">
-			{ token ? (
-				<AgentsDemoUI token={ token } />
-			) : (
-				'Loading...'
-			) }
+			{ token ? <AgentsDemoUI token={ token } /> : 'Loading...' }
 		</div>
 	);
 };

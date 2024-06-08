@@ -8,9 +8,7 @@ import { useCallback, useMemo } from 'react';
  * Internal dependencies
  */
 import { store as agentStore } from '../store/index.js';
-import InformTool, {
-	INFORM_TOOL_NAME,
-} from '../agents/tools/inform-user.js';
+import InformTool, { INFORM_TOOL_NAME } from '../agents/tools/inform-user.js';
 import createSetAgentTool, {
 	SET_AGENT_TOOL_NAME,
 } from '../agents/tools/set-agent.js';

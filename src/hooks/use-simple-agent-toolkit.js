@@ -6,9 +6,7 @@ import { useCallback, useMemo, useState } from 'react';
 /**
  * Internal dependencies
  */
-import InformTool, {
-	INFORM_TOOL_NAME,
-} from '../agents/tools/inform-user.js';
+import InformTool, { INFORM_TOOL_NAME } from '../agents/tools/inform-user.js';
 import AskUserTool from '../agents/tools/ask-user.js';
 import createSetAgentTool, {
 	SET_AGENT_TOOL_NAME,
@@ -17,7 +15,7 @@ import SetGoalTool, {
 	SET_AGENT_GOAL_TOOL_NAME,
 } from '../agents/tools/set-goal.js';
 
-const useSimpleAgentToolkit = ({ agents }) => {
+const useSimpleAgentToolkit = ( { agents } ) => {
 	const [ agentId, setAgent ] = useState();
 	const [ agentGoal, setAgentGoal ] = useState(
 		"Understand the user's goal"
@@ -35,7 +33,7 @@ const useSimpleAgentToolkit = ({ agents }) => {
 				thought: agentThought,
 			},
 		};
-	}, [ agentId, agentGoal, agentThought ] );
+	}, [ agents, agentId, agentGoal, agentThought ] );
 
 	const callbacks = useMemo( () => {
 		return {

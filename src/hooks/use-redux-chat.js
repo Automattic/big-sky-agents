@@ -2,7 +2,7 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { store as agentStore } from '../store/index.js';
 import { useCallback } from 'react';
 
-const useReduxChat = ( { chatModel, model, temperature } ) => {
+const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 	const {
 		setStarted,
 		clearError,
@@ -41,7 +41,8 @@ const useReduxChat = ( { chatModel, model, temperature } ) => {
 	const runAgent = useCallback(
 		( messages, tools, systemPrompt, nextStepPrompt ) => {
 			if (
-				! chatModel || // no ChatModel
+				! service || // no ChatModel
+				! token || // no apiKey
 				! enabled || // disabled
 				running || // already running
 				error || // there's an error
@@ -63,24 +64,27 @@ const useReduxChat = ( { chatModel, model, temperature } ) => {
 			runChatCompletion( {
 				model,
 				temperature,
-				history: messages,
+				messages,
 				tools,
 				systemPrompt,
 				nextStepPrompt,
-				service: chatModel.getService(),
-				apiKey: chatModel.getApiKey(),
+				service,
+				apiKey: token,
+				feature,
 			} );
 		},
 		[
-			chatModel,
+			model,
+			temperature,
+			service,
+			token,
 			enabled,
 			running,
 			error,
 			pendingToolRequests,
 			assistantMessage,
 			runChatCompletion,
-			model,
-			temperature,
+			feature,
 		]
 	);
 
@@ -88,7 +92,7 @@ const useReduxChat = ( { chatModel, model, temperature } ) => {
 		clearPendingToolRequests();
 		clearMessages();
 		clearError();
-	}, [] );
+	}, [ clearError, clearMessages, clearPendingToolRequests ] );
 
 	return {
 		// running state

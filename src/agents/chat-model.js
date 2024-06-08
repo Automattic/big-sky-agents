@@ -1,5 +1,7 @@
+// TODO: extract all this to a JSON configuration file
 export const ChatModelService = {
-	WPCOM: 'wpcom',
+	WPCOM_JETPACK_AI: 'wpcom-jetpack-ai',
+	WPCOM_OPENAI: 'wpcom-openai', // the wpcom OpenAI proxy
 	OPENAI: 'openai',
 	GROQ: 'groq',
 	OLLAMA: 'ollama',
@@ -7,12 +9,13 @@ export const ChatModelService = {
 	LOCALAI: 'localai',
 	getAvailable: () => {
 		const services = [
-			ChatModelService.WPCOM,
+			ChatModelService.WPCOM_JETPACK_AI,
+			ChatModelService.WPCOM_OPENAI,
 			ChatModelService.OLLAMA,
 			ChatModelService.LMSTUDIO,
 			ChatModelService.LOCALAI,
 			ChatModelService.OPENAI,
-			ChatModelService.GROQ
+			ChatModelService.GROQ,
 		];
 		return services;
 	},
@@ -20,9 +23,15 @@ export const ChatModelService = {
 		return ChatModelService.OPENAI;
 	},
 	getDefaultApiKey: ( service ) => {
-		if ( service === ChatModelService.GROQ && typeof process !== 'undefined' ) {
+		if (
+			service === ChatModelService.GROQ &&
+			typeof process !== 'undefined'
+		) {
 			return process.env.GROQ_API_KEY;
-		} else if ( service === ChatModelService.OPENAI && typeof process !== 'undefined' ) {
+		} else if (
+			service === ChatModelService.OPENAI &&
+			typeof process !== 'undefined'
+		) {
 			return process.env.OPENAI_API_KEY;
 		}
 		return null;
@@ -50,7 +59,12 @@ export const ChatModelType = {
 	getAvailable: ( service ) => {
 		if ( service === ChatModelService.GROQ ) {
 			return [ ChatModelType.LLAMA3_70B_8192 ];
-		} else if ( service === ChatModelService.WPCOM ) {
+		} else if (
+			[
+				ChatModelService.WPCOM_JETPACK_AI,
+				ChatModelService.WPCOM_OPENAI,
+			].includes( service )
+		) {
 			return [
 				ChatModelType.GPT_4O,
 				ChatModelType.GPT_4_TURBO,
@@ -61,7 +75,10 @@ export const ChatModelType = {
 			return [ ChatModelType.GEMMA_7b_INSTRUCT ];
 		} else if ( service === ChatModelService.LOCALAI ) {
 			// TODO: obtain dynamically
-			return [ ChatModelType.MISTRAL_03, ChatModelType.HERMES_2_PRO_MISTRAL ];
+			return [
+				ChatModelType.MISTRAL_03,
+				ChatModelType.HERMES_2_PRO_MISTRAL,
+			];
 		} else if ( service === ChatModelService.LMSTUDIO ) {
 			return [ ChatModelType.PHI_3_MEDIUM ];
 		}
@@ -73,9 +90,13 @@ export const ChatModelType = {
 		}
 		if ( service === ChatModelService.GROQ ) {
 			return ChatModelType.LLAMA3_70B_8192;
-		} else if ( service === ChatModelService.OPENAI ) {
-			return ChatModelType.GPT_4O;
-		} else if ( service === ChatModelService.WPCOM ) {
+		} else if (
+			[
+				ChatModelService.WPCOM_JETPACK_AI,
+				ChatModelService.WPCOM_OPENAI,
+				ChatModelService.OPENAI,
+			].includes( service )
+		) {
 			return ChatModelType.GPT_4O;
 		} else if ( service === ChatModelService.OLLAMA ) {
 			return ChatModelType.GEMMA_7b_INSTRUCT;
@@ -87,18 +108,22 @@ export const ChatModelType = {
 };
 
 function getServiceChatCompletionUrl( service ) {
-	if ( service === ChatModelService.GROQ ) {
-		return 'https://api.groq.com/openai/v1/chat/completions';
-	} else if ( service === ChatModelService.OPENAI ) {
-		return 'https://api.openai.com/v1/chat/completions';
-	} else if ( service === ChatModelService.OLLAMA ) {
-		return 'http://127.0.0.1:11434/api/chat';
-	} else if ( service === ChatModelService.LMSTUDIO ) {
-		return 'http://127.0.0.1:1234/v1/chat/completions';
-	} else if ( service === ChatModelService.LOCALAI ) {
-		return 'http://127.0.0.1:1234/v1/chat/completions';
+	switch ( service ) {
+		case ChatModelService.GROQ:
+			return 'https://api.groq.com/openai/v1/chat/completions';
+		case ChatModelService.OPENAI:
+			return 'https://api.openai.com/v1/chat/completions';
+		case ChatModelService.OLLAMA:
+			return 'http://127.0.0.1:11434/api/chat';
+		case ChatModelService.LMSTUDIO:
+			return 'http://127.0.0.1:1234/v1/chat/completions';
+		case ChatModelService.LOCALAI:
+			return 'http://127.0.0.1:1234/v1/chat/completions';
+		case ChatModelService.WPCOM_OPENAI:
+			return 'https://public-api.wordpress.com/wpcom/v2/openai-proxy/v1/chat/completions';
+		default:
+			return 'https://public-api.wordpress.com/wpcom/v2/jetpack-ai-query';
 	}
-	return 'https://public-api.wordpress.com/wpcom/v2/jetpack-ai-query';
 }
 
 // reformat the history based on what the model supports
@@ -145,7 +170,10 @@ const formatHistory = ( history, model ) => {
 };
 
 function getDefaultTemperature( service, model ) {
-	if ( service === ChatModelService.GROQ && model === ChatModelService.LLAMA3_70B_8192 ) {
+	if (
+		service === ChatModelService.GROQ &&
+		model === ChatModelService.LLAMA3_70B_8192
+	) {
 		// arbitrary difference for testing
 		return 0.1;
 	}
@@ -153,7 +181,10 @@ function getDefaultTemperature( service, model ) {
 }
 
 function getDefaultMaxTokens( service, model ) {
-	if ( service === ChatModelService.GROQ && model === ChatModelService.LLAMA3_70B_8192 ) {
+	if (
+		service === ChatModelService.GROQ &&
+		model === ChatModelService.LLAMA3_70B_8192
+	) {
 		return 8192;
 	}
 	return 4096;
@@ -199,7 +230,8 @@ function formatMessages(
 class ChatModel {
 	constructor( { apiKey, service } ) {
 		this.service = service ?? ChatModelService.getDefault();
-		this.apiKey = apiKey ?? ChatModelService.getDefaultApiKey( this.service );
+		this.apiKey =
+			apiKey ?? ChatModelService.getDefaultApiKey( this.service );
 	}
 
 	getDefaultModel() {
@@ -218,24 +250,27 @@ class ChatModel {
 	 * A higher level call to the chat completions API. This method formats the history, sets defaults,
 	 * calls the API, and returns the assistant response message.
 	 *
-	 * @param {string}        model           The model to use
-	 * @param {Array<Object>} messages        The history of messages (OpenAI Chat Completion format)
-	 * @param {Array<Object>} tools           The tools to use (Swagger/JSONSchema format)
-	 * @param {string}        systemPrompt    The system prompt
-	 * @param {string}        agentLoopPrompt The agent loop prompt
-	 * @param {number}        temperature     The temperature to use
-	 * @param {number}        max_tokens      The maximum number of tokens to generate
+	 * @param {Object}        params                 The parameters for the API call
+	 * @param {string}        params.model           The model to use
+	 * @param {Array<Object>} params.messages        The history of messages (OpenAI Chat Completion format)
+	 * @param {Array<Object>} params.tools           The tools to use (Swagger/JSONSchema format)
+	 * @param {string}        params.systemPrompt    The system prompt
+	 * @param {string}        params.agentLoopPrompt The agent loop prompt
+	 * @param {number}        params.temperature     The temperature to use
+	 * @param {number}        params.maxTokens       The maximum number of tokens to generate
+	 * @param {string}        params.feature         The WPCOM feature slug for this product (WPCOM endpoints only)
 	 * @return {Promise<Object>} The response message
 	 */
-	async run(
+	async run( {
 		model,
 		messages,
 		tools,
 		systemPrompt,
 		agentLoopPrompt,
 		temperature,
-		max_tokens
-	) {
+		maxTokens,
+		feature,
+	} ) {
 		if ( ! messages || ! messages.length ) {
 			throw new Error( 'Missing history' );
 		}
@@ -250,7 +285,8 @@ class ChatModel {
 		);
 		temperature =
 			temperature ?? getDefaultTemperature( this.service, model );
-		max_tokens = max_tokens ?? getDefaultMaxTokens( this.service, model );
+		const max_tokens =
+			maxTokens ?? getDefaultMaxTokens( this.service, model );
 
 		const response = await this.call( {
 			model,
@@ -258,6 +294,7 @@ class ChatModel {
 			max_tokens,
 			messages,
 			tools,
+			feature,
 		} );
 
 		const choice = response.choices[ 0 ];
@@ -284,6 +321,7 @@ class ChatModel {
 	 * @param {Array<Object>} request.messages    The messages to use
 	 * @param {Array<Object>} request.tools       The tools to use
 	 * @param {string}        request.tool_choice The tool to use
+	 * @param {string}        request.feature     The WPCOM feature slug for this product (WPCOM endpoints only)
 	 *
 	 * @return {Promise<Object>} The response object
 	 */
@@ -294,6 +332,7 @@ class ChatModel {
 		messages,
 		tools,
 		tool_choice = null,
+		feature,
 	} ) {
 		const params = {
 			stream: false,
@@ -314,8 +353,22 @@ class ChatModel {
 			};
 		}
 
-		if ( ChatModelService.WPCOM === this.service ) {
-			params.feature = 'big-sky';
+		const headers = {
+			Authorization: `Bearer ${ this.apiKey }`,
+			'Content-Type': 'application/json',
+			'Access-Control-Request-Headers':
+				'authorization,content-type,X-WPCOM-AI-Feature',
+		};
+
+		if (
+			feature &&
+			[
+				ChatModelService.WPCOM_JETPACK_AI,
+				ChatModelService.WPCOM_OPENAI,
+			].includes( this.service )
+		) {
+			// params.feature = feature;
+			headers[ 'X-WPCOM-AI-Feature' ] = feature;
 		}
 
 		console.log(
@@ -326,10 +379,7 @@ class ChatModel {
 			getServiceChatCompletionUrl( this.service ),
 			{
 				method: 'POST',
-				headers: {
-					Authorization: `Bearer ${ this.apiKey }`,
-					'Content-Type': 'application/json',
-				},
+				headers,
 				body: JSON.stringify( params ),
 			}
 		);

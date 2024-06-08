@@ -1,6 +1,6 @@
 {
 	"name": "@automattic/big-sky-agents",
-	"version": "1.0.17",
+	"version": "1.0.25",
 	"description": "The Big Sky Agent Framework",
 	"repository": {
 		"type": "git",
@@ -14,13 +14,26 @@
 		"dist"
 	],
 	"types": "dist/index.d.ts",
+	"husky": {
+		"hooks": {
+			"pre-commit": "lint-staged",
+			"pre-push": "npm test"
+		}
+	},
+	"lint-staged": {
+		"*.{js,json,ts,tsx,yml,yaml}": [
+			"npm run lint:fix"
+		]
+	},
 	"scripts": {
 		"build": "rollup -c",
 		"dev": "rollup -c -w",
+		"lint": "eslint --ext .ts,.tsx,.js,.jsx src",
+		"lint:fix": "eslint --ext .ts,.tsx,.js,.jsx src --fix",
 		"test": "jest",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build",
-		"prepare": "npm run build"
+		"prepare": "husky && npm run build"
 	},
 	"devDependencies": {
 		"@babel/eslint-parser": "^7.24.7",
@@ -30,6 +43,7 @@
 		"@mdx-js/react": "^3.0.1",
 		"@rollup/plugin-babel": "^6.0.4",
 		"@rollup/plugin-commonjs": "^26.0.1",
+		"@rollup/plugin-eslint": "^9.0.5",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^15.2.3",
 		"@rollup/plugin-typescript": "^11.1.6",
@@ -44,6 +58,7 @@
 		"@storybook/test": "8.1.6",
 		"@storybook/types": "8.1.6",
 		"@testing-library/user-event": "^14.5.2",
+		"@typescript-eslint/eslint-plugin": "^7.12.0",
 		"@vitejs/plugin-react": "^4.3.0",
 		"@vtaits/react-fake-browser-ui": "^1.0.0",
 		"@wordpress/api-fetch": "^7.0.0",
@@ -51,6 +66,7 @@
 		"@wordpress/components": "^28.0.0",
 		"@wordpress/data": "^10.0.0",
 		"@wordpress/env": "^10.0.0",
+		"@wordpress/eslint-plugin": "^19.0.0",
 		"@wordpress/i18n": "^5.0.0",
 		"@wordpress/icons": "^10.0.0",
 		"@wordpress/prettier-config": "^4.0.0",
@@ -65,7 +81,11 @@
 		"classnames": "^2.5.1",
 		"deepmerge": "^4.3.1",
 		"dotenv": "^16.4.5",
+		"eslint-plugin-jsx-a11y": "^6.8.0",
+		"eslint-plugin-react": "^7.34.2",
+		"eslint-plugin-react-hooks": "^4.6.2",
 		"express": "^4.19.2",
+		"husky": "^9.0.11",
 		"mini-css-extract-plugin": "^2.9.0",
 		"nanoid": "^5.0.7",
 		"postcss-preset-env": "^9.5.14",
@@ -85,7 +105,7 @@
 		"tail": "^2.2.6",
 		"ts-loader": "^9.5.1",
 		"ts-node": "^10.9.2",
-		"typescript": "^5.4.5",
+		"typescript": "^5.3.3",
 		"vite-plugin-dts": "^3.9.1",
 		"webpack": "^5.91.0"
 	},

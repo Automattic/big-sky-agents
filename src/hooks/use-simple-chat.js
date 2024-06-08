@@ -6,8 +6,7 @@ import { useCallback, useRef, useState } from 'react';
 /**
  * Internal dependencies
  */
-// import { store as agentStore } from '../../store/index.js';
-
+import useChatModel from './use-chat-model.js';
 import uuidv4 from '../utils/uuid.js';
 
 const formatToolResultContent = ( result ) => {
@@ -19,7 +18,7 @@ const formatToolResultContent = ( result ) => {
 		: `${ result }`;
 };
 
-const useSimpleChat = ( { chatModel, model, temperature } ) => {
+const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 	const [ started, setStarted ] = useState( false );
 	const [ running, setRunning ] = useState( false );
 	const [ error, setError ] = useState();
@@ -28,6 +27,7 @@ const useSimpleChat = ( { chatModel, model, temperature } ) => {
 	const [ enabled, setEnabled ] = useState( true );
 	const [ assistantMessage, setAssistantMessage ] = useState();
 	const runningRef = useRef( false );
+	const chatModel = useChatModel( { token, service } );
 
 	const call = useCallback( ( name, args, id ) => {
 		console.log( '🤖 Adding Tool Call', name, args, id );
@@ -62,38 +62,45 @@ const useSimpleChat = ( { chatModel, model, temperature } ) => {
 		] );
 	}, [] );
 
-	const setToolCallResultSync = useCallback( ( toolCallId, result ) => {
-		console.log( '🤖 Setting Tool Call Result', toolCallId, result );
-		setHistory( ( messages ) => {
-			const newCall = {
-				role: 'tool',
-				tool_call_id: toolCallId,
-				content: formatToolResultContent( result ),
-			};
-			// careful to insert in the correct order
-			const toolCallMessage = messages.find( ( callMessage ) => {
-				return (
-					callMessage.role === 'assistant' &&
-					callMessage.tool_calls?.some(
-						( toolCall ) => toolCall.id === toolCallId
-					)
-				);
+	const setToolCallResultSync = useCallback(
+		( toolCallId, result ) => {
+			console.log( '🤖 Setting Tool Call Result', toolCallId, result );
+			setHistory( ( messages ) => {
+				const newCall = {
+					role: 'tool',
+					tool_call_id: toolCallId,
+					content: formatToolResultContent( result ),
+				};
+				// careful to insert in the correct order
+				const toolCallMessage = messages.find( ( callMessage ) => {
+					return (
+						callMessage.role === 'assistant' &&
+						callMessage.tool_calls?.some(
+							( toolCall ) => toolCall.id === toolCallId
+						)
+					);
+				} );
+				if ( toolCallMessage ) {
+					const index = messages.indexOf( toolCallMessage );
+					return [
+						...messages.slice( 0, index + 1 ),
+						newCall,
+						...messages.slice( index + 1 ),
+					];
+				}
+				return [ ...messages, newCall ];
 			} );
-			if ( toolCallMessage ) {
-				const index = messages.indexOf( toolCallMessage );
-				return [
-					...messages.slice( 0, index + 1 ),
-					newCall,
-					...messages.slice( index + 1 ),
-				];
-			}
-			return [ ...messages, newCall ];
-		} );
-		console.warn("filtering toolcalls to remove ID", toolCallId, pendingToolRequests );
-		setPendingToolRequests( ( toolCalls ) =>
-			toolCalls.filter( ( toolCall ) => toolCall.id !== toolCallId )
-		);
-	}, [] );
+			console.warn(
+				'filtering toolcalls to remove ID',
+				toolCallId,
+				pendingToolRequests
+			);
+			setPendingToolRequests( ( toolCalls ) =>
+				toolCalls.filter( ( toolCall ) => toolCall.id !== toolCallId )
+			);
+		},
+		[ pendingToolRequests ]
+	);
 
 	const setToolCallResult = useCallback(
 		( toolCallId, result ) => {
@@ -166,23 +173,26 @@ const useSimpleChat = ( { chatModel, model, temperature } ) => {
 					error,
 					enabled,
 					running,
-					history,
+					messages,
 					pendingToolRequests,
 					assistantMessage,
+					feature,
 				} );
 				return;
 			}
 
 			runningRef.current = true;
 			setRunning( true );
-			chatModel.run(
-				model,
-				messages,
-				tools,
-				systemPrompt,
-				nextStepPrompt,
-				temperature
-			)
+			chatModel
+				.run( {
+					model,
+					messages,
+					tools,
+					systemPrompt,
+					nextStepPrompt,
+					temperature,
+					feature,
+				} )
 				.then( ( message ) => {
 					runningRef.current = false;
 					setRunning( false );
@@ -217,6 +227,7 @@ const useSimpleChat = ( { chatModel, model, temperature } ) => {
 			pendingToolRequests,
 			running,
 			temperature,
+			feature,
 		]
 	);
 

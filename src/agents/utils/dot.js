@@ -70,7 +70,9 @@ function resolveDefs( c, syn, block, def ) {
 					value.replace( syn.defineParams, ( _2, param, v ) => {
 						def[ code ] = { arg: param, text: v };
 					} );
-					if ( ! ( code in def ) ) def[ code ] = value;
+					if ( ! ( code in def ) ) {
+						def[ code ] = value;
+					}
 				} else {
 					new Function( 'def', `def['${ code }']=${ value }` )( def );
 				}
@@ -154,7 +156,9 @@ export function compile( tmpl, def ) {
 				return elseCase ? "';}else{out+='" : "';}out+='";
 			} )
 			.replace( currentSyntax.iterate, ( _, arr, vName, iName ) => {
-				if ( ! arr ) return "';} } out+='";
+				if ( ! arr ) {
+					return "';} } out+='";
+				}
 				sid++;
 				const defI = iName ? `let ${ iName }=-1;` : '';
 				const incI = iName ? `${ iName }++;` : '';
@@ -213,17 +217,21 @@ function checkEncoders( c, encoders ) {
 	const typ = encoderType[ c.selfContained ];
 	for ( const enc in encoders ) {
 		const e = c.encoders[ enc ];
-		if ( ! e ) throw new Error( `unknown encoder "${ enc }"` );
-		if ( typeof e !== typ )
+		if ( ! e ) {
+			throw new Error( `unknown encoder "${ enc }"` );
+		}
+		if ( typeof e !== typ ) {
 			throw new Error(
 				`selfContained ${ c.selfContained }: encoder type must be "${ typ }"`
 			);
+		}
 	}
 }
 
 function addEncoders( c, encoders ) {
 	let s = '';
-	for ( const enc in encoders )
+	for ( const enc in encoders ) {
 		s += `const ${ c.encodersPrefix }${ enc }=${ c.encoders[ enc ] };`;
+	}
 	return s;
 }

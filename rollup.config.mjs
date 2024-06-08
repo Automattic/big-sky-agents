@@ -5,6 +5,7 @@ import dts from 'rollup-plugin-dts';
 import { babel } from '@rollup/plugin-babel';
 import sass from 'rollup-plugin-sass';
 import json from '@rollup/plugin-json';
+import eslint from '@rollup/plugin-eslint';
 import preserveDirectives from 'rollup-preserve-directives';
 import packageJson from './package.json' assert { type: 'json' };
 
@@ -24,6 +25,15 @@ export default [
 			},
 		],
 		plugins: [
+			eslint({
+				throwOnError: true,
+				exclude: [
+					'node_modules/**',
+					'dist/**',
+					'src/**/*.scss',
+					'src/**/*.json',
+				],
+			}),
 			resolve(),
 			json(),
 			preserveDirectives(),
