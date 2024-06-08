@@ -356,7 +356,8 @@ class ChatModel {
 		const headers = {
 			Authorization: `Bearer ${ this.apiKey }`,
 			'Content-Type': 'application/json',
-			'Access-Control-Request-Headers': 'authorization,content-type,X-WPCOM-AI-Feature',
+			'Access-Control-Request-Headers':
+				'authorization,content-type,X-WPCOM-AI-Feature',
 		};
 
 		if (
