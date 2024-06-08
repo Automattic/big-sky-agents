@@ -57,7 +57,7 @@ export const controls = {
  * @param {string}        request.model
  * @param {number}        request.temperature
  * @param {number}        request.maxTokens
- * @param {Array<Object>} request.history
+ * @param {Array<Object>} request.messages
  * @param {Array<Object>} request.tools
  * @param {Object}        request.systemPrompt
  * @param {Object}        request.nextStepPrompt
