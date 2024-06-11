@@ -167,4 +167,4 @@ The roadmap is roughly the following (in no particular order):
 -   Lots of documentation and examples needed.
 -   Add "back-end" agents which have a model limited set of tools but can operate in the background, e.g. via wp-cron, as distinguished from front-end agents which can manipulate blocks etc.
 -   Add more formal hooks/filters and other integration points
--   Add "Plans", which have multiple steps potentially driven by separate agents. e.g. the "Build my WPCOM Site" plan might include setting up the home page, choosing a theme and building some content, but along the way the user can share files and screenshots of the kind of thing they want, guiding the experience.
+-   Add "Plans", which have multiple steps potentially driven by separate agents.

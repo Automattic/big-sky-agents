@@ -168,16 +168,16 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 				pendingToolRequests.length > 0 || // waiting on tool calls
 				assistantMessage // the assistant has a question for the user
 			) {
-				console.warn( 'not running agent', {
-					chatModel,
-					error,
-					enabled,
-					running,
-					messages,
-					pendingToolRequests,
-					assistantMessage,
-					feature,
-				} );
+				// console.warn( 'not running agent', {
+				// 	chatModel,
+				// 	error,
+				// 	enabled,
+				// 	running,
+				// 	messages,
+				// 	pendingToolRequests,
+				// 	assistantMessage,
+				// 	feature,
+				// } );
 				return;
 			}
 
