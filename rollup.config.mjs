@@ -25,22 +25,23 @@ export default [
 			},
 		],
 		plugins: [
-			eslint({
+			eslint( {
 				throwOnError: true,
 				exclude: [
 					'node_modules/**',
 					'dist/**',
 					'src/**/*.scss',
 					'src/**/*.json',
+					'src/**/*.riv',
 				],
-			}),
+			} ),
 			resolve(),
 			json(),
 			preserveDirectives(),
 			commonjs(),
 			babel( {
 				babelHelpers: 'bundled',
-				extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
+				extensions: [ '.ts', '.tsx', '.js', '.jsx', '.riv' ],
 			} ),
 			sass( {
 				output: 'dist/style.css',

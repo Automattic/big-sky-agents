@@ -10,6 +10,10 @@ export default defineConfig( {
 	resolve: {
 		alias: hq.get( 'rollup' ),
 	},
+	assetsInclude: [ '**/*.riv' ],
+	optimizeDeps: {
+		include: [ '@rive-app/react-canvas', 'preline' ],
+	},
 	plugins: [
 		react(),
 		dts( { rollupTypes: true, exclude: [ '**/*.stories.(ts|tsx)' ] } ),
