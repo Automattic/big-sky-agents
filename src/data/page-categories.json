@@ -1,0 +1,67 @@
+[
+	{
+		"title": "About",
+		"description": "About page",
+		"slug": "about"
+	},
+	{
+		"title": "Contact",
+		"description": "Contact page",
+		"slug": "contact"
+	},
+	{
+		"title": "Home",
+		"description": "Home page",
+		"slug": "home"
+	},
+	{
+		"title": "Services",
+		"description": "Services page",
+		"slug": "services"
+	},
+	{
+		"title": "Work",
+		"description": "Work page",
+		"slug": "work"
+	},
+	{
+		"title": "Blog",
+		"description": "Blog page",
+		"slug": "blog"
+	},
+	{
+		"title": "Portfolio",
+		"description": "Portfolio page",
+		"slug": "portfolio"
+	},
+	{
+		"title": "Testimonials",
+		"description": "Testimonials page",
+		"slug": "testimonials"
+	},
+	{
+		"title": "Team",
+		"description": "Team page",
+		"slug": "team"
+	},
+	{
+		"title": "FAQ",
+		"description": "FAQ page",
+		"slug": "faq"
+	},
+	{
+		"title": "Pricing",
+		"description": "Pricing page",
+		"slug": "pricing"
+	},
+	{
+		"title": "Terms",
+		"description": "Terms page",
+		"slug": "terms"
+	},
+	{
+		"title": "Privacy",
+		"description": "Privacy page",
+		"slug": "privacy"
+	}
+]

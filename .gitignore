@@ -1,0 +1,21 @@
+dist
+node_modules
+vendor
+
+# Operating system specific files
+.DS_Store
+Thumbs.db
+
+# Local overrides
+.wp-env.override.json
+/.idea
+debug.log
+.env
+
+# LocalAI related
+local-ai
+llama.log
+
+# ignore anything in ./models that's NOT a yaml file
+models/*
+!models/*.yaml

@@ -1,0 +1,6 @@
+@import '@wordpress/base-styles/_variables';
+@import '@wordpress/components/build-style/style.css';
+
+body {
+	font-family: $default-font;
+}

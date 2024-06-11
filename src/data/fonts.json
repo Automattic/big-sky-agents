@@ -1,0 +1,67 @@
+[
+	{
+		"name": "Bricolage",
+		"description": "Bold serif for headings; clean sans-serif for body.",
+		"categories": [ "modern", "bold", "readable", "impactful" ]
+	},
+	{
+		"name": "DM Serif & DM Sans",
+		"description": "Modern serif for headings; humanist sans-serif for body.",
+		"categories": [ "modern", "refined", "readable", "impactful" ]
+	},
+	{
+		"name": "Figtree",
+		"description": "Bold, condensed sans-serif for headings; standard sans-serif for body.",
+		"categories": [ "modern", "efficient", "cohesive", "readable" ]
+	},
+	{
+		"name": "Fjalla",
+		"description": "Bold, extended sans-serif for headings; classic sans-serif for body.",
+		"categories": [ "bold", "clear", "contemporary", "accessible" ]
+	},
+	{
+		"name": "Fraunces",
+		"description": "Elegant serif for headings; open sans-serif for body.",
+		"categories": [ "elegant", "sophisticated", "professional", "readable" ]
+	},
+	{
+		"name": "Gabarito",
+		"description": "Bold uppercase sans-serif for headings; lighter sans-serif for body.",
+		"categories": [ "bold", "straightforward", "clean", "uncluttered" ]
+	},
+	{
+		"name": "Ibarra & Inter",
+		"description": "Elegant, high-contrast serif for headings; lighter serif for body.",
+		"categories": [ "elegant", "sophisticated", "classic", "balanced" ]
+	},
+	{
+		"name": "Instrument Serif & Noto Sans Mono",
+		"description": "Bold serif for headlines; restrained serif for body; sans-serif for buttons.",
+		"categories": [ "bold", "grand", "impactful", "strategic" ]
+	},
+	{
+		"name": "Instrument Serif & Urbanist",
+		"description": "Traditional serif for headings; lighter serif for body; bold sans-serif for buttons.",
+		"categories": [ "elegant", "functional", "trustworthy", "consistent" ]
+	},
+	{
+		"name": "Rufina & PT Serif",
+		"description": "Bold, elegant serif for headings; classic serif for body; sans-serif for buttons.",
+		"categories": [ "bold", "elegant", "classic", "professional" ]
+	},
+	{
+		"name": "Sora",
+		"description": "Bold sans-serif for headings; lighter sans-serif for body.",
+		"categories": [ "modern", "clean", "efficient", "forward-thinking" ]
+	},
+	{
+		"name": "Syne",
+		"description": "Bold sans-serif for headings; lighter sans-serif for body; regular sans-serif for buttons.",
+		"categories": [ "bold", "sophisticated", "modern", "professional" ]
+	},
+	{
+		"name": "Vina Sans & Rubik",
+		"description": "Bold sans-serif for headings; classic sans-serif for body; Vina Sans for buttons.",
+		"categories": [ "bold", "contemporary", "sleek", "elegant" ]
+	}
+]
