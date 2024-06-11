@@ -36,6 +36,11 @@ export { default as ChatModelControls } from './components/chat-model-controls.j
 export { default as AgentsDemoPage } from './components/agents-demo-page.jsx';
 
 /**
+ * Hooks
+ */
+export { default as useChatIcon } from './hooks/use-chat-icon.js';
+
+/**
  * Core Classes
  */
 export { default as Agent } from './agents/agent.js';
