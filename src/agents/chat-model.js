@@ -321,7 +321,8 @@ class ChatModel {
 	 * @param {Array<Object>} request.messages    The messages to use
 	 * @param {Array<Object>} request.tools       The tools to use
 	 * @param {string}        request.tool_choice The tool to use
-	 * @param {string}        request.feature     The WPCOM feature slug for this product (WPCOM endpoints only)
+	 * @param {string}        request.feature     The feature slug for this product (WPCOM endpoints only)
+	 * @param {string}        request.session_id  The session ID (WPCOM endpoints only)
 	 *
 	 * @return {Promise<Object>} The response object
 	 */
@@ -333,6 +334,7 @@ class ChatModel {
 		tools,
 		tool_choice = null,
 		feature,
+		session_id,
 	} ) {
 		const params = {
 			stream: false,
@@ -356,19 +358,24 @@ class ChatModel {
 		const headers = {
 			Authorization: `Bearer ${ this.apiKey }`,
 			'Content-Type': 'application/json',
-			'Access-Control-Request-Headers':
-				'authorization,content-type,X-WPCOM-AI-Feature',
 		};
 
-		if (
-			feature &&
-			[
-				ChatModelService.WPCOM_JETPACK_AI,
-				ChatModelService.WPCOM_OPENAI,
-			].includes( this.service )
-		) {
-			// params.feature = feature;
-			headers[ 'X-WPCOM-AI-Feature' ] = feature;
+		if ( feature ) {
+			if ( ChatModelService.WPCOM_JETPACK_AI === this.service ) {
+				params.feature = feature;
+			} else if ( ChatModelService.WPCOM_OPENAI === this.service ) {
+				headers[ 'X-WPCOM-AI-Feature' ] = feature;
+				headers[ 'Access-Control-Request-Headers' ] =
+					'authorization,content-type,X-WPCOM-AI-Feature';
+			}
+		}
+
+		if ( session_id ) {
+			if ( ChatModelService.WPCOM_JETPACK_AI === this.service ) {
+				params.session_id = session_id;
+			} else if ( ChatModelService.WPCOM_OPENAI === this.service ) {
+				headers[ 'X-WPCOM-Session-ID' ] = session_id;
+			}
 		}
 
 		console.log(
