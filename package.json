@@ -116,8 +116,5 @@
 	},
 	"publishConfig": {
 		"registry": "https://npm.pkg.github.com"
-	},
-	"dependencies": {
-		"@automattic/big-sky-agents": "^1.0.5"
 	}
 }
