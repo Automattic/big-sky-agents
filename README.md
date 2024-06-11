@@ -64,24 +64,18 @@ npm link @automattic/big-sky-agents
 
 > [!NOTE] This section applies only to members of the Automattic Github organization.
 
-You will need to be authenticated to Github's NPM repository using a Personal Access Token.
-
-1. Create a Github [Personal Access Token](https://github.com/settings/tokens). Be sure to select a "Classic" token, not a fine-grained one. Select "No Expiration" unless you want your dev environment to break by surprise in the future.
-
-2. Select at least the "read:packages" scope. If you want to use this token to publish the package, then also select the "write:packages" scope.
-
-3. Log into NPM on the command line:
+You will need to be authenticated to NPM.
 
 ```bash
-npm login --scope=@automattic --auth-type=legacy --registry=https://npm.pkg.github.com
-Username: yourgithubusername
-Password: # a spinner will appear here, just paste your token
+npm login --scope=@automattic --registry=https://registry.npmjs.org/
 ```
+
+Enter your npmjs.com credentials when prompted.
 
 Now you should be able to publish the package. Don't forget to bump the version in `package.json` first!
 
 ```bash
-npm publish
+npm publish --access public
 ```
 
 You can [view the updated package here](https://github.com/Automattic/big-sky-agents/pkgs/npm/big-sky-agents) to verify.
@@ -169,9 +163,8 @@ The roadmap is roughly the following (in no particular order):
 
 -   Needs work to get CLI working again.
 -   MLFlow and/or LangSmith integration for prompt monitoring and evaluation.
--   Editor integrations (e.g. to be used in the editor)
+-   Gutenberg integrations?
 -   Lots of documentation and examples needed.
--   Add more self-hosted and WPCOM-hosted remote tools, like our Odie knowledge base for the WP Support Bot.
 -   Add "back-end" agents which have a model limited set of tools but can operate in the background, e.g. via wp-cron, as distinguished from front-end agents which can manipulate blocks etc.
 -   Add more formal hooks/filters and other integration points
 -   Add "Plans", which have multiple steps potentially driven by separate agents. e.g. the "Build my WPCOM Site" plan might include setting up the home page, choosing a theme and building some content, but along the way the user can share files and screenshots of the kind of thing they want, guiding the experience.
