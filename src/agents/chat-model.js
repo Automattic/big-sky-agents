@@ -40,7 +40,7 @@ export const ChatModelService = {
 
 export const ChatModelType = {
 	GPT_4_TURBO: 'gpt-4-turbo',
-	GPT_4O: 'gpt-4o-2024-05-13',
+	GPT_4O: 'gpt-4o',
 	LLAMA3_70B_8192: 'llama3-70b-8192',
 	LLAMA3_70B_8192_WPCOM: 'llama3-70b',
 	GEMMA_7b_INSTRUCT: 'gemma:7b-instruct-q5_K_M',

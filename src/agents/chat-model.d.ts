@@ -16,7 +16,7 @@ declare class ChatModelService {
 
 declare class ChatModelType {
 	static readonly GPT_4_TURBO: 'gpt-4-turbo';
-	static readonly GPT_4O: 'gpt-4o-2024-05-13';
+	static readonly GPT_4O: 'gpt-4o';
 	static readonly LLAMA3_70B_8192: 'llama3-70b-8192';
 	static readonly LLAMA3_70B_8192_WPCOM: 'llama3-70b';
 	static readonly GEMMA_7b_INSTRUCT: 'gemma:7b-instruct-q5_K_M';
