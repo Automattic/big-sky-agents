@@ -1,6 +1,5 @@
 /**
- * This tool produces 3 possible responses:
- * * a specific set of coordinates
+ * TODO
  */
 class Geocoder {
 	constructor( mapboxApiKey ) {

@@ -33,8 +33,7 @@ export { default as useReduxAgentToolkit } from './hooks/use-redux-agent-toolkit
 export { default as AgentUI } from './components/agent-ui.jsx';
 export { default as AgentControls } from './components/agent-controls.jsx';
 export { default as ChatModelControls } from './components/chat-model-controls.jsx';
-export { default as AgentsDemoPageJetpack } from './components/agents-demo-page-jetpack.jsx';
-export { default as AgentsDemoPageStandalone } from './components/agents-demo-page-standalone.jsx';
+export { default as AgentsDemoPage } from './components/agents-demo-page.jsx';
 
 /**
  * Core Classes

@@ -20,6 +20,10 @@ import {
 	WORDPRESS_TUTOR_AGENT_ID,
 } from '../agents/default-agents.js';
 
+/**
+ * This is an example of switching dynamically between agents based on the Current Agent. TODO: some kind of registration mechanism.
+ */
+
 const useCurrentAgent = ( { chat, toolkit } ) => {
 	return useMemo( () => {
 		switch ( toolkit.values.agent.id ) {

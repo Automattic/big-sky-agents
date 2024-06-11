@@ -18,6 +18,7 @@ import ToolNotices from './tool-notices.jsx';
 import { ASK_USER_TOOL_NAME } from '../agents/tools/ask-user.js';
 import { INFORM_TOOL_NAME } from '../agents/tools/inform-user.js';
 import { CONFIRM_TOOL_NAME } from '../agents/tools/confirm.js';
+import './agent-ui.scss';
 
 const AgentMessage = ( { message, isActive = true, ...props } ) =>
 	isActive && (

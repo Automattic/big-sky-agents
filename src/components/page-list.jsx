@@ -1,4 +1,5 @@
 import { Icon, MenuGroup, MenuItem } from '@wordpress/components';
+import './page-list.scss';
 
 function PageList( { pages, disabled, selectedPage, onSelectPage } ) {
 	return (

@@ -2,42 +2,42 @@
 
 ## Overview
 
-This is an NPM package intended to power AI experiences across Automattic.
+Big Sky Agents is a front-end library for building AI-enhanced applications. It is designed to work with Gutenberg UI components and WordPress.com APIs and authentication. It exists to provide a consistent AI UX across Automattic's products and to distribute innovations across projects and platforms.
 
 Links:
  * [Package Homepage](https://github.com/Automattic/big-sky-agents/pkgs/npm/big-sky-agents)
  * [Complete React Example](https://github.com/Automattic/big-sky-agents-react) - an example of using this library in a standalone React app
 
-## Prerequisites
+## Getting Started
 
-Since this package is published privately on Github, you will need to perform the following steps before integrating it with your app:
-
-1. Create a Github [Personal Access Token](https://github.com/settings/tokens). Be sure to select a "Classic" token, not a fine-grained one. Select "No Expiration" unless you want your dev environment to break by surprise in the future.
-
-2. Select at least the "read:packages" scope. If you want to use this token to publish the package, then also select the "write:packages" scope.
-
-3. Log into NPM on the command line:
+To use this package in your project, you can install it via npm:
 
 ```bash
-npm login --scope=@automattic --auth-type=legacy --registry=https://npm.pkg.github.com
-Username: yourgithubusername
-Password: # a spinner will appear here, just paste your token
+npm install
 ```
 
-## Publishing the package
+To view the components live, you can run Storybook.
+
+## Storybook
+
+You can interact with the components in Storybook. For convenience, you can set the API key in .env like this. It is important to include the `STORYBOOK_` prefix for the variable to be picked up:
+
 
 ```bash
-npm publish
+STORYBOOK_OPENAI_API_KEY="sk-..."
 ```
 
-## Adding to a project
+Then run Storybook:
 
-Because this is a private Github repo, you have to add the dependency like this:
+```bash
+npm run storybook
+```
 
+## Developing against this package locally
 
-## Developing
+These instructions show you how to incorporate this package into another project for development, for example a WordPress plugin or React app.
 
-These instructions show you how to incorporate this package into another project for development.
+Note that Electron doesn't currently work in this mode due to strangeness with node gyp linking.
 
 First, make sure you're using the same Node version for both apps, e.g.
 
@@ -60,20 +60,31 @@ In the other project:
 npm link @automattic/big-sky-agents
 ```
 
-## Storybook
+## Publishing the package
 
-You can interact with the components in Storybook. For convenience, you can set the API key in .env like this. It is important to include the `STORYBOOK_` prefix for the variable to be picked up:
+> [!NOTE] This section applies only to members of the Automattic Github organization.
 
+You will need to be authenticated to Github's NPM repository using a Personal Access Token.
+
+1. Create a Github [Personal Access Token](https://github.com/settings/tokens). Be sure to select a "Classic" token, not a fine-grained one. Select "No Expiration" unless you want your dev environment to break by surprise in the future.
+
+2. Select at least the "read:packages" scope. If you want to use this token to publish the package, then also select the "write:packages" scope.
+
+3. Log into NPM on the command line:
 
 ```bash
-STORYBOOK_OPENAI_API_KEY="sk-..."
+npm login --scope=@automattic --auth-type=legacy --registry=https://npm.pkg.github.com
+Username: yourgithubusername
+Password: # a spinner will appear here, just paste your token
 ```
 
-Then run Storybook:
+Now you should be able to publish the package. Don't forget to bump the version in `package.json` first!
 
 ```bash
-npm run storybook
+npm publish
 ```
+
+You can [view the updated package here](https://github.com/Automattic/big-sky-agents/pkgs/npm/big-sky-agents) to verify.
 
 ## LocalAI
 
@@ -83,15 +94,15 @@ Make sure your .env has an entry for `HUGGINGFACEHUB_API_TOKEN`.
 
 I've only tried this on a Mac. Kinda works, might need a better model, but they're only going to improve. This is the worst they'll ever be ;)
 
-1. Update your .env with the correct address and settings. Alternatively, you can run `./local-ai --address=":1234" --cors --context-size=8192`
+1. Install deps: `brew install abseil grpc llama.cpp`
+
+1. Update your .env with the correct address and settings:
 
 ```bash
 LOCALAI_ADDRESS=127.0.0.1:1234
 LOCALAI_CONTEXT_SIZE=8192
 LOCALAI_CORS=true
 ```
-
-2. Install deps: `brew install abseil grpc llama.cpp`
 
 3. Download local-ai binary:
 
@@ -117,11 +128,11 @@ Alternatively, without the `.env` vars:
 
 ## Features
 
-The Big Sky Agent Framework is a set of core libraries and UI adapters to Gutenberg components which enables simple, pluggable, isolated agents and tools that can collaborate on shared documents and tasks with the user. It's similar in some ways to LangChainJS but has no dependencies, and it is more developer-friendly and less abstract than more general toolkits.
+The Big Sky Agent Framework is a set of core libraries and UI adapters to Gutenberg components which enables simple, pluggable, isolated agents and tools that can collaborate on shared data structures and tasks with the user. It's similar in some ways to LangChainJS/LangGraph but has no dependencies other than WordPress' core libraries (@wordpress/components, etc). It is intended to be accessible to developers at all levels of experience - but we're not there yet.
 
 The Big Sky Agent Framework currently has the following features:
 
--   Goals. At the top level, there is always a current goal (and, in the future, a current plan). This, along with the prompt, data and tools, gives the agent a clear idea of what to do next.
+-   Goals. At the top level, there is a current Goal (and, in the future, a current Plan). This, along with the prompt, data and tools, gives the Agent a clear idea of what to do next.
 -   Chat: The Chat object exposes message history and functions to add tool calls, various kinds of messages, and invoke a Chat Completion.
 -   Agents. Agents expose tools and prompt templates, as well as lifecycle callbacks like "onStart" and "onConfirm".
     -   Wapuu: Here to understand your goal and choose the best agent to help you.
@@ -146,16 +157,11 @@ The Big Sky Agent Framework currently has the following features:
     -   [Groq](https://href.li/?https://groq.com/) (LLama 70b)
     -   [LocalAI](https://href.li/?https://github.com/mudler/LocalAI)
     -   LMStudio
--   Prompt Templating. We support two very lightweight templating languages: f-string and a fork of DoT.js. Could be extended to others. Prompt templating allows for very flexible composition and rendering of content into Markdown or other formats. This also allows us to evaluate templates more easily (as if they're models).
--   Zero-dependency. Most core Agent classes can be used outside the browser and WordPress.
--   Core WP Integrations. We have default integrations with WordPress Core Components and Data. Works in React Standalone, Redux, and Node.js (CLI) modes.
+-   Prompt Templating. We support two very lightweight templating languages: f-string and an optimized rewrite of DoT.js. Could be extended to others. Prompt templating allows for very flexible composition and rendering of content into Markdown or other formats. This also allows us to evaluate templates more easily (as if they're models).
+-   Zero-dependency. Most core Agent classes can be used outside the browser and WordPress, though UI components use `@wordpress/components`.
+-   Core WP Integrations. We have default integrations with WordPress Core Components and Data. Works in React Standalone, Redux, and Node.js (CLI) modes (latter coming soon).
 -   Pluggable. Pluggable by any WP plugin -- add your own agent, tools, or toolkit, wrapping your own core functionalit, from eCommerce to Advertising and SEO. 
 -   Multimodal. Natively multi-modal. Chat using text and images, and soon audio and video.
--   Business Friendly. One can imagine many potential vectors for growth in subscribers and/or revenue:
-    -   Hosted models and services, on a subscription or per-token basis. As the leader in the WordPress space, we naturally accrue a certain level of prestige around our solutions. We could white-label an inference service like Groq if we need to scale quickly.
-    -   Smart Private History. A service similar to OpenAI Assistants which moves the inference into our back-end, behind public-api.wordpress.com, offering history storage for learning, privacy, and optimization. This means that the more you use the service, the better it understands you.
-    -   Developer Tools. Offer consumers of our hosted models, services and storage integration with popular platforms like LangSmith and MLFlow for optimizing WordPress-based AI experiences. 
-    -   Enabling transformative new UIs. WooCommerce in particular would benefit from AI-assisted flows to enable users to manage their stores and sites with ease. No more "one size fits all" UIs; instead, users will accomplish "goals" via "flows" that ask them only the necessary questions to get to the goal.
 
 ## Roadmap
 
@@ -163,7 +169,7 @@ The roadmap is roughly the following (in no particular order):
 
 -   Needs work to get CLI working again.
 -   MLFlow and/or LangSmith integration for prompt monitoring and evaluation.
--   Editor integrations (e.g. to be used with existing Big Sky front-end)
+-   Editor integrations (e.g. to be used in the editor)
 -   Lots of documentation and examples needed.
 -   Add more self-hosted and WPCOM-hosted remote tools, like our Odie knowledge base for the WP Support Bot.
 -   Add "back-end" agents which have a model limited set of tools but can operate in the background, e.g. via wp-cron, as distinguished from front-end agents which can manipulate blocks etc.

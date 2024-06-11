@@ -1,5 +1,6 @@
 /**
  * Extracted from https://github.com/langchain-ai/langchainjs/blob/main/langchain-core/src/prompts/
+ * Under the MIT license.
  * Which in turn was extracted from Python's f-string implementation.
  * See: https://github.com/python/cpython/blob/135ec7cefbaffd516b77362ad2b2ad1025af462e/Objects/stringlib/unicode_format.h#L700-L706
  *

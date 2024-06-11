@@ -3,8 +3,11 @@ export type {
   ChatModelType,
   ChatModelService,
 } from "./agents/chat-model";
-// import ChatModel from "./agents/chat-model";
 import { ChatModelType, ChatModelService } from "./agents/chat-model";
+
+/**
+ * Hooks
+ */
 
 export declare function useAgentExecutor(options: {
   agent: Agent;
@@ -27,6 +30,10 @@ export declare function useReduxAgentToolkit(options: {
   agents: AgentConfig[];
 }): AgentToolkit;
 
+/**
+ * Chat
+ */
+
 interface ChatOptions {
   token: string | undefined;
   service: ChatModelService;
@@ -41,11 +48,17 @@ export interface Message {
   tool_calls?: ToolCall[];
 }
 
-interface MessageContentPart {
-  type: "text" | "image_url";
-  text?: string;
-  image_url?: string;
+interface TextMessageContentPart {
+  type: "text";
+  text: string;
 }
+
+interface ImageMessageContentPart {
+  type: "image_url";
+  image_url: string;
+}
+
+type MessageContentPart = TextMessageContentPart | ImageMessageContentPart;
 
 interface ToolCall {
   id: string;
@@ -100,18 +113,21 @@ interface Chat {
 /**
  * Formatter and Prompt Templates
  */
+
 export declare class Formatter {
   format(values: any): string;
 }
+
+export type FormattingEngine = (values: any) => string;
 
 export declare class StringPromptTemplate extends Formatter {
   constructor(options: {
     inputVariables: string[];
     template: string;
-    engine: any;
+    engine: FormattingEngine;
     formatters?: any;
   });
-  validate(engine: any, inputVariables: string[]): void;
+  validate(engine: FormattingEngine, inputVariables: string[]): void;
 }
 
 export declare class FStringPromptTemplate extends StringPromptTemplate {
@@ -124,8 +140,9 @@ export declare class DotPromptTemplate extends StringPromptTemplate {
 }
 
 /**
- * Agent
+ * Agents
  */
+
 declare class Agent {
   constructor(chat: Chat, toolkit: AgentToolkit);
   getId(): string;
@@ -147,13 +164,19 @@ export declare class StandardAgent extends Agent {
 /**
  * Agent Toolkit
  */
+
 interface ToolkitCallbacks {
   [toolName: string]: (args: any) => string;
 }
 
-interface AgentToolkit {
+interface Toolkit {
   onReset: () => void;
   tools: any[]; // TODO: Tool
+  values: any;
+  callbacks: ToolkitCallbacks;
+}
+
+interface AgentToolkit extends Toolkit {
   values: {
     agents: any[];
     agent: Agent;
@@ -164,11 +187,19 @@ interface AgentToolkit {
 /**
  * Agent UI
  */
+
 type AgentUIProps = {
   chat: Chat;
   agent: Agent;
   toolkit: AgentToolkit;
 };
+
+export declare function AgentUI(props: AgentUIProps): JSX.Element;
+export declare function AgentControls(props: AgentUIProps): JSX.Element;
+
+/**
+ * Chat UI
+ */
 
 type ChatModelControlsProps = {
   model: string;
@@ -181,8 +212,6 @@ type ChatModelControlsProps = {
   onTokenChanged: (token: string) => void;
 };
 
-export declare function AgentUI(props: AgentUIProps): JSX.Element;
-export declare function AgentControls(props: AgentUIProps): JSX.Element;
 export declare function ChatModelControls(
   props: ChatModelControlsProps
 ): JSX.Element;

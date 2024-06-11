@@ -1,12 +1,4 @@
 import { combineReducers, createReduxStore, register } from '@wordpress/data';
-// import { composeWithDevTools } from 'redux-devtools-extension';
-
-import {
-	actions as authActions,
-	controls as authControls,
-	reducer as authReducer,
-	selectors as authSelectors,
-} from './auth.js';
 
 import {
 	actions as agentsActions,
@@ -59,7 +51,6 @@ const createNamespacedSelectors = ( namespace, selectors ) => {
 
 const store = createReduxStore( 'big-sky-agent', {
 	reducer: combineReducers( {
-		auth: authReducer,
 		agents: agentsReducer,
 		messages: chatReducer,
 		site: siteReducer,
@@ -68,7 +59,6 @@ const store = createReduxStore( 'big-sky-agent', {
 		pageSections: sectionReducer,
 	} ),
 	actions: {
-		...authActions,
 		...agentsActions,
 		...chatActions,
 		...siteActions,
@@ -77,7 +67,6 @@ const store = createReduxStore( 'big-sky-agent', {
 		...sectionActions,
 	},
 	selectors: {
-		...createNamespacedSelectors( 'auth', authSelectors ),
 		...createNamespacedSelectors( 'agents', agentsSelectors ),
 		...createNamespacedSelectors( 'messages', chatSelectors ),
 		...createNamespacedSelectors( 'site', siteSelectors ),
@@ -85,11 +74,7 @@ const store = createReduxStore( 'big-sky-agent', {
 		...createNamespacedSelectors( 'pages', pageSelectors ),
 		...createNamespacedSelectors( 'pageSections', sectionSelectors ),
 	},
-	resolvers: {
-		// No need for resolvers if using thunks directly in actions
-	},
 	controls: {
-		...authControls,
 		...chatControls,
 	},
 } );
