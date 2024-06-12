@@ -419,6 +419,8 @@ export class WPCOMJetpackAIChatModel extends ChatModel {
 		if ( session_id ) {
 			params.session_id = session_id;
 		}
+
+		return params;
 	}
 
 	getServiceUrl() {
