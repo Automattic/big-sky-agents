@@ -107,25 +107,6 @@ export const ChatModelType = {
 	},
 };
 
-function getServiceChatCompletionUrl( service ) {
-	switch ( service ) {
-		case ChatModelService.GROQ:
-			return 'https://api.groq.com/openai/v1/chat/completions';
-		case ChatModelService.OPENAI:
-			return 'https://api.openai.com/v1/chat/completions';
-		case ChatModelService.OLLAMA:
-			return 'http://127.0.0.1:11434/api/chat';
-		case ChatModelService.LMSTUDIO:
-			return 'http://127.0.0.1:1234/v1/chat/completions';
-		case ChatModelService.LOCALAI:
-			return 'http://127.0.0.1:1234/v1/chat/completions';
-		case ChatModelService.WPCOM_OPENAI:
-			return 'https://public-api.wordpress.com/wpcom/v2/openai-proxy/v1/chat/completions';
-		default:
-			return 'https://public-api.wordpress.com/wpcom/v2/jetpack-ai-query';
-	}
-}
-
 // reformat the history based on what the model supports
 const formatHistory = ( history, model ) => {
 	const maxImageURLLength = 200; // typically they are base64-encoded so very large
@@ -169,27 +150,6 @@ const formatHistory = ( history, model ) => {
 	return history;
 };
 
-function getDefaultTemperature( service, model ) {
-	if (
-		service === ChatModelService.GROQ &&
-		model === ChatModelService.LLAMA3_70B_8192
-	) {
-		// arbitrary difference for testing
-		return 0.1;
-	}
-	return 0.2;
-}
-
-function getDefaultMaxTokens( service, model ) {
-	if (
-		service === ChatModelService.GROQ &&
-		model === ChatModelService.LLAMA3_70B_8192
-	) {
-		return 8192;
-	}
-	return 4096;
-}
-
 const DEFAULT_SYSTEM_PROMPT = 'You are a helpful AI assistant.';
 
 function formatMessages(
@@ -228,22 +188,12 @@ function formatMessages(
 }
 
 class ChatModel {
-	constructor( { apiKey, service } ) {
-		this.service = service ?? ChatModelService.getDefault();
-		this.apiKey =
-			apiKey ?? ChatModelService.getDefaultApiKey( this.service );
-	}
-
-	getDefaultModel() {
-		return ChatModelType.getDefault( this.service );
+	constructor( { apiKey } ) {
+		this.apiKey = apiKey;
 	}
 
 	getApiKey() {
 		return this.apiKey;
-	}
-
-	getService() {
-		return this.service;
 	}
 
 	/**
@@ -275,7 +225,7 @@ class ChatModel {
 			throw new Error( 'Missing history' );
 		}
 
-		model = model ?? ChatModelType.getDefault( this.service );
+		model = model ?? this.getDefaultModel();
 		messages = formatMessages(
 			messages,
 			systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
@@ -283,10 +233,8 @@ class ChatModel {
 			this.maxHistoryLength,
 			model
 		);
-		temperature =
-			temperature ?? getDefaultTemperature( this.service, model );
-		const max_tokens =
-			maxTokens ?? getDefaultMaxTokens( this.service, model );
+		temperature = temperature ?? this.getDefaultTemperature( model );
+		const max_tokens = maxTokens ?? this.getDefaultMaxTokens( model );
 
 		const response = await this.call( {
 			model,
@@ -326,84 +274,33 @@ class ChatModel {
 	 *
 	 * @return {Promise<Object>} The response object
 	 */
-	async call( {
-		model,
-		temperature,
-		max_tokens,
-		messages,
-		tools,
-		tool_choice = null,
-		feature,
-		session_id,
-	} ) {
-		const params = {
-			stream: false,
-			model,
-			temperature,
-			messages,
-			max_tokens,
-		};
-
-		if ( tools?.length ) {
-			params.tools = tools;
-		}
-
-		if ( tool_choice ) {
-			params.tool_choice = {
-				type: 'function',
-				function: { name: tool_choice },
-			};
-		}
-
-		const headers = {
-			Authorization: `Bearer ${ this.apiKey }`,
-			'Content-Type': 'application/json',
-		};
-
-		if ( feature ) {
-			if ( ChatModelService.WPCOM_JETPACK_AI === this.service ) {
-				params.feature = feature;
-			} else if ( ChatModelService.WPCOM_OPENAI === this.service ) {
-				headers[ 'X-WPCOM-AI-Feature' ] = feature;
-				headers[ 'Access-Control-Request-Headers' ] =
-					'authorization,content-type,X-WPCOM-AI-Feature';
-			}
-		}
-
-		if ( session_id ) {
-			if ( ChatModelService.WPCOM_JETPACK_AI === this.service ) {
-				params.session_id = session_id;
-			} else if ( ChatModelService.WPCOM_OPENAI === this.service ) {
-				headers[ 'X-WPCOM-Session-ID' ] = session_id;
-			}
-		}
+	async call( request ) {
+		const params = this.getParams( request );
+		const headers = this.getHeaders( request );
 
 		console.log(
-			`Calling ${ this.service } with model ${ model }, temperature ${ temperature }, max_tokens ${ max_tokens }`
+			`Calling ${ this.constructor.name } with model ${ params.model }, temperature ${ params.temperature }, max_tokens ${ params.max_tokens }`
 		);
 
-		const request = await fetch(
-			getServiceChatCompletionUrl( this.service ),
-			{
-				method: 'POST',
-				headers,
-				body: JSON.stringify( params ),
-			}
-		);
+		const serviceRequest = await fetch( this.getServiceUrl(), {
+			method: 'POST',
+			headers,
+			body: JSON.stringify( params ),
+		} );
 
-		if ( request.status === 401 ) {
+		if ( serviceRequest.status === 401 ) {
 			throw new Error( 'Unauthorized' );
-		} else if ( request.status === 429 ) {
+		} else if ( serviceRequest.status === 429 ) {
 			throw new Error( 'Rate limit exceeded' );
-		} else if ( request.status === 500 ) {
-			const responseText = await request.text();
+		} else if ( serviceRequest.status === 500 ) {
+			const responseText = await serviceRequest.text();
 			throw new Error( `Internal server error: ${ responseText }` );
 		}
 
 		let response;
 
 		try {
-			response = await request.json();
+			response = await serviceRequest.json();
 		} catch ( error ) {
 			console.error( 'Error parsing response', error );
 			throw new Error( 'Unexpected response format' );
@@ -431,6 +328,184 @@ class ChatModel {
 		}
 
 		return response;
+	}
+
+	getParams( {
+		model,
+		temperature,
+		max_tokens,
+		messages,
+		tools,
+		tool_choice = null,
+	} ) {
+		const params = {
+			stream: false,
+			model,
+			temperature,
+			messages,
+			max_tokens,
+		};
+
+		if ( tools?.length ) {
+			params.tools = tools;
+		}
+
+		if ( tool_choice ) {
+			params.tool_choice = {
+				type: 'function',
+				function: { name: tool_choice },
+			};
+		}
+
+		return params;
+	}
+
+	getHeaders( /* request */ ) {
+		return {
+			Authorization: `Bearer ${ this.apiKey }`,
+			'Content-Type': 'application/json',
+		};
+	}
+
+	getDefaultMaxTokens( /* model */ ) {
+		return 4096;
+	}
+
+	getDefaultTemperature( /* model */ ) {
+		return 0.2;
+	}
+
+	getDefaultModel() {
+		throw new Error( 'Not implemented' );
+	}
+
+	getServiceUrl() {
+		throw new Error( 'Not implemented' );
+	}
+
+	static getInstance( service, apiToken ) {
+		switch ( service ) {
+			case ChatModelService.GROQ:
+				return new GroqChatModel( { apiKey: apiToken } );
+			case ChatModelService.OPENAI:
+				return new OpenAIChatModel( { apiKey: apiToken } );
+			case ChatModelService.WPCOM_JETPACK_AI:
+				return new WPCOMJetpackAIChatModel( { apiKey: apiToken } );
+			case ChatModelService.WPCOM_OPENAI:
+				return new WPCOMOpenAIChatModel( { apiKey: apiToken } );
+			case ChatModelService.OLLAMA:
+				return new OllamaChatModel( { apiKey: apiToken } );
+			case ChatModelService.LMSTUDIO:
+				return new LMStudioChatModel( { apiKey: apiToken } );
+			case ChatModelService.LOCALAI:
+				return new LocalAIChatModel( { apiKey: apiToken } );
+			default:
+				throw new Error( `Unknown service: ${ service }` );
+		}
+	}
+}
+
+export class WPCOMJetpackAIChatModel extends ChatModel {
+	getDefaultModel() {
+		return ChatModelType.GPT_4O;
+	}
+
+	getParams( { session_id, feature, ...request } ) {
+		const params = super.getParams( request );
+		if ( feature ) {
+			params.feature = feature;
+		}
+
+		if ( session_id ) {
+			params.session_id = session_id;
+		}
+	}
+
+	getServiceUrl() {
+		return 'https://public-api.wordpress.com/wpcom/v2/jetpack-ai-query';
+	}
+}
+
+export class WPCOMOpenAIChatModel extends ChatModel {
+	getHeaders( { feature, session_id, ...request } ) {
+		const headers = super.getHeaders( request );
+		if ( feature ) {
+			headers[ 'X-WPCOM-AI-Feature' ] = feature;
+			headers[ 'Access-Control-Request-Headers' ] =
+				'authorization,content-type,X-WPCOM-AI-Feature';
+		}
+
+		if ( session_id ) {
+			headers[ 'X-WPCOM-Session-ID' ] = session_id;
+		}
+
+		return headers;
+	}
+
+	getDefaultModel() {
+		return ChatModelType.GPT_4O;
+	}
+
+	getServiceUrl() {
+		return 'https://public-api.wordpress.com/wpcom/v2/openai-proxy/v1/chat/completions';
+	}
+}
+
+export class OllamaChatModel extends ChatModel {
+	getDefaultModel() {
+		return ChatModelType.GEMMA_7b_INSTRUCT;
+	}
+
+	getServiceUrl() {
+		return 'http://localhost:11434/api/chat';
+	}
+}
+
+export class LMStudioChatModel extends ChatModel {
+	getDefaultModel() {
+		return ChatModelType.PHI_3_MEDIUM;
+	}
+
+	getServiceUrl() {
+		return 'http://localhost:1234/v1/chat/completions';
+	}
+}
+
+export class LocalAIChatModel extends ChatModel {
+	getDefaultModel() {
+		return ChatModelType.HERMES_2_PRO_MISTRAL;
+	}
+
+	getServiceUrl() {
+		return 'http://localhost:1234/v1/chat/completions';
+	}
+}
+
+export class OpenAIChatModel extends ChatModel {
+	getDefaultModel() {
+		return ChatModelType.GPT_4O;
+	}
+
+	getServiceUrl() {
+		return 'https://api.openai.com/v1/chat/completions';
+	}
+}
+
+export class GroqChatModel extends ChatModel {
+	getDefaultModel() {
+		return ChatModelType.LLAMA3_70B_8192;
+	}
+
+	getDefaultTemperature() {
+		return 0.1;
+	}
+
+	getDefaultMaxTokens() {
+		return 8192;
+	}
+
+	getServiceUrl() {
+		return 'https://api.groq.com/openai/v1/chat/completions';
 	}
 }
 

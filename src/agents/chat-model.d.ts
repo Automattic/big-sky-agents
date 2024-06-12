@@ -1,5 +1,4 @@
 import { Message, Tool } from '..';
-
 declare class ChatModelService {
 	static readonly WPCOM_JETPACK_AI: 'wpcom-jetpack-ai';
 	static readonly WPCOM_OPENAI: 'wpcom-openai'; // the wpcom OpenAI proxy
@@ -30,11 +29,23 @@ declare class ChatModelType {
 	static getDefault: ( service?: ChatModelService | null ) => string;
 }
 
+interface ChatCompletionRequest {
+	model: ChatModelType;
+	messages: Message[];
+	tools: Tool[];
+	temperature?: number;
+	max_tokens?: number;
+	tool_choice?: string | null;
+	feature?: string;
+};
+
 declare class ChatModel {
-	constructor( options: { apiKey?: string; service?: string } );
+	constructor( options: { apiKey?: string } );
 	getDefaultModel(): ChatModelType;
-	getApiKey(): string | null;
-	getService(): ChatModelService;
+	getDefaultApiKey(): string | null;
+	getDefaultTemperature(): number;
+	getParams( request: ChatCompletionRequest ): Record< string, any >;
+	getHeaders( request: ChatCompletionRequest ): Record< string, string >;
 	run( options: {
 		model: ChatModelType;
 		messages: Message[];
@@ -45,15 +56,28 @@ declare class ChatModel {
 		maxTokens?: number;
 		feature?: string;
 	} ): Promise< any >;
-	call( options: {
-		model: ChatModelType;
-		messages: Message[];
-		tools: Tool[];
-		temperature?: number;
-		max_tokens?: number;
-		tool_choice?: string | null;
-		feature?: string;
-	} ): Promise< any >;
+	call( options: ChatCompletionRequest ): Promise< any >;
+	static getInstance(
+		service: ChatModelService,
+		apiKey: string | null
+	): ChatModel;
 }
+
+declare class GroqChatModel extends ChatModel {}
+declare class OpenAIChatModel extends ChatModel {}
+declare class OllamaChatModel extends ChatModel {}
+declare class LocalAIChatModel extends ChatModel {}
+declare class WPCOMJetpackAIChatModel extends ChatModel {}
+declare class WPCOMOpenAIChatModel extends ChatModel {}
+
 export default ChatModel;
-export { ChatModelService, ChatModelType };
+export {
+	ChatModelService,
+	ChatModelType,
+	GroqChatModel,
+	OpenAIChatModel,
+	OllamaChatModel,
+	LocalAIChatModel,
+	WPCOMJetpackAIChatModel,
+	WPCOMOpenAIChatModel,
+};

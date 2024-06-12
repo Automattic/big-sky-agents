@@ -36,7 +36,7 @@ export const controls = {
 		maxTokens,
 		feature,
 	} ) {
-		const chatModel = new ChatModel( { apiKey, service } );
+		const chatModel = ChatModel.getInstance( service, apiKey );
 		return await chatModel.run( {
 			model,
 			messages,

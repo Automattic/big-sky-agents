@@ -24,12 +24,7 @@ const useChatModel = ( { token, service } ) => {
 		}
 		// eslint-disable-next-line no-console
 		console.log( '🤖 Creating Chat Model', service, token );
-		setChatModel(
-			new ChatModel( {
-				apiKey: token,
-				service,
-			} )
-		);
+		setChatModel( ChatModel.getInstance( service, token ) );
 	}, [ token, chatModel, service ] );
 
 	return chatModel;

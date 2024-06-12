@@ -2,7 +2,14 @@ export type {
 	default as ChatModel,
 	ChatModelType,
 	ChatModelService,
+  GroqChatModel,
+	OpenAIChatModel,
+	OllamaChatModel,
+	LocalAIChatModel,
+	WPCOMJetpackAIChatModel,
+	WPCOMOpenAIChatModel,
 } from './agents/chat-model';
+
 import { ChatModelType, ChatModelService } from './agents/chat-model';
 
 /**

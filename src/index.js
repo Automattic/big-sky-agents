@@ -10,6 +10,12 @@ export {
 	default as ChatModel,
 	ChatModelType,
 	ChatModelService,
+	GroqChatModel,
+	OpenAIChatModel,
+	OllamaChatModel,
+	LocalAIChatModel,
+	WPCOMJetpackAIChatModel,
+	WPCOMOpenAIChatModel,
 } from './agents/chat-model.js';
 export { default as useChatModel } from './hooks/use-chat-model.js';
 
