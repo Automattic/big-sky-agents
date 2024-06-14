@@ -6,9 +6,9 @@ export default {
 	title: 'Example/AgentsDemoUI',
 	component: AgentsDemoUI,
 	argTypes: {
-		token: {
+		apiKey: {
 			control: 'text',
-			name: 'API Token',
+			name: 'OAuth Bearer Token',
 		},
 	},
 };
@@ -18,5 +18,5 @@ const Template = ( args ) => <AgentsDemoUI { ...args } />;
 export const AgentsDemoUIOpenAI = Template.bind( {} );
 
 AgentsDemoUIOpenAI.args = {
-	token: import.meta.env.STORYBOOK_OPENAI_API_KEY,
+	apiKey: import.meta.env.STORYBOOK_OPENAI_API_KEY,
 };

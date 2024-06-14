@@ -23,7 +23,7 @@ export declare function useChatExecutor( options: {
 } ): void;
 
 export declare function useChatModel( options: {
-	token: string | undefined;
+	apiKey: string | undefined;
 	service: string;
 	feature?: string;
 	sessionId?: string;
@@ -55,7 +55,7 @@ export declare function useReduxAgentToolkit( options: {
  */
 
 interface ChatOptions {
-	token: string | undefined;
+	apiKey: string | undefined;
 	service: ChatModelService;
 	model: ChatModelType;
 	temperature?: number;
@@ -247,11 +247,11 @@ type ChatModelControlsProps = {
 	model: string;
 	service: string;
 	temperature: number;
-	token: string;
+	apiKey: string;
 	onServiceChanged: ( service: string ) => void;
 	onModelChanged: ( model: string ) => void;
 	onTemperatureChanged: ( temperature: number ) => void;
-	onTokenChanged: ( token: string ) => void;
+	onApiKeyChanged: ( apiKey: string ) => void;
 };
 
 export declare function ChatModelControls(

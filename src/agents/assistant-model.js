@@ -235,6 +235,7 @@ class AssistantModel {
 		return await this.getResponse( createMessageRequest, 'thread.message' );
 	}
 
+	// we don't currently use this. leaving here for later.
 	async getThreadRuns( threadId ) {
 		const headers = this.getHeaders();
 		const getRunsRequest = await fetch(
@@ -318,17 +319,17 @@ class AssistantModel {
 		throw new Error( 'Not implemented' );
 	}
 
-	static getInstance( service, apiToken, feature, sessionId ) {
+	static getInstance( service, apiKey, feature, sessionId ) {
 		switch ( service ) {
 			case AssistantModelService.OPENAI:
 				return new OpenAIAssistantModel( {
-					apiKey: apiToken,
+					apiKey,
 					feature,
 					sessionId,
 				} );
 			case AssistantModelService.WPCOM_OPENAI:
 				return new WPCOMOpenAIAssistantModel( {
-					apiKey: apiToken,
+					apiKey,
 					feature,
 					sessionId,
 				} );

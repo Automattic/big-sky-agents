@@ -2,7 +2,7 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { store as agentStore } from '../store/index.js';
 import { useCallback } from 'react';
 
-const useReduxChat = ( { token, service, model, temperature, feature } ) => {
+const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 	const {
 		setStarted,
 		clearError,
@@ -53,7 +53,7 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 		( messages, tools, instructions, additionalInstructions ) => {
 			if (
 				! service || // no ChatModel
-				! token || // no apiKey
+				! apiKey || // no apiKey
 				! enabled || // disabled
 				running || // already running
 				error || // there's an error
@@ -80,7 +80,7 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 				instructions,
 				additionalInstructions,
 				service,
-				apiKey: token,
+				apiKey,
 				feature,
 			} );
 		},
@@ -88,7 +88,7 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 			model,
 			temperature,
 			service,
-			token,
+			apiKey,
 			enabled,
 			running,
 			error,
@@ -103,7 +103,7 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 		( tools, instructions, additionalInstructions ) => {
 			if (
 				! service || // no ChatModel
-				! token || // no apiKey
+				! apiKey || // no apiKey
 				! assistantId || // disabled
 				running || // already running
 				error || // there's an error
@@ -113,7 +113,7 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 			) {
 				console.warn( 'not running assistant', {
 					service,
-					token,
+					apiKey,
 					assistantId,
 					running,
 					error,
@@ -132,7 +132,7 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 
 			runCreateThreadRun( {
 				service,
-				apiKey: token,
+				apiKey,
 				assistantId,
 				threadId,
 				model,
@@ -145,7 +145,7 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 		},
 		[
 			service,
-			token,
+			apiKey,
 			assistantId,
 			running,
 			error,
@@ -161,18 +161,35 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 	);
 
 	const createThread = useCallback( () => {
-		runCreateThread( { service, apiKey: token } );
-	}, [ runCreateThread, service, token ] );
+		runCreateThread( { service, apiKey } );
+	}, [ runCreateThread, service, apiKey ] );
 
 	const updateThreadRun = useCallback( () => {
-		runGetThreadRun( { service, apiKey: token, threadId } );
-	}, [ runGetThreadRun, service, token, threadId ] );
+		// status is queued, in_progress, requires_action, cancelling, cancelled, failed, completed, incomplete, or expired
+		if (
+			threadRun &&
+			! [ 'cancelled', 'failed', 'completed' ].includes(
+				threadRun.status
+			)
+		) {
+			runGetThreadRun( {
+				service,
+				apiKey,
+				threadId,
+				threadRunId: threadRun.id,
+			} );
+		} else {
+			console.warn( 'threadRun is not in a state to update', {
+				threadRun,
+			} );
+		}
+	}, [ threadRun, runGetThreadRun, service, apiKey, threadId ] );
 
 	const userSay = useCallback(
 		( message, image_urls = [] ) => {
-			addUserMessage( message, image_urls, threadId, service, token );
+			addUserMessage( message, image_urls, threadId, service, apiKey );
 		},
-		[ addUserMessage, service, threadId, token ]
+		[ addUserMessage, service, threadId, apiKey ]
 	);
 
 	const onReset = useCallback( () => {

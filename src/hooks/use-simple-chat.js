@@ -18,7 +18,7 @@ const formatToolResultContent = ( result ) => {
 		: `${ result }`;
 };
 
-const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
+const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 	const [ started, setStarted ] = useState( false );
 	const [ running, setRunning ] = useState( false );
 	const [ error, setError ] = useState();
@@ -27,7 +27,7 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 	const [ enabled, setEnabled ] = useState( true );
 	const [ assistantMessage, setAssistantMessage ] = useState();
 	const runningRef = useRef( false );
-	const chatModel = useChatModel( { token, service, feature } );
+	const chatModel = useChatModel( { apiKey, service, feature } );
 
 	const call = useCallback( ( name, args, id ) => {
 		console.log( '🤖 Adding Tool Call', name, args, id );

@@ -26,18 +26,18 @@ import './agents-demo-ui.scss';
  * Renders the Agents Demo UI component.
  *
  * This component displays the user interface for the Agents Demo, which allows users to interact with agents and preview generated content.
- * @param {Object}   root0                The component props.
- * @param {string}   root0.token          The token to use for the chat model.
- * @param {Function} root0.onTokenChanged Callback function to call when the token changes.
+ * @param {Object}   root0                 The component props.
+ * @param {string}   root0.apiKey          The token to use for the chat model.
+ * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  */
-const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
+const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
 	const [ previewVisible, setPreviewVisible ] = useState( false );
 	const [ model, setModel ] = useState( ChatModelType.getDefault() );
 	const [ service, setService ] = useState( ChatModelService.getDefault() );
 	const [ temperature, setTemperature ] = useState( 0.2 );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
-	const [ token, setToken ] = useState( originalToken );
+	const [ apiKey, setApiKey ] = useState( originalApiKey );
 	const feature = 'big-sky';
 
 	// const chat = useSimpleChat( {
@@ -48,13 +48,13 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	// const toolkit = useSimpleToolkit( { pageId: selectedPageId } );
 
 	const chat = useReduxChat( {
-		token,
+		apiKey,
 		service,
 		model,
 		temperature,
 		feature,
 	} );
-	const toolkit = useReduxToolkit( { token, pageId: selectedPageId } );
+	const toolkit = useReduxToolkit( { apiKey, pageId: selectedPageId } );
 
 	const agent = useCurrentAgent( {
 		pageId: selectedPageId,
@@ -146,14 +146,14 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 						chat={ chat }
 					/>
 					<ChatModelControls
-						token={ token }
+						apiKey={ apiKey }
 						model={ model }
 						service={ service }
 						temperature={ temperature }
-						onTokenChanged={ ( newToken ) => {
-							setToken( newToken );
-							if ( typeof onTokenChanged === 'function' ) {
-								onTokenChanged( newToken );
+						onApiKeyChanged={ ( newToken ) => {
+							setApiKey( newToken );
+							if ( typeof onApiKeyChanged === 'function' ) {
+								onApiKeyChanged( newToken );
 							}
 						} }
 						onModelChanged={ setModel }

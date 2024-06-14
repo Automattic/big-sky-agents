@@ -41,10 +41,6 @@ export const controls = {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
 		return await assistantModel.createThreadRun( request );
 	},
-	async GET_THREAD_RUNS_CALL( { service, apiKey, threadId } ) {
-		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.getThreadRuns( threadId );
-	},
 	async GET_THREAD_RUN_CALL( { service, apiKey, threadId, threadRunId } ) {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
 		return await assistantModel.getThreadRun( threadId, threadRunId );
@@ -92,25 +88,6 @@ function* runChatCompletion( { service, apiKey, ...request } ) {
 	} catch ( error ) {
 		console.error( 'Chat error', error );
 		return { type: 'CHAT_ERROR', error: error.message };
-	}
-}
-
-function* runGetThreadRuns( { service, apiKey, threadId } ) {
-	yield { type: 'GET_THREAD_RUNS_BEGIN_REQUEST' };
-	try {
-		const threadRuns = yield {
-			type: 'GET_THREAD_RUNS_CALL',
-			service,
-			apiKey,
-			threadId,
-		};
-		yield {
-			type: 'GET_THREAD_RUNS_END_REQUEST',
-			threadRuns,
-		};
-	} catch ( error ) {
-		console.error( 'Thread error', error );
-		return { type: 'GET_THREAD_RUNS_ERROR', error: error.message };
 	}
 }
 
@@ -207,7 +184,7 @@ function* addMessage( message, threadId, service, apiKey ) {
 		message,
 	};
 	// add the message to the active thread
-	if ( threadId ) {
+	if ( threadId && message.role === 'user' ) {
 		yield { type: 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST' };
 		try {
 			yield {
@@ -439,15 +416,41 @@ export const reducer = ( state = initialState, action ) => {
 			};
 		case 'RUN_THREAD_ERROR':
 			return { ...state, running: false, error: action.error };
-		case 'GET_THREAD_RUNS_BEGIN_REQUEST':
+		case 'GET_THREAD_RUN_BEGIN_REQUEST':
 			return { ...state, running: true };
-		case 'GET_THREAD_RUNS_END_REQUEST':
-			return {
+		case 'GET_THREAD_RUN_END_REQUEST':
+			// check if action.threadRun has pending tool calls
+			const { threadRun } = action;
+
+			// first, update with the threadrun
+			const newState = {
 				...state,
 				running: false,
-				threadRuns: action.threadRuns,
+				threadRuns: [
+					...state.threadRuns.filter(
+						( tr ) => tr.id !== threadRun.id
+					),
+					action.threadRun,
+				],
 			};
-		case 'GET_THREAD_RUNS_ERROR':
+
+			// now optionally update with tool call messages
+			if (
+				threadRun.status === 'requires_action' &&
+				threadRun.required_action.type === 'submit_tool_outputs'
+			) {
+				const tool_calls =
+					threadRun.required_action.submit_tool_outputs.tool_calls;
+
+				// add an assistant message with the tool calls
+				const assistantMessage = {
+					role: 'assistant',
+					tool_calls,
+				};
+				return addMessageReducer( newState, assistantMessage );
+			}
+			return newState;
+		case 'GET_THREAD_RUN_ERROR':
 			return { ...state, running: false, error: action.error };
 		default:
 			return state;
@@ -528,7 +531,6 @@ export const actions = {
 	runChatCompletion,
 	runCreateThread,
 	runCreateThreadRun,
-	runGetThreadRuns,
 	runGetThreadRun,
 	addMessage,
 	clearMessages: () => ( {

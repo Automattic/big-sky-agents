@@ -29,11 +29,11 @@ import './agents-demo-ui.scss';
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
  *
  * This component displays the user interface for the Assistants Demo, which allows users to interact with assistants and preview generated content.
- * @param {Object}   root0                The component props.
- * @param {string}   root0.token          The token to use for the chat model.
- * @param {Function} root0.onTokenChanged Callback function to call when the token changes.
+ * @param {Object}   root0                 The component props.
+ * @param {string}   root0.apiKey          The token to use for the chat model.
+ * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  */
-const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
+const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
 	const [ previewVisible, setPreviewVisible ] = useState( false );
 	const [ model, setModel ] = useState( AssistantModelType.getDefault() );
@@ -42,7 +42,7 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	);
 	const [ temperature, setTemperature ] = useState( 0.2 );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
-	const [ token, setToken ] = useState( originalToken );
+	const [ apiKey, setApiKey ] = useState( originalApiKey );
 	const feature = 'big-sky';
 
 	// const chat = useSimpleChat( {
@@ -53,13 +53,16 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	// const toolkit = useSimpleToolkit( { pageId: selectedPageId } );
 
 	const chat = useReduxChat( {
-		token,
+		apiKey,
 		service,
 		model,
 		temperature,
 		feature,
 	} );
-	const toolkit = useReduxToolkit( { token, pageId: selectedPageId } );
+	const toolkit = useReduxToolkit( {
+		apiKey,
+		pageId: selectedPageId,
+	} );
 
 	const agent = useCurrentAgent( {
 		pageId: selectedPageId,
@@ -151,14 +154,14 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 						chat={ chat }
 					/>
 					<ChatModelControls
-						token={ token }
+						apiKey={ apiKey }
 						model={ model }
 						service={ service }
 						temperature={ temperature }
-						onTokenChanged={ ( newToken ) => {
-							setToken( newToken );
-							if ( typeof onTokenChanged === 'function' ) {
-								onTokenChanged( newToken );
+						onApiKeyChanged={ ( newApiKey ) => {
+							setApiKey( newApiKey );
+							if ( typeof onApiKeyChanged === 'function' ) {
+								onApiKeyChanged( newApiKey );
 							}
 						} }
 						onModelChanged={ setModel }

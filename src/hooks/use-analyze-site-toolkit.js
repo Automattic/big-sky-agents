@@ -13,14 +13,14 @@ import AnalyzeUrlTool, {
 
 const values = {};
 
-const useAnalyzeSiteToolkit = ( { token } ) => {
+const useAnalyzeSiteToolkit = ( { apiKey } ) => {
 	const callbacks = useMemo( () => {
 		return {
 			[ ANALYZE_URL_TOOL_NAME ]: ( { url } ) => {
-				return makeAnalyzeUrlRequest( { url, token } );
+				return makeAnalyzeUrlRequest( { url, apiKey } );
 			},
 		};
-	}, [ token ] );
+	}, [ apiKey ] );
 
 	const tools = useMemo( () => {
 		return [ AnalyzeUrlTool ];
