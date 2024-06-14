@@ -1,7 +1,7 @@
 /**
  * Run the agent
  */
-export { default as useAgentExecutor } from './hooks/use-agent-executor.js';
+export { default as useChatExecutor } from './hooks/use-chat-executor.js';
 
 /**
  * ChatModel and hooks

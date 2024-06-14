@@ -16,7 +16,7 @@ import { ChatModelType, ChatModelService } from './agents/chat-model';
  * Hooks
  */
 
-export declare function useAgentExecutor( options: {
+export declare function useChatExecutor( options: {
 	agent: Agent;
 	chat: Chat;
 	toolkit: AgentToolkit;
@@ -60,11 +60,33 @@ interface ChatOptions {
 	feature?: string;
 }
 
-export interface Message {
-	role: 'assistant' | 'tool' | 'user';
+// define MessageRole enum
+enum MessageRole {
+	ASSISTANT = 'assistant',
+	USER = 'user',
+	TOOL = 'tool',
+}
+
+interface BaseMessage {
+	role: MessageRole;
 	content: string | MessageContentPart[];
+}
+
+interface AssistantMessage extends BaseMessage {
+	role: MessageRole.ASSISTANT;
 	tool_calls?: ToolCall[];
 }
+
+interface UserMessage extends BaseMessage {
+	role: MessageRole.USER;
+}
+
+interface ToolMessage extends BaseMessage {
+	role: MessageRole.TOOL;
+	tool_call_id: string;
+}
+
+export type Message = AssistantMessage | UserMessage | ToolMessage;
 
 interface TextMessageContentPart {
 	type: 'text';
@@ -122,8 +144,8 @@ interface Chat {
 	runAgent: (
 		messages: Message[],
 		tools: any,
-		systemPrompt: string,
-		nextStepPrompt: string
+		instructions: string,
+		additionalInstructions: string
 	) => void;
 	onReset: () => void;
 }
@@ -168,8 +190,8 @@ declare class Agent {
 	userSay( message: string, file_urls?: string[] ): void;
 	getTools( values: any ): any[];
 	findTools( ...toolNames: string[] ): any[];
-	getSystemPrompt(): Formatter;
-	getNextStepPrompt(): Formatter;
+	getInstructions(): Formatter;
+	getAdditionalInstructions(): Formatter;
 	onStart(): void;
 }
 

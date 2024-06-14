@@ -1,4 +1,5 @@
 export const WAPUU_AGENT_ID = 'Wapuu';
+export const WAPUU_ASSISTANT_ID = 'asst_jTIeJ557zgwPMWORuBt4vGOz';
 export const WORDPRESS_SITE_SPEC_AGENT_ID = 'WPSiteSpec';
 export const WORDPRESS_PAGE_SPEC_AGENT_ID = 'WPPageSpec';
 export const WORDPRESS_DESIGN_AGENT_ID = 'WPDesign';
@@ -9,6 +10,8 @@ export const WOO_STORE_AGENT_ID = 'WooStore';
 export default [
 	{
 		id: WAPUU_AGENT_ID,
+		// OpenAI assistant_id
+		assistantId: WAPUU_ASSISTANT_ID,
 		name: 'Wapuu',
 		description:
 			'Here to understand your goal and choose the best agent to help you.',

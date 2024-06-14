@@ -5,7 +5,7 @@ import { ANALYZE_URL_TOOL_NAME } from './tools/analyze-url.js';
 import { CONFIRM_TOOL_NAME } from './tools/confirm.js';
 import { SET_SITE_COLORS_TOOL_NAME } from './tools/site-tools.js';
 
-const systemPrompt = FStringPromptTemplate.fromString(
+const instructions = FStringPromptTemplate.fromString(
 	`You are a helpful design assistant. Your mission is to help the user design the perfect site.`
 );
 
@@ -17,8 +17,8 @@ const defaultChoices = [
 ];
 
 class DesignAgent extends StandardAgent {
-	getSystemPrompt() {
-		return systemPrompt;
+	getInstructions() {
+		return instructions;
 	}
 
 	getTools( values ) {

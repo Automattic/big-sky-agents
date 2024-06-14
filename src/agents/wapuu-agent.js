@@ -1,9 +1,9 @@
 import StandardAgent from './standard-agent.js';
 import { ANALYZE_URL_TOOL_NAME } from './tools/analyze-url.js';
-import { WAPUU_AGENT_ID } from './default-agents.js';
+import { WAPUU_AGENT_ID, WAPUU_ASSISTANT_ID } from './default-agents.js';
 import { FStringPromptTemplate } from './prompt-template.js';
 
-const systemPrompt = FStringPromptTemplate.fromString(
+const instructions = FStringPromptTemplate.fromString(
 	`You are a helpful AI assistant. Your mission is to find out what the user needs, clearly set goal and choose an appropriate agent to help them.`
 );
 
@@ -12,8 +12,12 @@ class WapuuAgent extends StandardAgent {
 		return WAPUU_AGENT_ID;
 	}
 
-	getSystemPrompt() {
-		return systemPrompt;
+	getAssistantId() {
+		return WAPUU_ASSISTANT_ID;
+	}
+
+	getInstructions() {
+		return instructions;
 	}
 
 	getTools( values ) {

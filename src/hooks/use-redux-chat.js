@@ -13,6 +13,10 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 		clearPendingToolRequests,
 		setToolCallResult,
 		runChatCompletion,
+		runCreateThread,
+		runCreateAssistant,
+		setAssistantId,
+		runAssistantThread,
 	} = useDispatch( agentStore );
 
 	const {
@@ -24,6 +28,9 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 		history,
 		assistantMessage,
 		pendingToolRequests,
+		threadId,
+		assistantId,
+		assistantRunId,
 	} = useSelect( ( select ) => {
 		const values = {
 			error: select( agentStore ).getError(),
@@ -34,12 +41,15 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 			history: select( agentStore ).getMessages(),
 			assistantMessage: select( agentStore ).getAssistantMessage(),
 			pendingToolRequests: select( agentStore ).getPendingToolRequests(),
+			threadId: select( agentStore ).getThreadId(),
+			assistantId: select( agentStore ).getAssistantId(),
+			assistantRunId: select( agentStore ).getAssistantRunId(),
 		};
 		return values;
 	} );
 
 	const runAgent = useCallback(
-		( messages, tools, systemPrompt, nextStepPrompt ) => {
+		( messages, tools, instructions, additionalInstructions ) => {
 			if (
 				! service || // no ChatModel
 				! token || // no apiKey
@@ -66,8 +76,8 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 				temperature,
 				messages,
 				tools,
-				systemPrompt,
-				nextStepPrompt,
+				instructions,
+				additionalInstructions,
 				service,
 				apiKey: token,
 				feature,
@@ -86,6 +96,87 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 			runChatCompletion,
 			feature,
 		]
+	);
+
+	const runAssistant = useCallback(
+		( messages, tools, instructions, additionalInstructions ) => {
+			if (
+				! service || // no ChatModel
+				! token || // no apiKey
+				! assistantId || // disabled
+				running || // already running
+				error || // there's an error
+				! enabled || // disabled
+				! messages.length > 0 || // nothing to process
+				pendingToolRequests.length > 0 || // waiting on tool calls
+				assistantMessage // the assistant has a question for the user
+			) {
+				console.warn( 'not running agent', {
+					service,
+					token,
+					assistantId,
+					running,
+					error,
+					enabled,
+					messages,
+					pendingToolRequests,
+					assistantMessage,
+				} );
+				return;
+			}
+			// first, create a thread (TODO: update existing thread!)
+			// if ( ! threadId ) {
+			// 	runCreateThread( { service, apiKey: token } );
+			// } else {
+			// 	console.warn( 'thread already exists', { threadId } );
+			// }
+
+			runAssistantThread( {
+				service,
+				apiKey: token,
+				assistantId,
+				threadId,
+				model,
+				temperature,
+				messages,
+				tools,
+				instructions,
+				additionalInstructions,
+				feature,
+			} );
+		},
+		[
+			assistantId,
+			assistantMessage,
+			enabled,
+			error,
+			feature,
+			model,
+			pendingToolRequests,
+			runAssistantThread,
+			running,
+			service,
+			temperature,
+			threadId,
+			token,
+		]
+	);
+
+	const createThread = useCallback( () => {
+		runCreateThread( { service, apiKey: token } );
+	}, [ runCreateThread, service, token ] );
+
+	const createAssistant = useCallback(
+		( request ) => {
+			runCreateAssistant( {
+				service,
+				model,
+				temperature,
+				apiKey: token,
+				...request,
+			} );
+		},
+		[ model, runCreateAssistant, service, temperature, token ]
 	);
 
 	const onReset = useCallback( () => {
@@ -116,7 +207,17 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 		pendingToolRequests,
 		clearPendingToolRequests,
 
-		runAgent, // run a chat completion with tool, systemPrompt and nextStepPrompt
+		runAgent, // run a chat completion with messages, tools, instructions and additionalInstructions
+
+		// assistants
+		threadId,
+		createThread,
+		assistantId,
+		createAssistant,
+		setAssistantId,
+
+		assistantRunId,
+		runAssistant, // run an assistant completion with messages and tools
 
 		onReset,
 	};

@@ -1,11 +1,11 @@
 import { ASK_USER_TOOL_NAME } from './tools/ask-user.js';
 import { FStringPromptTemplate } from './prompt-template.js';
 
-const systemPrompt = FStringPromptTemplate.fromString(
+const instructions = FStringPromptTemplate.fromString(
 	`You are a helpful assistant.`
 );
 
-const nextStepPrompt = FStringPromptTemplate.fromString(
+const additionalInstructions = FStringPromptTemplate.fromString(
 	`Please attempt to complete the goal: {agent.goal}.`
 );
 
@@ -17,6 +17,18 @@ class Agent {
 
 	getId() {
 		throw new Error( 'Agent must implement getId' );
+	}
+
+	getAssistantId() {
+		return null;
+	}
+
+	getInstructions() {
+		return instructions;
+	}
+
+	getAdditionalInstructions() {
+		return additionalInstructions;
 	}
 
 	call( toolName, ...args ) {
@@ -35,14 +47,6 @@ class Agent {
 		return this.toolkit.tools.filter( ( tool ) =>
 			toolNames.includes( tool.function.name )
 		);
-	}
-
-	getSystemPrompt() {
-		return systemPrompt;
-	}
-
-	getNextStepPrompt() {
-		return nextStepPrompt;
 	}
 
 	onStart() {

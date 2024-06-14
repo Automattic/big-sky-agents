@@ -3,7 +3,7 @@ import AnalyzeUrlTool from './tools/analyze-url.js';
 import { WOO_STORE_AGENT_ID } from './default-agents.js';
 import { FStringPromptTemplate } from './prompt-template.js';
 
-const systemPrompt = FStringPromptTemplate.fromString(
+const instructions = FStringPromptTemplate.fromString(
 	`You are a helpful eCommerce assistant. You are an expert in all things WooCommerce.`
 );
 
@@ -12,8 +12,8 @@ class WooAgent extends StandardAgent {
 		return WOO_STORE_AGENT_ID;
 	}
 
-	getSystemPrompt() {
-		return systemPrompt;
+	getInstructions() {
+		return instructions;
 	}
 
 	getTools( values ) {

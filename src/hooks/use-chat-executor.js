@@ -1,7 +1,7 @@
 /* eslint-disable camelcase, no-console */
 import { useEffect, useState } from 'react';
 
-const useAgentExecutor = ( {
+const useChatExecutor = ( {
 	agent,
 	chat: {
 		started,
@@ -16,8 +16,9 @@ const useAgentExecutor = ( {
 	toolkit: { values, callbacks },
 } ) => {
 	const [ tools, setTools ] = useState( [] );
-	const [ systemPrompt, setSystemPrompt ] = useState( '' );
-	const [ nextStepPrompt, setNextStepPrompt ] = useState( '' );
+	const [ instructions, setInstructions ] = useState( '' );
+	const [ additionalInstructions, setAdditionalInstructions ] =
+		useState( '' );
 
 	useEffect( () => {
 		if ( agent ) {
@@ -25,19 +26,19 @@ const useAgentExecutor = ( {
 			 * Compute new state
 			 */
 			const newTools = agent.getTools( values );
-			const newSystemPrompt = agent.getSystemPrompt().format( values );
+			const newSystemPrompt = agent.getInstructions().format( values );
 			const newNextStepPrompt = agent
-				.getNextStepPrompt()
+				.getAdditionalInstructions()
 				.format( values );
 
-			if ( newSystemPrompt && newSystemPrompt !== systemPrompt ) {
+			if ( newSystemPrompt && newSystemPrompt !== instructions ) {
 				// console.warn( '🧠 System prompt', newSystemPrompt );
-				setSystemPrompt( newSystemPrompt );
+				setInstructions( newSystemPrompt );
 			}
 
-			if ( newNextStepPrompt !== nextStepPrompt ) {
+			if ( newNextStepPrompt !== additionalInstructions ) {
 				// console.warn( '🧠 Next step prompt', newNextStepPrompt );
-				setNextStepPrompt( newNextStepPrompt );
+				setAdditionalInstructions( newNextStepPrompt );
 			}
 
 			if ( JSON.stringify( newTools ) !== JSON.stringify( tools ) ) {
@@ -45,24 +46,24 @@ const useAgentExecutor = ( {
 				setTools( newTools );
 			}
 		}
-	}, [ agent, nextStepPrompt, systemPrompt, tools, values ] );
+	}, [ agent, additionalInstructions, instructions, tools, values ] );
 
 	useEffect( () => {
 		if (
 			! enabled || // disabled
 			running || // thinking
-			! systemPrompt || // at a minimum we need a system prompt
+			! instructions || // at a minimum we need a system prompt
 			history.length === 0 // no history
 		) {
 			return;
 		}
-		runAgent( history, tools, systemPrompt, nextStepPrompt );
+		runAgent( history, tools, instructions, additionalInstructions );
 	}, [
 		enabled,
 		runAgent,
 		running,
-		systemPrompt,
-		nextStepPrompt,
+		instructions,
+		additionalInstructions,
 		tools,
 		history,
 	] );
@@ -106,4 +107,4 @@ const useAgentExecutor = ( {
 	}, [ agent, running, setStarted, started ] );
 };
 
-export default useAgentExecutor;
+export default useChatExecutor;

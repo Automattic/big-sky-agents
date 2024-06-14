@@ -1,7 +1,11 @@
 import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../agents/chat-model.js';
+import AssistantModel from '../agents/assistant-model.js';
 
 const initialState = {
+	threadId: localStorage.getItem( 'threadId' ) || null, // The assistant thread ID
+	assistantRunId: null, // The assistant run ID
+	assistantId: null, // The assistant ID
 	history: [],
 	tool_calls: [],
 	running: false,
@@ -24,29 +28,22 @@ export const controls = {
 	async RESOLVE_TOOL_CALL_RESULT( { promise } ) {
 		return await promise;
 	},
-	async CHAT_CALL( {
-		messages,
-		model,
-		temperature,
-		tools,
-		systemPrompt,
-		nextStepPrompt,
-		service,
-		apiKey,
-		maxTokens,
-		feature,
-	} ) {
+	async CHAT_CALL( { service, apiKey, request } ) {
 		const chatModel = ChatModel.getInstance( service, apiKey );
-		return await chatModel.run( {
-			model,
-			messages,
-			tools,
-			systemPrompt,
-			nextStepPrompt,
-			temperature,
-			maxTokens,
-			feature,
-		} );
+		return await chatModel.run( request );
+	},
+	async CREATE_THREAD_CALL( { service, apiKey } ) {
+		// @see: https://platform.openai.com/docs/api-reference/threads/createThread
+		const assistantModel = AssistantModel.getInstance( service, apiKey );
+		return await assistantModel.createThread();
+	},
+	async CREATE_ASSISTANT_CALL( { service, apiKey, request } ) {
+		const assistantModel = AssistantModel.getInstance( service, apiKey );
+		return await assistantModel.createAssistant( request );
+	},
+	async RUN_ASSISTANT_CALL( { service, apiKey, request } ) {
+		const assistantModel = AssistantModel.getInstance( service, apiKey );
+		return await assistantModel.runAssistant( request );
 	},
 };
 
@@ -54,43 +51,25 @@ export const controls = {
  * Make a Chat Completion call
  *
  * @param {Object}        request
+ * @param {string}        request.service
+ * @param {string}        request.apiKey
  * @param {string}        request.model
  * @param {number}        request.temperature
  * @param {number}        request.maxTokens
  * @param {Array<Object>} request.messages
  * @param {Array<Object>} request.tools
- * @param {Object}        request.systemPrompt
- * @param {Object}        request.nextStepPrompt
- * @param {string}        request.service
- * @param {string}        request.apiKey
+ * @param {Object}        request.instructions
+ * @param {Object}        request.additionalInstructions
  * @param {string}        request.feature
  */
-function* runChatCompletion( {
-	model,
-	temperature,
-	maxTokens,
-	messages,
-	tools,
-	systemPrompt,
-	nextStepPrompt,
-	service,
-	apiKey,
-	feature,
-} ) {
+function* runChatCompletion( { service, apiKey, ...request } ) {
 	yield { type: 'CHAT_BEGIN_REQUEST' };
 	try {
 		const assistantMessage = yield {
 			type: 'CHAT_CALL',
-			model,
-			temperature,
-			maxTokens,
-			messages,
-			tools,
-			systemPrompt,
-			nextStepPrompt,
 			service,
 			apiKey,
-			feature,
+			request,
 		};
 
 		// we need to do a silly hack because gpt-4o repeats call IDs
@@ -105,6 +84,63 @@ function* runChatCompletion( {
 	} catch ( error ) {
 		console.error( 'Chat error', error );
 		return { type: 'CHAT_ERROR', error: error.message };
+	}
+}
+
+function* runCreateThread( { service, apiKey } ) {
+	yield { type: 'CREATE_THREAD_BEGIN_REQUEST' };
+	try {
+		const threadResponse = yield {
+			type: 'CREATE_THREAD_CALL',
+			service,
+			apiKey,
+		};
+		return {
+			type: 'CREATE_THREAD_END_REQUEST',
+			threadId: threadResponse.id,
+		};
+	} catch ( error ) {
+		console.error( 'Thread error', error );
+		return { type: 'CREATE_THREAD_ERROR', error: error.message };
+	}
+}
+
+// openai tools: code_interpreter, file_search, or function
+function* runCreateAssistant( { service, apiKey, ...request } ) {
+	yield { type: 'CREATE_ASSISTANT_BEGIN_REQUEST' };
+	try {
+		const assistantResponse = yield {
+			type: 'CREATE_ASSISTANT_CALL',
+			service,
+			apiKey,
+			request,
+		};
+		return {
+			type: 'CREATE_ASSISTANT_END_REQUEST',
+			assistantId: assistantResponse.id,
+		};
+	} catch ( error ) {
+		console.error( 'Assistant error', error );
+		return { type: 'CREATE_ASSISTANT_ERROR', error: error.message };
+	}
+}
+
+function* runAssistantThread( { service, apiKey, ...request } ) {
+	yield { type: 'RUN_ASSISTANT_BEGIN_REQUEST' };
+	try {
+		const runResponse = yield {
+			type: 'RUN_ASSISTANT_CALL',
+			service,
+			apiKey,
+			request,
+		};
+		yield {
+			type: 'RUN_ASSISTANT_END_REQUEST',
+			assistantRunId: runResponse.id,
+		};
+	} catch ( error ) {
+		console.error( 'Chat error', error );
+		return { type: 'RUN_ASSISTANT_ERROR', error: error.message };
 	}
 }
 
@@ -265,6 +301,44 @@ export const reducer = ( state = initialState, action ) => {
 				...state,
 				tool_calls: [],
 			};
+		case 'SET_THREAD_ID':
+			localStorage.setItem( 'threadId', action.threadId );
+			return {
+				...state,
+				threadId: action.threadId,
+			};
+		case 'SET_ASSISTANT_ID':
+			return {
+				...state,
+				assistantId: action.assistantId,
+			};
+		case 'CREATE_THREAD_BEGIN_REQUEST':
+			return { ...state, running: true };
+		case 'CREATE_THREAD_END_REQUEST':
+			localStorage.setItem( 'threadId', action.threadId );
+			return { ...state, running: false, threadId: action.threadId };
+		case 'CREATE_THREAD_ERROR':
+			return { ...state, running: false, error: action.error };
+		case 'CREATE_ASSISTANT_BEGIN_REQUEST':
+			return { ...state, running: true };
+		case 'CREATE_ASSISTANT_END_REQUEST':
+			return {
+				...state,
+				running: false,
+				assistantId: action.assistantId,
+			};
+		case 'CREATE_ASSISTANT_ERROR':
+			return { ...state, running: false, error: action.error };
+		case 'RUN_ASSISTANT_BEGIN_REQUEST':
+			return { ...state, running: true };
+		case 'RUN_ASSISTANT_END_REQUEST':
+			return {
+				...state,
+				running: false,
+				assistantRunId: action.assistantRunId,
+			};
+		case 'RUN_ASSISTANT_ERROR':
+			return { ...state, running: false, error: action.error };
 		default:
 			return state;
 	}
@@ -308,15 +382,29 @@ export const selectors = {
 					typeof tool_call.result === 'undefined' )
 		);
 	},
+	getThreadId: ( state ) => state.threadId,
+	getAssistantId: ( state ) => state.assistantId,
+	getAssistantRunId: ( state ) => state.assistantRunId,
 };
 
 export const actions = {
+	setThreadId: ( threadId ) => ( {
+		type: 'SET_THREAD_ID',
+		threadId,
+	} ),
+	setAssistantId: ( assistantId ) => ( {
+		type: 'SET_ASSISTANT_ID',
+		assistantId,
+	} ),
 	clearError: () => ( {
 		type: 'CHAT_ERROR',
 		error: null,
 	} ),
 	setToolCallResult,
 	runChatCompletion,
+	runCreateThread,
+	runCreateAssistant,
+	runAssistantThread,
 	addMessage: ( message ) => ( {
 		type: 'ADD_MESSAGE',
 		message,

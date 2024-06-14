@@ -8,6 +8,7 @@ import {
 	SelectControl,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
+import './agent-controls.scss';
 
 const RunningIndicator = ( { running, enabled } ) => {
 	return (
@@ -23,11 +24,22 @@ const RunningIndicator = ( { running, enabled } ) => {
 };
 
 const AgentControls = ( { agent, toolkit, chat } ) => {
-	const { onReset: onResetChat, running, enabled, setEnabled } = chat;
+	const {
+		threadId,
+		assistantId,
+		assistantRunId,
+		onReset: onResetChat,
+		running,
+		enabled,
+		setEnabled,
+	} = chat;
 
 	const {
 		onReset: onResetToolkit,
-		values: { agents, agentId, agentGoal },
+		values: {
+			agents,
+			agent: { id: agentId, goal: agentGoal },
+		},
 		callbacks: { setAgent, setAgentGoal },
 	} = toolkit;
 
@@ -60,6 +72,33 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 					</span>
 				</BaseControl>
 				<BaseControl
+					id={ 'assistant-control' }
+					label="Assistant"
+					labelPosition="side"
+				>
+					<span className="big-sky__assistant-indicator">
+						{ assistantId ?? 'None' }
+					</span>
+				</BaseControl>
+				<BaseControl
+					id={ 'thread-control' }
+					label="Thread"
+					labelPosition="side"
+				>
+					<span className="big-sky__thread-indicator">
+						{ threadId ?? 'None' }
+					</span>
+				</BaseControl>
+				<BaseControl
+					id={ 'assistant-run-control' }
+					label="Assistant Run"
+					labelPosition="side"
+				>
+					<span className="big-sky__assistant-run-indicator">
+						{ assistantRunId ?? 'None' }
+					</span>
+				</BaseControl>
+				<BaseControl
 					id={ 'goal-control' }
 					label="Goal"
 					labelPosition="side"
@@ -83,13 +122,19 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 				<SelectControl
 					label="Agent"
 					labelPosition="side"
-					value={ agentId }
-					options={ agents.map( ( anAgent ) => {
-						return {
-							label: anAgent.name,
-							value: anAgent.id,
-						};
-					} ) }
+					value={ agentId ?? '' }
+					options={ [
+						...agents.map( ( anAgent ) => {
+							return {
+								label: anAgent.name,
+								value: anAgent.id,
+							};
+						} ),
+						{
+							label: 'None',
+							value: '',
+						},
+					] }
 					onChange={ ( newAgentId ) => {
 						onResetChat();
 						onResetToolkit();

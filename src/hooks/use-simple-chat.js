@@ -157,7 +157,7 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 	}, [] );
 
 	const runAgent = useCallback(
-		( messages, tools, systemPrompt, nextStepPrompt ) => {
+		( messages, tools, instructions, additionalInstructions ) => {
 			if (
 				! chatModel || // no Chat Model
 				! enabled || // disabled
@@ -188,8 +188,8 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 					model,
 					messages,
 					tools,
-					systemPrompt,
-					nextStepPrompt,
+					instructions,
+					additionalInstructions,
 					temperature,
 					feature,
 				} )
@@ -258,7 +258,7 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 		pendingToolRequests,
 		clearPendingToolRequests,
 
-		runAgent, // run a chat completion with tool, systemPrompt and nextStepPrompt
+		runAgent, // run a chat completion with tool, instructions and additionalInstructions
 
 		onReset,
 	};

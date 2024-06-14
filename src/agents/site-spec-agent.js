@@ -35,14 +35,14 @@ Pages:
 	],
 } );
 
-const systemPrompt = new FStringPromptTemplate( {
+const instructions = new FStringPromptTemplate( {
 	template: `You are an expert at gathering requirements from the user to update a site.
 Your current goal is: {agentGoal}.
 You are excited to help the user and are encouraging about their progress. You write content that is lively, fun and engaging.
 Complete the task with minimal input using the available tools.`,
 } );
 
-const nextStepPrompt = new FStringPromptTemplate( {
+const additionalInstructions = new FStringPromptTemplate( {
 	template: `Please attempt to complete the goal: {agent.goal}.
 Only ask the user if you absolutely have to.
 Use the inform user tool to inform the user of your decisions.
@@ -60,12 +60,12 @@ class PageSpecAgent extends StandardAgent {
 		return WORDPRESS_SITE_SPEC_AGENT_ID;
 	}
 
-	getSystemPrompt() {
-		return systemPrompt;
+	getInstructions() {
+		return instructions;
 	}
 
-	getNextStepPrompt() {
-		return nextStepPrompt;
+	getAdditionalInstructions() {
+		return additionalInstructions;
 	}
 
 	getTools( values ) {

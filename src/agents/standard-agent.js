@@ -5,11 +5,11 @@ import SetGoalTool from './tools/set-goal.js';
 import createSetAgentTool from './tools/set-agent.js';
 import { FStringPromptTemplate } from './prompt-template.js';
 
-const systemPrompt = FStringPromptTemplate.fromString(
+const instructions = FStringPromptTemplate.fromString(
 	`You are a helpful assistant.`
 );
 
-const nextStepPrompt = FStringPromptTemplate.fromString(
+const additionalInstructions = FStringPromptTemplate.fromString(
 	`Please attempt to complete the goal: {agent.goal}.`
 );
 
@@ -35,12 +35,12 @@ class StandardAgent extends Agent {
 		this.call( SetGoalTool.function.name, { goal } );
 	}
 
-	getSystemPrompt() {
-		return systemPrompt;
+	getInstructions() {
+		return instructions;
 	}
 
-	getNextStepPrompt() {
-		return nextStepPrompt;
+	getAdditionalInstructions() {
+		return additionalInstructions;
 	}
 }
 

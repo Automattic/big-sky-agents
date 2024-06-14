@@ -154,8 +154,8 @@ const DEFAULT_SYSTEM_PROMPT = 'You are a helpful AI assistant.';
 
 function formatMessages(
 	history,
-	systemPrompt,
-	agentLoopPrompt,
+	instructions,
+	additionalInstructions,
 	maxHistoryLength,
 	model
 ) {
@@ -172,15 +172,15 @@ function formatMessages(
 	const messages = [
 		{
 			role: 'system',
-			content: systemPrompt,
+			content: instructions,
 		},
 		...formatHistory( trimmedMessages, model ),
 	];
 
-	if ( agentLoopPrompt ) {
+	if ( additionalInstructions ) {
 		messages.push( {
 			role: 'system',
-			content: agentLoopPrompt,
+			content: additionalInstructions,
 		} );
 	}
 
@@ -200,23 +200,23 @@ class ChatModel {
 	 * A higher level call to the chat completions API. This method formats the history, sets defaults,
 	 * calls the API, and returns the assistant response message.
 	 *
-	 * @param {Object}        params                 The parameters for the API call
-	 * @param {string}        params.model           The model to use
-	 * @param {Array<Object>} params.messages        The history of messages (OpenAI Chat Completion format)
-	 * @param {Array<Object>} params.tools           The tools to use (Swagger/JSONSchema format)
-	 * @param {string}        params.systemPrompt    The system prompt
-	 * @param {string}        params.agentLoopPrompt The agent loop prompt
-	 * @param {number}        params.temperature     The temperature to use
-	 * @param {number}        params.maxTokens       The maximum number of tokens to generate
-	 * @param {string}        params.feature         The WPCOM feature slug for this product (WPCOM endpoints only)
+	 * @param {Object}        params                        The parameters for the API call
+	 * @param {string}        params.model                  The model to use
+	 * @param {Array<Object>} params.messages               The history of messages (OpenAI Chat Completion format)
+	 * @param {Array<Object>} params.tools                  The tools to use (Swagger/JSONSchema format)
+	 * @param {string}        params.instructions           The system prompt
+	 * @param {string}        params.additionalInstructions The agent loop prompt
+	 * @param {number}        params.temperature            The temperature to use
+	 * @param {number}        params.maxTokens              The maximum number of tokens to generate
+	 * @param {string}        params.feature                The WPCOM feature slug for this product (WPCOM endpoints only)
 	 * @return {Promise<Object>} The response message
 	 */
 	async run( {
 		model,
 		messages,
 		tools,
-		systemPrompt,
-		agentLoopPrompt,
+		instructions,
+		additionalInstructions,
 		temperature,
 		maxTokens,
 		feature,
@@ -228,8 +228,8 @@ class ChatModel {
 		model = model ?? this.getDefaultModel();
 		messages = formatMessages(
 			messages,
-			systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
-			agentLoopPrompt,
+			instructions ?? DEFAULT_SYSTEM_PROMPT,
+			additionalInstructions,
 			this.maxHistoryLength,
 			model
 		);

@@ -3,7 +3,7 @@ import StandardAgent from './standard-agent.js';
 import { WORDPRESS_TUTOR_AGENT_ID } from './default-agents.js';
 import { FStringPromptTemplate } from './prompt-template.js';
 
-const systemPrompt = FStringPromptTemplate.fromString(
+const instructions = FStringPromptTemplate.fromString(
 	`You are a helpful WordPress tutor. You are an expert in all things WordPress.`
 );
 
@@ -12,8 +12,8 @@ class TutorAgent extends StandardAgent {
 		return WORDPRESS_TUTOR_AGENT_ID;
 	}
 
-	getSystemPrompt() {
-		return systemPrompt;
+	getInstructions() {
+		return instructions;
 	}
 
 	onStart() {

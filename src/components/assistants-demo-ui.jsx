@@ -12,20 +12,23 @@ import PageSpecPreview from './page-spec-preview.jsx';
 import AgentUI from './agent-ui.jsx';
 import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
-import { ChatModelService, ChatModelType } from '../agents/chat-model.js';
+import {
+	AssistantModelService,
+	AssistantModelType,
+} from '../agents/assistant-model.js';
 import PageList from './page-list.jsx';
 import useReduxToolkit from '../hooks/use-redux-toolkit.js';
 import useCurrentAgent from '../hooks/use-current-agent.js';
-import useChatExecutor from '../hooks/use-chat-executor.js';
+import useAssistantExecutor from '../hooks/use-assistant-executor.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useReduxChat from '../hooks/use-redux-chat.js';
 import './agents-demo-ui.scss';
 
 /**
- * Renders the Agents Demo UI component.
+ * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
  *
- * This component displays the user interface for the Agents Demo, which allows users to interact with agents and preview generated content.
+ * This component displays the user interface for the Assistants Demo, which allows users to interact with assistants and preview generated content.
  * @param {Object}   root0                The component props.
  * @param {string}   root0.token          The token to use for the chat model.
  * @param {Function} root0.onTokenChanged Callback function to call when the token changes.
@@ -33,8 +36,10 @@ import './agents-demo-ui.scss';
 const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
 	const [ previewVisible, setPreviewVisible ] = useState( false );
-	const [ model, setModel ] = useState( ChatModelType.getDefault() );
-	const [ service, setService ] = useState( ChatModelService.getDefault() );
+	const [ model, setModel ] = useState( AssistantModelType.getDefault() );
+	const [ service, setService ] = useState(
+		AssistantModelService.getDefault()
+	);
 	const [ temperature, setTemperature ] = useState( 0.2 );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 	const [ token, setToken ] = useState( originalToken );
@@ -63,7 +68,7 @@ const AgentsDemoUI = ( { token: originalToken, onTokenChanged } ) => {
 	} );
 
 	// run the agent
-	useChatExecutor( {
+	useAssistantExecutor( {
 		chat,
 		agent,
 		toolkit,

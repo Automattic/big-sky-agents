@@ -51,11 +51,11 @@ class PageSpecAgent extends StandardAgent {
 		return WORDPRESS_SITE_SPEC_AGENT_ID;
 	}
 
-	getSystemPrompt() {
+	getInstructions() {
 		return SystemPrompt;
 	}
 
-	getNextStepPrompt() {
+	getAdditionalInstructions() {
 		return NextStepPrompt;
 	}
 
