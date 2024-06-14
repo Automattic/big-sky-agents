@@ -27,7 +27,7 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 	const [ enabled, setEnabled ] = useState( true );
 	const [ assistantMessage, setAssistantMessage ] = useState();
 	const runningRef = useRef( false );
-	const chatModel = useChatModel( { token, service } );
+	const chatModel = useChatModel( { token, service, feature } );
 
 	const call = useCallback( ( name, args, id ) => {
 		console.log( '🤖 Adding Tool Call', name, args, id );
@@ -191,7 +191,6 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 					instructions,
 					additionalInstructions,
 					temperature,
-					feature,
 				} )
 				.then( ( message ) => {
 					runningRef.current = false;
@@ -227,7 +226,6 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 			pendingToolRequests,
 			running,
 			temperature,
-			feature,
 		]
 	);
 

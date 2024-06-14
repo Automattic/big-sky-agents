@@ -188,8 +188,10 @@ function formatMessages(
 }
 
 class ChatModel {
-	constructor( { apiKey } ) {
+	constructor( { apiKey, feature, sessionId } ) {
 		this.apiKey = apiKey;
+		this.feature = feature;
+		this.sessionId = sessionId;
 	}
 
 	getApiKey() {
@@ -208,7 +210,6 @@ class ChatModel {
 	 * @param {string}        params.additionalInstructions The agent loop prompt
 	 * @param {number}        params.temperature            The temperature to use
 	 * @param {number}        params.maxTokens              The maximum number of tokens to generate
-	 * @param {string}        params.feature                The WPCOM feature slug for this product (WPCOM endpoints only)
 	 * @return {Promise<Object>} The response message
 	 */
 	async run( {
@@ -219,7 +220,6 @@ class ChatModel {
 		additionalInstructions,
 		temperature,
 		maxTokens,
-		feature,
 	} ) {
 		if ( ! messages || ! messages.length ) {
 			throw new Error( 'Missing history' );
@@ -242,7 +242,6 @@ class ChatModel {
 			max_tokens,
 			messages,
 			tools,
-			feature,
 		} );
 
 		const choice = response.choices[ 0 ];
@@ -269,14 +268,12 @@ class ChatModel {
 	 * @param {Array<Object>} request.messages    The messages to use
 	 * @param {Array<Object>} request.tools       The tools to use
 	 * @param {string}        request.tool_choice The tool to use
-	 * @param {string}        request.feature     The feature slug for this product (WPCOM endpoints only)
-	 * @param {string}        request.session_id  The session ID (WPCOM endpoints only)
 	 *
 	 * @return {Promise<Object>} The response object
 	 */
 	async call( request ) {
 		const params = this.getParams( request );
-		const headers = this.getHeaders( request );
+		const headers = this.getHeaders();
 
 		console.log(
 			`Calling ${ this.constructor.name } with model ${ params.model }, temperature ${ params.temperature }, max_tokens ${ params.max_tokens }`
@@ -360,7 +357,7 @@ class ChatModel {
 		return params;
 	}
 
-	getHeaders( /* request */ ) {
+	getHeaders() {
 		return {
 			Authorization: `Bearer ${ this.apiKey }`,
 			'Content-Type': 'application/json',
@@ -383,22 +380,23 @@ class ChatModel {
 		throw new Error( 'Not implemented' );
 	}
 
-	static getInstance( service, apiToken ) {
+	static getInstance( service, apiKey, feature, sessionId ) {
+		const params = { apiKey, feature, sessionId };
 		switch ( service ) {
 			case ChatModelService.GROQ:
-				return new GroqChatModel( { apiKey: apiToken } );
+				return new GroqChatModel( params );
 			case ChatModelService.OPENAI:
-				return new OpenAIChatModel( { apiKey: apiToken } );
+				return new OpenAIChatModel( params );
 			case ChatModelService.WPCOM_JETPACK_AI:
-				return new WPCOMJetpackAIChatModel( { apiKey: apiToken } );
+				return new WPCOMJetpackAIChatModel( params );
 			case ChatModelService.WPCOM_OPENAI:
-				return new WPCOMOpenAIChatModel( { apiKey: apiToken } );
+				return new WPCOMOpenAIChatModel( params );
 			case ChatModelService.OLLAMA:
-				return new OllamaChatModel( { apiKey: apiToken } );
+				return new OllamaChatModel( params );
 			case ChatModelService.LMSTUDIO:
-				return new LMStudioChatModel( { apiKey: apiToken } );
+				return new LMStudioChatModel( params );
 			case ChatModelService.LOCALAI:
-				return new LocalAIChatModel( { apiKey: apiToken } );
+				return new LocalAIChatModel( params );
 			default:
 				throw new Error( `Unknown service: ${ service }` );
 		}
@@ -410,14 +408,14 @@ export class WPCOMJetpackAIChatModel extends ChatModel {
 		return ChatModelType.GPT_4O;
 	}
 
-	getParams( { session_id, feature, ...request } ) {
+	getParams( request ) {
 		const params = super.getParams( request );
-		if ( feature ) {
-			params.feature = feature;
+		if ( this.feature ) {
+			params.feature = this.feature;
 		}
 
-		if ( session_id ) {
-			params.session_id = session_id;
+		if ( this.sessionId ) {
+			params.session_id = this.sessionId;
 		}
 
 		return params;
@@ -429,16 +427,16 @@ export class WPCOMJetpackAIChatModel extends ChatModel {
 }
 
 export class WPCOMOpenAIChatModel extends ChatModel {
-	getHeaders( { feature, session_id, ...request } ) {
-		const headers = super.getHeaders( request );
-		if ( feature ) {
-			headers[ 'X-WPCOM-AI-Feature' ] = feature;
+	getHeaders() {
+		const headers = super.getHeaders();
+		if ( this.feature ) {
+			headers[ 'X-WPCOM-AI-Feature' ] = this.feature;
 			headers[ 'Access-Control-Request-Headers' ] =
 				'authorization,content-type,X-WPCOM-AI-Feature';
 		}
 
-		if ( session_id ) {
-			headers[ 'X-WPCOM-Session-ID' ] = session_id;
+		if ( this.sessionId ) {
+			headers[ 'X-WPCOM-Session-ID' ] = this.sessionId;
 		}
 
 		return headers;

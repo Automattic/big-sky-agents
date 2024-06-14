@@ -21,12 +21,28 @@ declare class AssistantModelType {
 interface ChatCompletionRequest {
 	model: AssistantModelType;
 	messages: Message[];
-	tools: Tool[];
+	tools?: Tool[];
 	temperature?: number;
 	max_tokens?: number;
 	tool_choice?: string | null;
 	feature?: string;
 };
+
+declare interface RunThreadRequest {
+	threadId: string;
+	assistantId: string;
+	model?: AssistantModelType;
+	instructions?: string;
+	additionalInstructions?: string;
+	additionalMessages?: string[];
+	tools?: string[];
+	metadata?: object;
+	temperature?: number;
+	max_prompt_tokens?: number;
+	max_completion_tokens?: number;
+	truncation_strategy?: string;
+	response_format?: object;
+}
 
 declare class AssistantModel {
 	constructor( options: { apiKey?: string } );
@@ -35,17 +51,9 @@ declare class AssistantModel {
 	getDefaultTemperature(): number;
 	getParams( request: ChatCompletionRequest ): Record< string, any >;
 	getHeaders( request: ChatCompletionRequest ): Record< string, string >;
-	run( options: {
-		model: AssistantModelType;
-		messages: Message[];
-		tools?: Tool[];
-		instructions: string;
-		additionalInstructions?: string;
-		temperature?: number;
-		maxTokens?: number;
-		feature?: string;
-	} ): Promise< any >;
-	call( options: ChatCompletionRequest ): Promise< any >;
+
+	async createThread( request: CreateThreadRequest ): Promise< any >; // TODO CreateThreadResponse
+	async runThread( request: RunThreadRequest ): Promise< any >;
 	static getInstance(
 		service: AssistantModelService,
 		apiKey: string | null

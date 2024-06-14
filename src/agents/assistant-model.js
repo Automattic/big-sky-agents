@@ -123,9 +123,11 @@ function formatMessages(
 // class Thread {}
 
 class AssistantModel {
-	constructor( { apiKey, assistantId } ) {
+	constructor( { apiKey, assistantId, feature, sessionId } ) {
 		this.apiKey = apiKey;
 		this.assistantId = assistantId;
+		this.feature = feature;
+		this.sessionId = sessionId;
 	}
 
 	getApiKey() {
@@ -137,9 +139,9 @@ class AssistantModel {
 	 * @see: https://platform.openai.com/docs/api-reference/threads/createThread
 	 * @param {Object} request
 	 */
-	async createThread( request ) {
+	async createThread() {
 		const params = {};
-		const headers = this.getHeaders( request );
+		const headers = this.getHeaders();
 		const createThreadRequest = await fetch(
 			`${ this.getServiceUrl() }/threads`,
 			{
@@ -148,62 +150,22 @@ class AssistantModel {
 				body: JSON.stringify( params ),
 			}
 		);
-
-		if ( createThreadRequest.status === 401 ) {
-			throw new Error( 'Unauthorized' );
-		} else if ( createThreadRequest.status === 429 ) {
-			throw new Error( 'Rate limit exceeded' );
-		} else if ( createThreadRequest.status === 500 ) {
-			const responseText = await createThreadRequest.text();
-			throw new Error( `Internal server error: ${ responseText }` );
-		}
-
-		let response;
-
-		try {
-			response = await createThreadRequest.json();
-		} catch ( error ) {
-			console.error( 'Error parsing response', error );
-			throw new Error( 'Unexpected response format' );
-		}
-
-		console.warn( 'createThreadRequest response', response );
-
-		// if response.code is set and response.choices is not, assume it's an error
-		if ( response.code && ! response.id ) {
-			throw new Error( `${ response.code } ${ response.message ?? '' }` );
-		}
-
-		if ( response.error ) {
-			console.error( 'Chat Model Error', response.error, params );
-			throw new Error(
-				`${ response.error.type }: ${ response.error.message }`
-			);
-		}
-
-		if ( ! response.object || response.object !== 'thread' ) {
-			console.error(
-				'Invalid response from server, not a thread',
-				response
-			);
-			throw new Error( 'Invalid response from server' );
-		}
-
-		return response;
+		return await this.getResponse( createThreadRequest, 'thread' );
 	}
 
 	/**
+	 * This is not currently used anywhere but kept here for reference.
 	 *
 	 * @param {*}      request
 	 * @param {string} request.name
 	 * @param {string} request.description
 	 * @param {string} request.instructions
-	 * @param {array}  request.tools
+	 * @param {Array}  request.tools
 	 * @param {Object} request.tool_resources
 	 * @param {Object} request.metadata
 	 * @param {Object} request.temperature
 	 * @param {Object} request.response_format
-	 * @returns
+	 * @return {Promise<Object>} The response object
 	 */
 	async createAssistant( request ) {
 		const headers = this.getHeaders( request );
@@ -215,48 +177,7 @@ class AssistantModel {
 				body: JSON.stringify( request ),
 			}
 		);
-
-		if ( createAssistantRequest.status === 401 ) {
-			throw new Error( 'Unauthorized' );
-		} else if ( createAssistantRequest.status === 429 ) {
-			throw new Error( 'Rate limit exceeded' );
-		} else if ( createAssistantRequest.status === 500 ) {
-			const responseText = await createAssistantRequest.text();
-			throw new Error( `Internal server error: ${ responseText }` );
-		}
-
-		let response;
-
-		try {
-			response = await createAssistantRequest.json();
-		} catch ( error ) {
-			console.error( 'Error parsing response', error );
-			throw new Error( 'Unexpected response format' );
-		}
-
-		console.warn( 'createAssistantRequest response', response );
-
-		// if response.code is set and response.choices is not, assume it's an error
-		if ( response.code && ! response.id ) {
-			throw new Error( `${ response.code } ${ response.message ?? '' }` );
-		}
-
-		if ( response.error ) {
-			console.error( 'Chat Model Error', response.error, request );
-			throw new Error(
-				`${ response.error.type }: ${ response.error.message }`
-			);
-		}
-
-		if ( ! response.object || response.object !== 'assistant' ) {
-			console.error(
-				'Invalid response from server, not an assistant',
-				response
-			);
-			throw new Error( 'Invalid response from server' );
-		}
-
-		return response;
+		return await this.getResponse( createAssistantRequest, 'assistant' );
 	}
 
 	/**
@@ -277,16 +198,19 @@ class AssistantModel {
 	 * @param {Object}  request.response_format
 	 * @returns
 	 */
-	async runAssistant( request ) {
+	async runThread( request ) {
 		const params = {
 			assistant_id: request.assistantId,
 			instructions: request.instructions,
 			additional_instructions: request.additionalInstructions,
 			additional_messages: request.additionalMessages,
 			tools: request.tools,
-			// TODO: etc.
+			model: request.model ?? this.getDefaultModel(),
+			temperature: request.temperature ?? this.getDefaultTemperature(),
+			max_completion_tokens:
+				request.max_tokens ?? this.getDefaultMaxTokens(),
 		};
-		const headers = this.getHeaders( request );
+		const headers = this.getHeaders();
 		const createRunRequest = await fetch(
 			`${ this.getServiceUrl() }/threads/${ request.threadId }/runs`,
 			{
@@ -295,42 +219,51 @@ class AssistantModel {
 				body: JSON.stringify( params ),
 			}
 		);
+		return await this.getResponse( createRunRequest, 'thread.run' );
+	}
 
-		if ( createRunRequest.status === 401 ) {
+	async createThreadMessage( threadId, message ) {
+		// calls POST threads/:threadId/messages
+		const params = message;
+		const headers = this.getHeaders();
+		const createMessageRequest = await fetch(
+			`${ this.getServiceUrl() }/threads/${ threadId }/messages`,
+			{
+				method: 'POST',
+				headers,
+				body: JSON.stringify( params ),
+			}
+		);
+		return await this.getResponse( createMessageRequest, 'thread.message' );
+	}
+
+	async getResponse( request, expectedObject = null ) {
+		if ( request.status === 400 ) {
+			const response = await request.json();
+			if ( response.error ) {
+				throw new Error(
+					`${ response.error.type }: ${ response.error.message }`
+				);
+			}
+			throw new Error( 'Bad request' );
+		} else if ( request.status === 401 ) {
 			throw new Error( 'Unauthorized' );
-		} else if ( createRunRequest.status === 429 ) {
+		} else if ( request.status === 429 ) {
 			throw new Error( 'Rate limit exceeded' );
-		} else if ( createRunRequest.status === 500 ) {
-			const responseText = await createRunRequest.text();
-			throw new Error( `Internal server error: ${ responseText }` );
+		} else if ( request.status === 500 ) {
+			const response = await request.json();
+			throw new Error( `Internal server error: ${ response }` );
 		}
 
-		let response;
+		const response = await request.json();
 
-		try {
-			response = await createRunRequest.json();
-		} catch ( error ) {
-			console.error( 'Error parsing response', error );
-			throw new Error( 'Unexpected response format' );
-		}
-
-		console.warn( 'createRunRequest response', response );
-
-		// if response.code is set and response.choices is not, assume it's an error
 		if ( response.code && ! response.id ) {
 			throw new Error( `${ response.code } ${ response.message ?? '' }` );
 		}
 
-		if ( response.error ) {
-			console.error( 'Create Run Error', response.error, request );
-			throw new Error(
-				`${ response.error.type }: ${ response.error.message }`
-			);
-		}
-
-		if ( ! response.object || response.object !== 'assistant' ) {
+		if ( expectedObject && response.object !== expectedObject ) {
 			console.error(
-				'Invalid response from server, not an assistant',
+				`Invalid response from server, not a ${ expectedObject }`,
 				response
 			);
 			throw new Error( 'Invalid response from server' );
@@ -339,171 +272,7 @@ class AssistantModel {
 		return response;
 	}
 
-	// /**
-	//  * A higher level call to the chat completions API. This method formats the history, sets defaults,
-	//  * calls the API, and returns the assistant response message.
-	//  *
-	//  * @param {Object}        params                 The parameters for the API call
-	//  * @param {string}        params.model           The model to use
-	//  * @param {Array<Object>} params.messages        The history of messages (OpenAI Chat Completion format)
-	//  * @param {Array<Object>} params.tools           The tools to use (Swagger/JSONSchema format)
-	//  * @param {string}        params.systemPrompt    The system prompt
-	//  * @param {string}        params.agentLoopPrompt The agent loop prompt
-	//  * @param {number}        params.temperature     The temperature to use
-	//  * @param {number}        params.maxTokens       The maximum number of tokens to generate
-	//  * @param {string}        params.feature         The WPCOM feature slug for this product (WPCOM endpoints only)
-	//  * @return {Promise<Object>} The response message
-	//  */
-	// async run( {
-	// 	model,
-	// 	messages,
-	// 	tools,
-	// 	systemPrompt,
-	// 	agentLoopPrompt,
-	// 	temperature,
-	// 	maxTokens,
-	// 	feature,
-	// } ) {
-	// 	if ( ! messages || ! messages.length ) {
-	// 		throw new Error( 'Missing history' );
-	// 	}
-
-	// 	model = model ?? this.getDefaultModel();
-	// 	messages = formatMessages(
-	// 		messages,
-	// 		systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
-	// 		agentLoopPrompt,
-	// 		this.maxHistoryLength,
-	// 		model
-	// 	);
-	// 	temperature = temperature ?? this.getDefaultTemperature( model );
-	// 	const max_tokens = maxTokens ?? this.getDefaultMaxTokens( model );
-
-	// 	const response = await this.call( {
-	// 		model,
-	// 		temperature,
-	// 		max_tokens,
-	// 		messages,
-	// 		tools,
-	// 		feature,
-	// 	} );
-
-	// 	const choice = response.choices[ 0 ];
-
-	// 	if ( choice.finish_reason === 'tool_calls' ) {
-	// 	} else if ( choice.finish_reason === 'length' ) {
-	// 		throw new Error( 'Finish reason length not implemented' );
-	// 	} else if ( choice.finish_reason === 'content_filter' ) {
-	// 		throw new Error( 'Finish reason content_filter not implemented' );
-	// 	} else if ( choice.finish_reason === 'stop' ) {
-	// 	}
-
-	// 	return choice.message;
-	// }
-
-	// /**
-	//  * A direct Chat Completions call. Simply makes the call and checks for HTTP errors.
-	//  * @see https://platform.openai.com/docs/api-reference/chat/create
-	//  *
-	//  * @param {Object}        request             The request object
-	//  * @param {string}        request.model       The model to use
-	//  * @param {number}        request.temperature The temperature to use
-	//  * @param {number}        request.max_tokens  The maximum number of tokens to generate
-	//  * @param {Array<Object>} request.messages    The messages to use
-	//  * @param {Array<Object>} request.tools       The tools to use
-	//  * @param {string}        request.tool_choice The tool to use
-	//  * @param {string}        request.feature     The feature slug for this product (WPCOM endpoints only)
-	//  * @param {string}        request.session_id  The session ID (WPCOM endpoints only)
-	//  *
-	//  * @return {Promise<Object>} The response object
-	//  */
-	// async call( request ) {
-	// 	const params = this.getParams( request );
-	// 	const headers = this.getHeaders( request );
-
-	// 	console.log(
-	// 		`Calling ${ this.constructor.name } with model ${ params.model }, temperature ${ params.temperature }, max_tokens ${ params.max_tokens }`
-	// 	);
-
-	// 	const serviceRequest = await fetch( this.getServiceUrl(), {
-	// 		method: 'POST',
-	// 		headers,
-	// 		body: JSON.stringify( params ),
-	// 	} );
-
-	// 	if ( serviceRequest.status === 401 ) {
-	// 		throw new Error( 'Unauthorized' );
-	// 	} else if ( serviceRequest.status === 429 ) {
-	// 		throw new Error( 'Rate limit exceeded' );
-	// 	} else if ( serviceRequest.status === 500 ) {
-	// 		const responseText = await serviceRequest.text();
-	// 		throw new Error( `Internal server error: ${ responseText }` );
-	// 	}
-
-	// 	let response;
-
-	// 	try {
-	// 		response = await serviceRequest.json();
-	// 	} catch ( error ) {
-	// 		console.error( 'Error parsing response', error );
-	// 		throw new Error( 'Unexpected response format' );
-	// 	}
-
-	// 	// if response.code is set and response.choices is not, assume it's an error
-	// 	if ( response.code && ! response.choices ) {
-	// 		throw new Error( `${ response.code } ${ response.message ?? '' }` );
-	// 	}
-
-	// 	if ( response.error ) {
-	// 		console.error( 'Chat Model Error', response.error, params );
-	// 		throw new Error(
-	// 			`${ response.error.type }: ${ response.error.message }`
-	// 		);
-	// 	}
-
-	// 	if ( ! response?.choices || response?.choices.length > 1 ) {
-	// 		console.error(
-	// 			'Invalid response from server, unexpected number of choices',
-	// 			response,
-	// 			response?.choices
-	// 		);
-	// 		throw new Error( 'Invalid response from server' );
-	// 	}
-
-	// 	return response;
-	// }
-
-	getParams( {
-		model,
-		temperature,
-		max_tokens,
-		messages,
-		tools,
-		tool_choice = null,
-	} ) {
-		const params = {
-			stream: false,
-			model,
-			temperature,
-			messages,
-			max_tokens,
-		};
-
-		if ( tools?.length ) {
-			params.tools = tools;
-		}
-
-		if ( tool_choice ) {
-			params.tool_choice = {
-				type: 'function',
-				function: { name: tool_choice },
-			};
-		}
-
-		return params;
-	}
-
-	getHeaders( /* request */ ) {
+	getHeaders() {
 		return {
 			Authorization: `Bearer ${ this.apiKey }`,
 			'Content-Type': 'application/json',
@@ -511,11 +280,11 @@ class AssistantModel {
 		};
 	}
 
-	getDefaultMaxTokens( /* model */ ) {
+	getDefaultMaxTokens() {
 		return 4096;
 	}
 
-	getDefaultTemperature( /* model */ ) {
+	getDefaultTemperature() {
 		return 0.2;
 	}
 
@@ -527,12 +296,20 @@ class AssistantModel {
 		throw new Error( 'Not implemented' );
 	}
 
-	static getInstance( service, apiToken ) {
+	static getInstance( service, apiToken, feature, sessionId ) {
 		switch ( service ) {
 			case AssistantModelService.OPENAI:
-				return new OpenAIAssistantModel( { apiKey: apiToken } );
+				return new OpenAIAssistantModel( {
+					apiKey: apiToken,
+					feature,
+					sessionId,
+				} );
 			case AssistantModelService.WPCOM_OPENAI:
-				return new WPCOMOpenAIAssistantModel( { apiKey: apiToken } );
+				return new WPCOMOpenAIAssistantModel( {
+					apiKey: apiToken,
+					feature,
+					sessionId,
+				} );
 			default:
 				throw new Error( `Unknown service: ${ service }` );
 		}
@@ -540,16 +317,16 @@ class AssistantModel {
 }
 
 export class WPCOMOpenAIAssistantModel extends AssistantModel {
-	getHeaders( { feature, session_id, ...request } ) {
-		const headers = super.getHeaders( request );
-		if ( feature ) {
-			headers[ 'X-WPCOM-AI-Feature' ] = feature;
+	getHeaders() {
+		const headers = super.getHeaders();
+		if ( this.feature ) {
+			headers[ 'X-WPCOM-AI-Feature' ] = this.feature;
 			headers[ 'Access-Control-Request-Headers' ] =
 				'authorization,content-type,X-WPCOM-AI-Feature';
 		}
 
-		if ( session_id ) {
-			headers[ 'X-WPCOM-Session-ID' ] = session_id;
+		if ( this.sessionId ) {
+			headers[ 'X-WPCOM-Session-ID' ] = this.sessionId;
 		}
 
 		return headers;

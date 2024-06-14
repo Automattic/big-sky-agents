@@ -32,6 +32,7 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 		running,
 		enabled,
 		setEnabled,
+		createThread,
 	} = chat;
 
 	const {
@@ -87,6 +88,7 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 				>
 					<span className="big-sky__thread-indicator">
 						{ threadId ?? 'None' }
+						<button onClick={ createThread }>reset</button>
 					</span>
 				</BaseControl>
 				<BaseControl

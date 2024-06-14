@@ -9,7 +9,6 @@ const useAssistantExecutor = ( {
 		setStarted,
 		enabled,
 		running,
-		history,
 		pendingToolRequests,
 		setToolCallResult,
 		runAssistant,
@@ -61,6 +60,10 @@ const useAssistantExecutor = ( {
 
 			const newAssistantId = agent.getAssistantId();
 
+			if ( ! newAssistantId ) {
+				throw new Error( 'Assistant ID is required' );
+			}
+
 			if ( newAssistantId && newAssistantId !== assistantId ) {
 				setAssistantId( newAssistantId );
 			}
@@ -94,12 +97,11 @@ const useAssistantExecutor = ( {
 		if (
 			! enabled || // disabled
 			running || // thinking
-			! instructions || // at a minimum we need a system prompt
-			history.length === 0 // no history
+			! instructions // at a minimum we need a system prompt
 		) {
 			return;
 		}
-		runAssistant( history, tools, instructions, additionalInstructions );
+		// runAssistant( tools, instructions, additionalInstructions );
 	}, [
 		enabled,
 		runAssistant,
@@ -107,7 +109,6 @@ const useAssistantExecutor = ( {
 		instructions,
 		additionalInstructions,
 		tools,
-		history,
 	] );
 
 	// useEffect( () => {

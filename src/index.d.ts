@@ -25,6 +25,8 @@ export declare function useChatExecutor( options: {
 export declare function useChatModel( options: {
 	token: string | undefined;
 	service: string;
+	feature?: string;
+	sessionId?: string;
 } ): any;
 
 interface ChatIconHook {

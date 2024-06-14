@@ -14,9 +14,9 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 		setToolCallResult,
 		runChatCompletion,
 		runCreateThread,
-		runCreateAssistant,
+		// runCreateAssistant,
 		setAssistantId,
-		runAssistantThread,
+		runThread,
 	} = useDispatch( agentStore );
 
 	const {
@@ -30,7 +30,6 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 		pendingToolRequests,
 		threadId,
 		assistantId,
-		assistantRunId,
 	} = useSelect( ( select ) => {
 		const values = {
 			error: select( agentStore ).getError(),
@@ -43,7 +42,6 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 			pendingToolRequests: select( agentStore ).getPendingToolRequests(),
 			threadId: select( agentStore ).getThreadId(),
 			assistantId: select( agentStore ).getAssistantId(),
-			assistantRunId: select( agentStore ).getAssistantRunId(),
 		};
 		return values;
 	} );
@@ -99,7 +97,7 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 	);
 
 	const runAssistant = useCallback(
-		( messages, tools, instructions, additionalInstructions ) => {
+		( tools, instructions, additionalInstructions ) => {
 			if (
 				! service || // no ChatModel
 				! token || // no apiKey
@@ -107,18 +105,16 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 				running || // already running
 				error || // there's an error
 				! enabled || // disabled
-				! messages.length > 0 || // nothing to process
 				pendingToolRequests.length > 0 || // waiting on tool calls
 				assistantMessage // the assistant has a question for the user
 			) {
-				console.warn( 'not running agent', {
+				console.warn( 'not running assistant', {
 					service,
 					token,
 					assistantId,
 					running,
 					error,
 					enabled,
-					messages,
 					pendingToolRequests,
 					assistantMessage,
 				} );
@@ -131,14 +127,13 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 			// 	console.warn( 'thread already exists', { threadId } );
 			// }
 
-			runAssistantThread( {
+			runThread( {
 				service,
 				apiKey: token,
 				assistantId,
 				threadId,
 				model,
 				temperature,
-				messages,
 				tools,
 				instructions,
 				additionalInstructions,
@@ -153,7 +148,7 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 			feature,
 			model,
 			pendingToolRequests,
-			runAssistantThread,
+			runThread,
 			running,
 			service,
 			temperature,
@@ -166,17 +161,11 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 		runCreateThread( { service, apiKey: token } );
 	}, [ runCreateThread, service, token ] );
 
-	const createAssistant = useCallback(
-		( request ) => {
-			runCreateAssistant( {
-				service,
-				model,
-				temperature,
-				apiKey: token,
-				...request,
-			} );
+	const userSay = useCallback(
+		( message, image_urls = [] ) => {
+			addUserMessage( message, image_urls, threadId, service, token );
 		},
-		[ model, runCreateAssistant, service, temperature, token ]
+		[ addUserMessage, service, threadId, token ]
 	);
 
 	const onReset = useCallback( () => {
@@ -198,7 +187,7 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 		// messages
 		history,
 		clearMessages,
-		userSay: addUserMessage,
+		userSay,
 		agentMessage: assistantMessage,
 
 		// tools
@@ -213,10 +202,8 @@ const useReduxChat = ( { token, service, model, temperature, feature } ) => {
 		threadId,
 		createThread,
 		assistantId,
-		createAssistant,
 		setAssistantId,
 
-		assistantRunId,
 		runAssistant, // run an assistant completion with messages and tools
 
 		onReset,

@@ -4,7 +4,7 @@ import AssistantModel from '../agents/assistant-model.js';
 
 const initialState = {
 	threadId: localStorage.getItem( 'threadId' ) || null, // The assistant thread ID
-	assistantRunId: null, // The assistant run ID
+	threadRuns: [], // The Assistant thread runs
 	assistantId: null, // The assistant ID
 	history: [],
 	tool_calls: [],
@@ -37,13 +37,13 @@ export const controls = {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
 		return await assistantModel.createThread();
 	},
-	async CREATE_ASSISTANT_CALL( { service, apiKey, request } ) {
+	async RUN_THREAD_CALL( { service, apiKey, request } ) {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.createAssistant( request );
+		return await assistantModel.runThread( request );
 	},
-	async RUN_ASSISTANT_CALL( { service, apiKey, request } ) {
+	async CREATE_THREAD_MESSAGE_CALL( { service, apiKey, threadId, message } ) {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.runAssistant( request );
+		return await assistantModel.createThreadMessage( threadId, message );
 	},
 };
 
@@ -105,42 +105,22 @@ function* runCreateThread( { service, apiKey } ) {
 	}
 }
 
-// openai tools: code_interpreter, file_search, or function
-function* runCreateAssistant( { service, apiKey, ...request } ) {
-	yield { type: 'CREATE_ASSISTANT_BEGIN_REQUEST' };
+function* runThread( { service, apiKey, ...request } ) {
+	yield { type: 'RUN_THREAD_BEGIN_REQUEST' };
 	try {
-		const assistantResponse = yield {
-			type: 'CREATE_ASSISTANT_CALL',
-			service,
-			apiKey,
-			request,
-		};
-		return {
-			type: 'CREATE_ASSISTANT_END_REQUEST',
-			assistantId: assistantResponse.id,
-		};
-	} catch ( error ) {
-		console.error( 'Assistant error', error );
-		return { type: 'CREATE_ASSISTANT_ERROR', error: error.message };
-	}
-}
-
-function* runAssistantThread( { service, apiKey, ...request } ) {
-	yield { type: 'RUN_ASSISTANT_BEGIN_REQUEST' };
-	try {
-		const runResponse = yield {
-			type: 'RUN_ASSISTANT_CALL',
+		const runThreadResponse = yield {
+			type: 'RUN_THREAD_CALL',
 			service,
 			apiKey,
 			request,
 		};
 		yield {
-			type: 'RUN_ASSISTANT_END_REQUEST',
-			assistantRunId: runResponse.id,
+			type: 'RUN_THREAD_END_REQUEST',
+			threadRun: runThreadResponse,
 		};
 	} catch ( error ) {
 		console.error( 'Chat error', error );
-		return { type: 'RUN_ASSISTANT_ERROR', error: error.message };
+		return { type: 'RUN_THREAD_ERROR', error: error.message };
 	}
 }
 
@@ -171,7 +151,85 @@ function filterMessage( message ) {
 	return message;
 }
 
-const addMessage = ( state, message ) => {
+// function* addMessage( message ) {
+// }
+
+function* addMessage( message, threadId, service, apiKey ) {
+	yield {
+		type: 'ADD_MESSAGE',
+		message,
+	};
+	// add the message to the active thread
+	if ( threadId ) {
+		yield { type: 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST' };
+		try {
+			const createMessageResponse = yield {
+				type: 'CREATE_THREAD_MESSAGE_CALL',
+				service,
+				apiKey,
+				threadId,
+				message,
+			};
+			yield {
+				type: 'CREATE_THREAD_MESSAGE_END_REQUEST',
+				threadRun: createMessageResponse,
+			};
+		} catch ( error ) {
+			console.error( 'Chat error', error );
+			return {
+				type: 'CREATE_THREAD_MESSAGE_ERROR',
+				error: error.message,
+			};
+		}
+	}
+}
+
+function* addUserMessage(
+	content,
+	image_urls = [],
+	threadId,
+	service,
+	apiKey
+) {
+	const message = {
+		role: 'user',
+		content: [
+			{
+				type: 'text',
+				text: content,
+			},
+			...image_urls?.map( ( image_url ) => ( {
+				type: 'image_url',
+				image_url, //: 'data:image/jpeg;base64,$base64'
+			} ) ),
+		],
+	};
+
+	yield addMessage( message, threadId, service, apiKey );
+}
+
+function* addAssistantMessage(
+	content,
+	finish_reason,
+	tool_calls,
+	threadId,
+	service,
+	apiKey
+) {
+	yield addMessage(
+		{
+			role: 'assistant',
+			content,
+			finish_reason,
+			tool_calls,
+		},
+		threadId,
+		service,
+		apiKey
+	);
+}
+
+const addMessageReducer = ( state, message ) => {
 	message = filterMessage( message );
 
 	// special processing for tools - add the tool call messages
@@ -265,7 +323,7 @@ export const reducer = ( state = initialState, action ) => {
 			return {
 				...state,
 				toolRunning: false,
-				...addMessage( state, {
+				...addMessageReducer( state, {
 					role: 'tool',
 					tool_call_id: action.id,
 					content: formatToolResultContent( action.result ),
@@ -293,7 +351,7 @@ export const reducer = ( state = initialState, action ) => {
 				].filter( ( tool_call ) => typeof tool_call !== 'undefined' ),
 			};
 		case 'ADD_MESSAGE':
-			return addMessage( state, action.message );
+			return addMessageReducer( state, action.message );
 		case 'CLEAR_MESSAGES':
 			return { ...state, history: [], tool_calls: [] };
 		case 'CLEAR_PENDING_TOOL_REQUESTS':
@@ -319,25 +377,15 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, running: false, threadId: action.threadId };
 		case 'CREATE_THREAD_ERROR':
 			return { ...state, running: false, error: action.error };
-		case 'CREATE_ASSISTANT_BEGIN_REQUEST':
+		case 'RUN_THREAD_BEGIN_REQUEST':
 			return { ...state, running: true };
-		case 'CREATE_ASSISTANT_END_REQUEST':
+		case 'RUN_THREAD_END_REQUEST':
 			return {
 				...state,
 				running: false,
-				assistantId: action.assistantId,
+				threadRuns: [ ...state.threadRuns, action.threadRun ],
 			};
-		case 'CREATE_ASSISTANT_ERROR':
-			return { ...state, running: false, error: action.error };
-		case 'RUN_ASSISTANT_BEGIN_REQUEST':
-			return { ...state, running: true };
-		case 'RUN_ASSISTANT_END_REQUEST':
-			return {
-				...state,
-				running: false,
-				assistantRunId: action.assistantRunId,
-			};
-		case 'RUN_ASSISTANT_ERROR':
+		case 'RUN_THREAD_ERROR':
 			return { ...state, running: false, error: action.error };
 		default:
 			return state;
@@ -384,7 +432,11 @@ export const selectors = {
 	},
 	getThreadId: ( state ) => state.threadId,
 	getAssistantId: ( state ) => state.assistantId,
-	getAssistantRunId: ( state ) => state.assistantRunId,
+	getThreadRuns: ( state ) => state.threadRun,
+	getLatestThreadRun: ( state ) => {
+		// statuses: queued, in_progress, requires_action, cancelling, cancelled, failed, completed, incomplete, or expired
+		return state.threadRuns[ state.threadRuns.length - 1 ];
+	},
 };
 
 export const actions = {
@@ -403,12 +455,8 @@ export const actions = {
 	setToolCallResult,
 	runChatCompletion,
 	runCreateThread,
-	runCreateAssistant,
-	runAssistantThread,
-	addMessage: ( message ) => ( {
-		type: 'ADD_MESSAGE',
-		message,
-	} ),
+	runThread,
+	addMessage,
 	clearMessages: () => ( {
 		type: 'CLEAR_MESSAGES',
 		messages: [],
@@ -416,26 +464,9 @@ export const actions = {
 	clearPendingToolRequests: () => ( {
 		type: 'CLEAR_PENDING_TOOL_REQUESTS',
 	} ),
-	addAssistantMessage: ( content, finish_reason, tool_calls ) => ( {
-		type: 'ADD_MESSAGE',
-		message: { role: 'assistant', content, finish_reason, tool_calls },
-	} ),
-	addUserMessage: ( content, image_urls = [] ) => ( {
-		type: 'ADD_MESSAGE',
-		message: {
-			role: 'user',
-			content: [
-				{
-					type: 'text',
-					text: content,
-				},
-				...image_urls.map( ( image_url ) => ( {
-					type: 'image_url',
-					image_url, //: 'data:image/jpeg;base64,$base64'
-				} ) ),
-			],
-		},
-	} ),
+	// TODO: unused?
+	addAssistantMessage,
+	addUserMessage,
 	addToolCall: ( name, args, id ) => ( {
 		type: 'ADD_MESSAGE',
 		message: {
