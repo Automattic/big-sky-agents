@@ -27,12 +27,14 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 	const {
 		threadId,
 		assistantId,
-		assistantRunId,
 		onReset: onResetChat,
 		running,
 		enabled,
 		setEnabled,
 		createThread,
+		createThreadRun,
+		updateThreadRun,
+		threadRun,
 	} = chat;
 
 	const {
@@ -97,7 +99,22 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 					labelPosition="side"
 				>
 					<span className="big-sky__assistant-run-indicator">
-						{ assistantRunId ?? 'None' }
+						{ threadRun ? (
+							<>
+								{ threadRun.id }
+								<button
+									onClick={ () =>
+										updateThreadRun( threadRun.id )
+									}
+								>
+									refresh
+								</button>
+							</>
+						) : (
+							<button onClick={ () => createThreadRun() }>
+								start
+							</button>
+						) }
 					</span>
 				</BaseControl>
 				<BaseControl

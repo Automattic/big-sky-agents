@@ -39,7 +39,15 @@ export const controls = {
 	},
 	async RUN_THREAD_CALL( { service, apiKey, request } ) {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.runThread( request );
+		return await assistantModel.createThreadRun( request );
+	},
+	async GET_THREAD_RUNS_CALL( { service, apiKey, threadId } ) {
+		const assistantModel = AssistantModel.getInstance( service, apiKey );
+		return await assistantModel.getThreadRuns( threadId );
+	},
+	async GET_THREAD_RUN_CALL( { service, apiKey, threadId, threadRunId } ) {
+		const assistantModel = AssistantModel.getInstance( service, apiKey );
+		return await assistantModel.getThreadRun( threadId, threadRunId );
 	},
 	async CREATE_THREAD_MESSAGE_CALL( { service, apiKey, threadId, message } ) {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
@@ -87,6 +95,45 @@ function* runChatCompletion( { service, apiKey, ...request } ) {
 	}
 }
 
+function* runGetThreadRuns( { service, apiKey, threadId } ) {
+	yield { type: 'GET_THREAD_RUNS_BEGIN_REQUEST' };
+	try {
+		const threadRuns = yield {
+			type: 'GET_THREAD_RUNS_CALL',
+			service,
+			apiKey,
+			threadId,
+		};
+		yield {
+			type: 'GET_THREAD_RUNS_END_REQUEST',
+			threadRuns,
+		};
+	} catch ( error ) {
+		console.error( 'Thread error', error );
+		return { type: 'GET_THREAD_RUNS_ERROR', error: error.message };
+	}
+}
+
+function* runGetThreadRun( { service, apiKey, threadId, threadRunId } ) {
+	yield { type: 'GET_THREAD_RUN_BEGIN_REQUEST' };
+	try {
+		const threadRun = yield {
+			type: 'GET_THREAD_RUN_CALL',
+			service,
+			apiKey,
+			threadId,
+			threadRunId,
+		};
+		yield {
+			type: 'GET_THREAD_RUN_END_REQUEST',
+			threadRun,
+		};
+	} catch ( error ) {
+		console.error( 'Thread error', error );
+		return { type: 'GET_THREAD_RUN_ERROR', error: error.message };
+	}
+}
+
 function* runCreateThread( { service, apiKey } ) {
 	yield { type: 'CREATE_THREAD_BEGIN_REQUEST' };
 	try {
@@ -105,10 +152,10 @@ function* runCreateThread( { service, apiKey } ) {
 	}
 }
 
-function* runThread( { service, apiKey, ...request } ) {
+function* runCreateThreadRun( { service, apiKey, ...request } ) {
 	yield { type: 'RUN_THREAD_BEGIN_REQUEST' };
 	try {
-		const runThreadResponse = yield {
+		const runCreateThreadRunResponse = yield {
 			type: 'RUN_THREAD_CALL',
 			service,
 			apiKey,
@@ -116,7 +163,7 @@ function* runThread( { service, apiKey, ...request } ) {
 		};
 		yield {
 			type: 'RUN_THREAD_END_REQUEST',
-			threadRun: runThreadResponse,
+			threadRun: runCreateThreadRunResponse,
 		};
 	} catch ( error ) {
 		console.error( 'Chat error', error );
@@ -163,7 +210,7 @@ function* addMessage( message, threadId, service, apiKey ) {
 	if ( threadId ) {
 		yield { type: 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST' };
 		try {
-			const createMessageResponse = yield {
+			yield {
 				type: 'CREATE_THREAD_MESSAGE_CALL',
 				service,
 				apiKey,
@@ -172,7 +219,6 @@ function* addMessage( message, threadId, service, apiKey ) {
 			};
 			yield {
 				type: 'CREATE_THREAD_MESSAGE_END_REQUEST',
-				threadRun: createMessageResponse,
 			};
 		} catch ( error ) {
 			console.error( 'Chat error', error );
@@ -377,6 +423,12 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, running: false, threadId: action.threadId };
 		case 'CREATE_THREAD_ERROR':
 			return { ...state, running: false, error: action.error };
+		case 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST':
+			return { ...state, running: true };
+		case 'CREATE_THREAD_MESSAGE_END_REQUEST':
+			return { ...state, running: false };
+		case 'CREATE_THREAD_MESSAGE_ERROR':
+			return { ...state, running: false, error: action.error };
 		case 'RUN_THREAD_BEGIN_REQUEST':
 			return { ...state, running: true };
 		case 'RUN_THREAD_END_REQUEST':
@@ -386,6 +438,16 @@ export const reducer = ( state = initialState, action ) => {
 				threadRuns: [ ...state.threadRuns, action.threadRun ],
 			};
 		case 'RUN_THREAD_ERROR':
+			return { ...state, running: false, error: action.error };
+		case 'GET_THREAD_RUNS_BEGIN_REQUEST':
+			return { ...state, running: true };
+		case 'GET_THREAD_RUNS_END_REQUEST':
+			return {
+				...state,
+				running: false,
+				threadRuns: action.threadRuns,
+			};
+		case 'GET_THREAD_RUNS_ERROR':
 			return { ...state, running: false, error: action.error };
 		default:
 			return state;
@@ -433,7 +495,17 @@ export const selectors = {
 	getThreadId: ( state ) => state.threadId,
 	getAssistantId: ( state ) => state.assistantId,
 	getThreadRuns: ( state ) => state.threadRun,
-	getLatestThreadRun: ( state ) => {
+	getThreadRun: ( state, threadRunId ) => {
+		return state.threadRuns.find(
+			( threadRun ) => threadRun.id === threadRunId
+		);
+	},
+	getThreadRunId: ( state ) => {
+		return state.threadRuns[ state.threadRuns.length - 1 ]?.id
+			? state.threadRuns[ state.threadRuns.length - 1 ].id
+			: null;
+	},
+	getCurrentThreadRun: ( state ) => {
 		// statuses: queued, in_progress, requires_action, cancelling, cancelled, failed, completed, incomplete, or expired
 		return state.threadRuns[ state.threadRuns.length - 1 ];
 	},
@@ -455,7 +527,9 @@ export const actions = {
 	setToolCallResult,
 	runChatCompletion,
 	runCreateThread,
-	runThread,
+	runCreateThreadRun,
+	runGetThreadRuns,
+	runGetThreadRun,
 	addMessage,
 	clearMessages: () => ( {
 		type: 'CLEAR_MESSAGES',

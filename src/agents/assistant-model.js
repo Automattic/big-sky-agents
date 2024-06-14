@@ -83,8 +83,6 @@ const formatHistory = ( history, model ) => {
 	return history;
 };
 
-const DEFAULT_SYSTEM_PROMPT = 'You are a helpful AI assistant.';
-
 function formatMessages(
 	history,
 	instructions,
@@ -198,7 +196,7 @@ class AssistantModel {
 	 * @param {Object}  request.response_format
 	 * @returns
 	 */
-	async runThread( request ) {
+	async createThreadRun( request ) {
 		const params = {
 			assistant_id: request.assistantId,
 			instructions: request.instructions,
@@ -235,6 +233,30 @@ class AssistantModel {
 			}
 		);
 		return await this.getResponse( createMessageRequest, 'thread.message' );
+	}
+
+	async getThreadRuns( threadId ) {
+		const headers = this.getHeaders();
+		const getRunsRequest = await fetch(
+			`${ this.getServiceUrl() }/threads/${ threadId }/runs`,
+			{
+				method: 'GET',
+				headers,
+			}
+		);
+		return await this.getResponse( getRunsRequest, 'list' );
+	}
+
+	async getThreadRun( threadId, runId ) {
+		const headers = this.getHeaders();
+		const getRunRequest = await fetch(
+			`${ this.getServiceUrl() }/threads/${ threadId }/runs/${ runId }`,
+			{
+				method: 'GET',
+				headers,
+			}
+		);
+		return await this.getResponse( getRunRequest, 'thread.run' );
 	}
 
 	async getResponse( request, expectedObject = null ) {

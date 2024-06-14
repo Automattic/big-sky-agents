@@ -53,7 +53,7 @@ declare class AssistantModel {
 	getHeaders( request: ChatCompletionRequest ): Record< string, string >;
 
 	async createThread( request: CreateThreadRequest ): Promise< any >; // TODO CreateThreadResponse
-	async runThread( request: RunThreadRequest ): Promise< any >;
+	async createThreadRun( request: RunThreadRequest ): Promise< any >;
 	static getInstance(
 		service: AssistantModelService,
 		apiKey: string | null
