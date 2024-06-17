@@ -5,7 +5,7 @@ import Markdown from 'react-markdown';
 
 const AgentMessageContent = ( { content } ) => {
 	/**
-	 * Formatted like this.
+	 * Formatted like this (OpenAI assistant style)
 	 * "content": [
 	 *    {
 	 *      "type": "text",
@@ -30,13 +30,18 @@ const AgentMessageContent = ( { content } ) => {
 	 *    }
 	 *  ],
 	 *
-	 * OR like this:
+	 * OR like this (Chat Completion style)
+	 *
 	 * "content": [
 	 *   {
 	 *     "type": "text",
 	 *     "text": "Hi! How can I help you today?"
 	 *   }
 	 * ]
+	 *
+	 * OR like this (old Chat Completion style)
+	 *
+	 * "content": "Hi! How can I help you today?"
 	 */
 
 	if ( typeof content === 'string' ) {
