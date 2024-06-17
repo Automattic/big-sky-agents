@@ -33,7 +33,8 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 		setEnabled,
 		createThread,
 		createThreadRun,
-		updateThreadRun,
+		updateThreadRuns,
+		updateThreadMessages,
 		threadRun,
 	} = chat;
 
@@ -89,8 +90,24 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 					labelPosition="side"
 				>
 					<span className="big-sky__thread-indicator">
-						{ threadId ?? 'None' }
-						<button onClick={ createThread }>reset</button>
+						{ threadId ? (
+							<>
+								{ threadId }
+								<br />
+								<button
+									onClick={ () => updateThreadMessages() }
+								>
+									refresh messages
+								</button>
+								<button onClick={ () => createThread() }>
+									recreate
+								</button>
+							</>
+						) : (
+							<button onClick={ () => createThread() }>
+								create
+							</button>
+						) }
 					</span>
 				</BaseControl>
 				<BaseControl
@@ -101,13 +118,13 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 					<span className="big-sky__assistant-run-indicator">
 						{ threadRun ? (
 							<>
-								{ threadRun.id }
-								<button
-									onClick={ () =>
-										updateThreadRun( threadRun.id )
-									}
-								>
+								{ threadRun.id } { threadRun.status }
+								<br />
+								<button onClick={ () => updateThreadRuns() }>
 									refresh
+								</button>
+								<button onClick={ () => createThreadRun() }>
+									restart
 								</button>
 							</>
 						) : (

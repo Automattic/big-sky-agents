@@ -1,6 +1,6 @@
 import { useDispatch, useSelect } from '@wordpress/data';
 import { store as agentStore } from '../store/index.js';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 	const {
@@ -11,13 +11,14 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		addUserMessage,
 		clearMessages,
 		clearPendingToolRequests,
-		setToolCallResult,
+		setToolCallResult: runSetToolCallResult,
 		runChatCompletion,
 		runCreateThread,
 		// runCreateAssistant,
 		setAssistantId,
 		runCreateThreadRun,
-		runGetThreadRun,
+		runGetThreadRuns,
+		runGetThreadMessages,
 	} = useDispatch( agentStore );
 
 	const {
@@ -32,6 +33,8 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		threadId,
 		assistantId,
 		threadRun,
+		threadRunsUpdated,
+		threadMessagesUpdated,
 	} = useSelect( ( select ) => {
 		const values = {
 			error: select( agentStore ).getError(),
@@ -44,10 +47,42 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			pendingToolRequests: select( agentStore ).getPendingToolRequests(),
 			threadId: select( agentStore ).getThreadId(),
 			assistantId: select( agentStore ).getAssistantId(),
-			threadRun: select( agentStore ).getCurrentThreadRun(),
+			threadRun: select( agentStore ).getActiveThreadRun(),
+			threadRunsUpdated: select( agentStore ).getThreadRunsUpdated(),
+			threadMessagesUpdated:
+				select( agentStore ).getThreadMessagesUpdated(),
 		};
 		return values;
 	} );
+
+	// update thread runs and messages if they haven't been updated
+	useEffect( () => {
+		if ( threadId && ! running ) {
+			if ( threadRunsUpdated === null ) {
+				runGetThreadRuns( { service, apiKey, threadId } );
+			}
+
+			if ( threadMessagesUpdated === null ) {
+				runGetThreadMessages( { service, apiKey, threadId } );
+			}
+		}
+	}, [
+		threadRunsUpdated,
+		running,
+		runGetThreadRuns,
+		service,
+		apiKey,
+		threadId,
+		threadMessagesUpdated,
+		runGetThreadMessages,
+	] );
+
+	// if we have a thread, and threadRunId is false, and running is false, create a thread run
+	// useEffect( () => {
+	// 	if ( threadId && ! threadRun && ! running ) {
+	// 		runCreateThreadRun();
+	// 	}
+	// }, [ threadId, threadRun, running, runCreateThreadRun ] );
 
 	const runAgent = useCallback(
 		( messages, tools, instructions, additionalInstructions ) => {
@@ -107,9 +142,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 				! assistantId || // disabled
 				running || // already running
 				error || // there's an error
-				! enabled || // disabled
-				pendingToolRequests.length > 0 || // waiting on tool calls
-				assistantMessage // the assistant has a question for the user
+				! enabled // disabled
 			) {
 				console.warn( 'not running assistant', {
 					service,
@@ -118,9 +151,12 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 					running,
 					error,
 					enabled,
-					pendingToolRequests,
-					assistantMessage,
 				} );
+				return;
+			}
+			// if we have an active run, refuse
+			if ( threadRun ) {
+				console.warn( 'active run exists', { threadRun } );
 				return;
 			}
 			// first, create a thread (TODO: update existing thread!)
@@ -129,6 +165,18 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			// } else {
 			// 	console.warn( 'thread already exists', { threadId } );
 			// }
+			console.warn( 'creating thread run', {
+				service,
+				apiKey,
+				assistantId,
+				threadId,
+				model,
+				temperature,
+				tools,
+				instructions,
+				additionalInstructions,
+				feature,
+			} );
 
 			runCreateThreadRun( {
 				service,
@@ -150,13 +198,12 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			running,
 			error,
 			enabled,
-			pendingToolRequests,
-			assistantMessage,
-			runCreateThreadRun,
 			threadId,
 			model,
 			temperature,
 			feature,
+			runCreateThreadRun,
+			threadRun,
 		]
 	);
 
@@ -164,32 +211,47 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		runCreateThread( { service, apiKey } );
 	}, [ runCreateThread, service, apiKey ] );
 
-	const updateThreadRun = useCallback( () => {
-		// status is queued, in_progress, requires_action, cancelling, cancelled, failed, completed, incomplete, or expired
-		if (
-			threadRun &&
-			! [ 'cancelled', 'failed', 'completed' ].includes(
-				threadRun.status
-			)
-		) {
-			runGetThreadRun( {
-				service,
-				apiKey,
-				threadId,
-				threadRunId: threadRun.id,
-			} );
-		} else {
-			console.warn( 'threadRun is not in a state to update', {
-				threadRun,
-			} );
+	const updateThreadRuns = useCallback( () => {
+		runGetThreadRuns( {
+			service,
+			apiKey,
+			threadId,
+		} );
+	}, [ runGetThreadRuns, service, apiKey, threadId ] );
+
+	const updateThreadMessages = useCallback( () => {
+		if ( threadId ) {
+			runGetThreadMessages( { service, apiKey, threadId } );
 		}
-	}, [ threadRun, runGetThreadRun, service, apiKey, threadId ] );
+	}, [ runGetThreadMessages, service, apiKey, threadId ] );
 
 	const userSay = useCallback(
 		( message, image_urls = [] ) => {
 			addUserMessage( message, image_urls, threadId, service, apiKey );
+			// run a new thread
+			if ( assistantId && threadId ) {
+				runCreateThreadRun( {
+					service,
+					apiKey,
+					assistantId,
+					threadId,
+					model,
+					temperature,
+					feature,
+				} );
+			}
 		},
-		[ addUserMessage, service, threadId, apiKey ]
+		[
+			addUserMessage,
+			threadId,
+			service,
+			apiKey,
+			runCreateThreadRun,
+			assistantId,
+			model,
+			temperature,
+			feature,
+		]
 	);
 
 	const onReset = useCallback( () => {
@@ -197,6 +259,20 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		clearMessages();
 		clearError();
 	}, [ clearError, clearMessages, clearPendingToolRequests ] );
+
+	const setToolCallResult = useCallback(
+		( toolCallId, result ) => {
+			runSetToolCallResult(
+				toolCallId,
+				result,
+				threadId,
+				threadRun?.id,
+				service,
+				apiKey
+			);
+		},
+		[ apiKey, runSetToolCallResult, service, threadId, threadRun?.id ]
+	);
 
 	return {
 		// running state
@@ -228,9 +304,10 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		assistantId,
 		setAssistantId,
 
-		createThreadRun, // run an assistant completion with messages and tools
-		updateThreadRun, // refresh the assistant completion
+		createThreadRun, // run a thread
+		updateThreadRuns, // refresh status of running threads
 		threadRun,
+		updateThreadMessages,
 
 		onReset,
 	};

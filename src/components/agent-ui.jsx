@@ -1,9 +1,4 @@
 /**
- * External dependencies
- */
-import Markdown from 'react-markdown';
-
-/**
  * WordPress dependencies
  */
 import { Flex, FlexBlock, Notice } from '@wordpress/components';
@@ -15,6 +10,7 @@ import { useMemo } from 'react';
 import AskUserQuestion from './ask-question.jsx';
 import Confirm from './confirm.jsx';
 import ToolNotices from './tool-notices.jsx';
+import AgentMessageContent from './agent-message-content.jsx';
 import { ASK_USER_TOOL_NAME } from '../agents/tools/ask-user.js';
 import { INFORM_TOOL_NAME } from '../agents/tools/inform-user.js';
 import { CONFIRM_TOOL_NAME } from '../agents/tools/confirm.js';
@@ -24,7 +20,7 @@ const AgentMessage = ( { message, isActive = true, ...props } ) =>
 	isActive && (
 		<div { ...props }>
 			<blockquote className="big-sky__oval-thought big-sky__agent-thought">
-				<Markdown>{ message }</Markdown>
+				<AgentMessageContent content={ message } />
 			</blockquote>
 		</div>
 	);
@@ -32,7 +28,7 @@ const AgentMessage = ( { message, isActive = true, ...props } ) =>
 const AgentQuestion = ( { question, children, ...props } ) => (
 	<div { ...props }>
 		<blockquote className="big-sky__oval-speech big-sky__agent-question">
-			<Markdown>{ question }</Markdown>
+			<AgentMessageContent content={ question } />
 		</blockquote>
 		{ children }
 	</div>

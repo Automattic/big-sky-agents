@@ -1,4 +1,5 @@
 import { combineReducers, createReduxStore, register } from '@wordpress/data';
+export { THREAD_RUN_COMPLETED_STATUSES } from './chat.js';
 
 import {
 	actions as agentsActions,

@@ -38,10 +38,10 @@ declare interface RunThreadRequest {
 	tools?: string[];
 	metadata?: object;
 	temperature?: number;
-	max_prompt_tokens?: number;
-	max_completion_tokens?: number;
-	truncation_strategy?: string;
-	response_format?: object;
+	maxPromptTokens?: number;
+	maxCompletionTokens?: number;
+	truncationStrategy?: string;
+	responseFormat?: object;
 }
 
 declare class AssistantModel {
@@ -54,6 +54,9 @@ declare class AssistantModel {
 
 	async createThread( request: CreateThreadRequest ): Promise< any >; // TODO CreateThreadResponse
 	async createThreadRun( request: RunThreadRequest ): Promise< any >;
+	async getThreadRuns( threadId: string ): Promise< any >;
+	async getThreadRun( threadId: string, runId: string ): Promise< any >;
+	async getThreadMessages( threadId: string ): Promise< any >;
 	static getInstance(
 		service: AssistantModelService,
 		apiKey: string | null

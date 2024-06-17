@@ -98,13 +98,13 @@ const useChatExecutor = ( {
 	/**
 	 * Call agent.onStart() when we render.
 	 */
-	useEffect( () => {
-		if ( agent && ! running && ! started ) {
-			// console.warn( '🧠 Starting agent', agent, started );
-			setStarted( true );
-			agent.onStart();
-		}
-	}, [ agent, running, setStarted, started ] );
+	// useEffect( () => {
+	// 	if ( agent && ! running && ! started ) {
+	// 		// console.warn( '🧠 Starting agent', agent, started );
+	// 		setStarted( true );
+	// 		agent.onStart();
+	// 	}
+	// }, [ agent, running, setStarted, started ] );
 };
 
 export default useChatExecutor;

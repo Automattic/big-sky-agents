@@ -39,87 +39,6 @@ export const AssistantModelType = {
 	},
 };
 
-// reformat the history based on what the model supports
-const formatHistory = ( history, model ) => {
-	const maxImageURLLength = 200; // typically they are base64-encoded so very large
-	const isMultimodal = AssistantModelType.isMultimodal( model );
-	const supportsToolMessages =
-		AssistantModelType.supportsToolMessages( model );
-
-	// if it's not multimodal, convert any multipart "content" properties to a simple string containing a list of image URLs.
-	if ( ! isMultimodal ) {
-		history = history.map( ( message ) => {
-			if ( message.content && Array.isArray( message.content ) ) {
-				const text = message.content
-					.filter( ( content ) => content.type === 'text' )
-					.map( ( content ) => content.text )
-					.join( '\n' );
-				const imageUrls = message.content
-					.filter( ( content ) => content.type === 'image_url' )
-					.map( ( content ) =>
-						content.image_url.substring( 0, maxImageURLLength )
-					)
-					.join( '\n' );
-				message.content = [ text, imageUrls ].join( '\n' );
-			}
-			return message;
-		} );
-	}
-
-	if ( ! supportsToolMessages ) {
-		console.warn( 'remapping history', history );
-		history = history.map( ( message ) => {
-			if ( message.role === 'tool' ) {
-				return {
-					...message,
-					role: 'user',
-				};
-			}
-			return message;
-		} );
-		console.warn( 'remapped history', history );
-	}
-
-	return history;
-};
-
-function formatMessages(
-	history,
-	instructions,
-	additionalInstructions,
-	maxHistoryLength,
-	model
-) {
-	const trimmedMessages = history.slice( -maxHistoryLength );
-
-	const firstNonToolMessageIndex = trimmedMessages.findIndex(
-		( message ) => message.role !== 'tool'
-	);
-
-	if ( firstNonToolMessageIndex > 0 ) {
-		trimmedMessages.splice( 0, firstNonToolMessageIndex );
-	}
-
-	const messages = [
-		{
-			role: 'system',
-			content: instructions,
-		},
-		...formatHistory( trimmedMessages, model ),
-	];
-
-	if ( additionalInstructions ) {
-		messages.push( {
-			role: 'system',
-			content: additionalInstructions,
-		} );
-	}
-
-	return messages;
-}
-
-// class Thread {}
-
 class AssistantModel {
 	constructor( { apiKey, assistantId, feature, sessionId } ) {
 		this.apiKey = apiKey;
@@ -134,8 +53,7 @@ class AssistantModel {
 
 	/**
 	 * https://api.openai.com/v1/threads
-	 * @see: https://platform.openai.com/docs/api-reference/threads/createThread
-	 * @param {Object} request
+	 * see: https://platform.openai.com/docs/api-reference/threads/createThread
 	 */
 	async createThread() {
 		const params = {};
@@ -180,21 +98,21 @@ class AssistantModel {
 
 	/**
 	 *
-	 * @param {*}       request
-	 * @param {string}  request.threadId
-	 * @param {string}  request.assistantId
-	 * @param {string}  request.model
-	 * @param {string}  request.instructions
-	 * @param {string}  request.additionalInstructions
-	 * @param {array}   request.additionalMessages
-	 * @param {array}   request.tools
-	 * @param {array}   request.metadata
-	 * @param {float}   request.temperature
-	 * @param {integer} request.max_prompt_tokens
-	 * @param {integer} request.max_completion_tokens
-	 * @param {Object}  request.truncation_strategy
-	 * @param {Object}  request.response_format
-	 * @returns
+	 * @param {*}      request
+	 * @param {string} request.threadId
+	 * @param {string} request.assistantId
+	 * @param {string} request.model
+	 * @param {string} request.instructions
+	 * @param {string} request.additionalInstructions
+	 * @param {Array}  request.additionalMessages
+	 * @param {Array}  request.tools
+	 * @param {Array}  request.metadata
+	 * @param {number} request.temperature
+	 * @param {number} request.maxPromptTokens
+	 * @param {number} request.maxCompletionTokens
+	 * @param {Object} request.truncationStrategy
+	 * @param {Object} request.responseFormat
+	 * @return {Promise<Object>} The response object
 	 */
 	async createThreadRun( request ) {
 		const params = {
@@ -206,8 +124,11 @@ class AssistantModel {
 			model: request.model ?? this.getDefaultModel(),
 			temperature: request.temperature ?? this.getDefaultTemperature(),
 			max_completion_tokens:
-				request.max_tokens ?? this.getDefaultMaxTokens(),
+				request.maxCompletionTokens ?? this.getDefaultMaxTokens(),
+			truncation_strategy: request.truncationStrategy,
+			response_format: request.responseFormat,
 		};
+		// console.warn( 'createThreadRun', params );
 		const headers = this.getHeaders();
 		const createRunRequest = await fetch(
 			`${ this.getServiceUrl() }/threads/${ request.threadId }/runs`,
@@ -221,7 +142,6 @@ class AssistantModel {
 	}
 
 	async createThreadMessage( threadId, message ) {
-		// calls POST threads/:threadId/messages
 		const params = message;
 		const headers = this.getHeaders();
 		const createMessageRequest = await fetch(
@@ -235,7 +155,6 @@ class AssistantModel {
 		return await this.getResponse( createMessageRequest, 'thread.message' );
 	}
 
-	// we don't currently use this. leaving here for later.
 	async getThreadRuns( threadId ) {
 		const headers = this.getHeaders();
 		const getRunsRequest = await fetch(
@@ -258,6 +177,38 @@ class AssistantModel {
 			}
 		);
 		return await this.getResponse( getRunRequest, 'thread.run' );
+	}
+
+	async getThreadMessages( threadId ) {
+		const headers = this.getHeaders();
+		const getMessagesRequest = await fetch(
+			`${ this.getServiceUrl() }/threads/${ threadId }/messages`,
+			{
+				method: 'GET',
+				headers,
+			}
+		);
+		return await this.getResponse( getMessagesRequest, 'list' );
+	}
+
+	async submitToolOutputs( threadId, runId, toolCallId, output ) {
+		const headers = this.getHeaders();
+		const submitToolOutputsRequest = await fetch(
+			`${ this.getServiceUrl() }/threads/${ threadId }/runs/${ runId }/submit_tool_outputs`,
+			{
+				method: 'POST',
+				headers,
+				body: JSON.stringify( {
+					tool_outputs: [
+						{
+							tool_call_id: toolCallId,
+							output,
+						},
+					],
+				} ),
+			}
+		);
+		return await this.getResponse( submitToolOutputsRequest, 'thread.run' );
 	}
 
 	async getResponse( request, expectedObject = null ) {

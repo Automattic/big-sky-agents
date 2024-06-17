@@ -5,7 +5,6 @@ const useAssistantExecutor = ( {
 	agent,
 	chat: {
 		started,
-
 		setStarted,
 		enabled,
 		running,
@@ -99,7 +98,7 @@ const useAssistantExecutor = ( {
 			running || // thinking
 			! instructions // at a minimum we need a system prompt
 		) {
-			return;
+			// return;
 		}
 		// runAssistant( tools, instructions, additionalInstructions );
 	}, [
@@ -111,43 +110,43 @@ const useAssistantExecutor = ( {
 		tools,
 	] );
 
-	// useEffect( () => {
-	// 	// process tool calls for any tools with callbacks
-	// 	// note that tools without callbacks will be processed outside this loop,
-	// 	// and will need responses before the ChatModel can run again
-	// 	if ( ! running && pendingToolRequests.length > 0 ) {
-	// 		pendingToolRequests.forEach( ( tool_call ) => {
-	// 			if ( tool_call.inProgress ) {
-	// 				return;
-	// 			}
+	useEffect( () => {
+		// process tool calls for any tools with callbacks
+		// note that tools without callbacks will be processed outside this loop,
+		// and will need responses before the ChatModel can run again
+		if ( ! running && pendingToolRequests.length > 0 ) {
+			pendingToolRequests.forEach( ( tool_call ) => {
+				if ( tool_call.inProgress ) {
+					return;
+				}
 
-	// 			if ( tool_call.error ) {
-	// 				// console.error( '⚙️ Tool call error', tool_call.error );
-	// 				throw new Error( tool_call.error );
-	// 			}
+				if ( tool_call.error ) {
+					// console.error( '⚙️ Tool call error', tool_call.error );
+					throw new Error( tool_call.error );
+				}
 
-	// 			const callback = callbacks[ tool_call.function.name ];
+				const callback = callbacks[ tool_call.function.name ];
 
-	// 			if ( typeof callback === 'function' ) {
-	// 				setToolCallResult(
-	// 					tool_call.id,
-	// 					callback( tool_call.function.arguments )
-	// 				);
-	// 			}
-	// 		} );
-	// 	}
-	// }, [ callbacks, pendingToolRequests, running, setToolCallResult ] );
+				if ( typeof callback === 'function' ) {
+					setToolCallResult(
+						tool_call.id,
+						callback( tool_call.function.arguments )
+					);
+				}
+			} );
+		}
+	}, [ callbacks, pendingToolRequests, running, setToolCallResult ] );
 
 	/**
 	 * Call agent.onStart() when we render.
 	 */
-	useEffect( () => {
-		if ( agent && ! running && ! started ) {
-			// console.warn( '🧠 Starting agent', agent, started );
-			setStarted( true );
-			agent.onStart();
-		}
-	}, [ agent, running, setStarted, started ] );
+	// useEffect( () => {
+	// 	if ( agent && ! running && ! started && ! assistantId ) {
+	// 		// console.warn( '🧠 Starting agent', agent, started );
+	// 		setStarted( true );
+	// 		agent.onStart();
+	// 	}
+	// }, [ agent, running, setStarted, started, assistantId ] );
 };
 
 export default useAssistantExecutor;

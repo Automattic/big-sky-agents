@@ -67,7 +67,13 @@ const useReduxAgentToolkit = () => {
 					: 'Thought cleared';
 			},
 		};
-	}, [ setAgent, setAgentGoal, setAgentThought ] );
+	}, [
+		setAgent,
+		setAgentGoal,
+		setAgentThought,
+		setAssistantId,
+		values.agents,
+	] );
 
 	const tools = useMemo( () => {
 		return [ createSetAgentTool( values.agents ), SetGoalTool, InformTool ];

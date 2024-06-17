@@ -2,10 +2,29 @@ import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../agents/chat-model.js';
 import AssistantModel from '../agents/assistant-model.js';
 
+export const THREAD_RUN_ACTIVE_STATUSES = [
+	'queued',
+	'in_progress',
+	'requires_action',
+	'cancelling',
+];
+
+export const THREAD_RUN_COMPLETED_STATUSES = [
+	'cancelled',
+	'failed',
+	'completed',
+];
+
 const initialState = {
+	// Assistants-API-related
+	assistantId: null, // The assistant ID
 	threadId: localStorage.getItem( 'threadId' ) || null, // The assistant thread ID
 	threadRuns: [], // The Assistant thread runs
-	assistantId: null, // The assistant ID
+	threadRunsUpdated: null, // The last time the thread runs were updated
+	threadMessages: [], // The Assistant thread messages
+	threadMessagesUpdated: null, // The last time Assistant messages were updated
+
+	// Chat-API-related
 	history: [],
 	tool_calls: [],
 	running: false,
@@ -41,13 +60,37 @@ export const controls = {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
 		return await assistantModel.createThreadRun( request );
 	},
+	async GET_THREAD_RUNS_CALL( { service, apiKey, threadId } ) {
+		const assistantModel = AssistantModel.getInstance( service, apiKey );
+		return await assistantModel.getThreadRuns( threadId );
+	},
 	async GET_THREAD_RUN_CALL( { service, apiKey, threadId, threadRunId } ) {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
 		return await assistantModel.getThreadRun( threadId, threadRunId );
 	},
+	async GET_THREAD_MESSAGES_CALL( { service, apiKey, threadId } ) {
+		const assistantModel = AssistantModel.getInstance( service, apiKey );
+		return await assistantModel.getThreadMessages( threadId );
+	},
 	async CREATE_THREAD_MESSAGE_CALL( { service, apiKey, threadId, message } ) {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
 		return await assistantModel.createThreadMessage( threadId, message );
+	},
+	async SUBMIT_TOOL_OUTPUTS_CALL( {
+		service,
+		apiKey,
+		threadId,
+		threadRunId,
+		toolCallId,
+		result,
+	} ) {
+		const assistantModel = AssistantModel.getInstance( service, apiKey );
+		return await assistantModel.submitToolOutputs(
+			threadId,
+			threadRunId,
+			toolCallId,
+			result
+		);
 	},
 };
 
@@ -91,6 +134,25 @@ function* runChatCompletion( { service, apiKey, ...request } ) {
 	}
 }
 
+function* runGetThreadRuns( { service, apiKey, threadId } ) {
+	yield { type: 'GET_THREAD_RUNS_BEGIN_REQUEST' };
+	try {
+		const threadRunsResponse = yield {
+			type: 'GET_THREAD_RUNS_CALL',
+			service,
+			apiKey,
+			threadId,
+		};
+		yield {
+			type: 'GET_THREAD_RUNS_END_REQUEST',
+			threadRuns: threadRunsResponse.data,
+		};
+	} catch ( error ) {
+		console.error( 'Thread error', error );
+		return { type: 'GET_THREAD_RUNS_ERROR', error: error.message };
+	}
+}
+
 function* runGetThreadRun( { service, apiKey, threadId, threadRunId } ) {
 	yield { type: 'GET_THREAD_RUN_BEGIN_REQUEST' };
 	try {
@@ -108,6 +170,25 @@ function* runGetThreadRun( { service, apiKey, threadId, threadRunId } ) {
 	} catch ( error ) {
 		console.error( 'Thread error', error );
 		return { type: 'GET_THREAD_RUN_ERROR', error: error.message };
+	}
+}
+
+function* runGetThreadMessages( { service, apiKey, threadId } ) {
+	yield { type: 'GET_THREAD_MESSAGES_BEGIN_REQUEST' };
+	try {
+		const threadMessagesResponse = yield {
+			type: 'GET_THREAD_MESSAGES_CALL',
+			service,
+			apiKey,
+			threadId,
+		};
+		yield {
+			type: 'GET_THREAD_MESSAGES_END_REQUEST',
+			threadMessages: threadMessagesResponse.data,
+		};
+	} catch ( error ) {
+		console.error( 'Thread error', error );
+		return { type: 'GET_THREAD_MESSAGES_ERROR', error: error.message };
 	}
 }
 
@@ -150,19 +231,48 @@ function* runCreateThreadRun( { service, apiKey, ...request } ) {
 
 /**
  * Set the result of a tool call, and if it's a promise then resolve it first
- * @param {number} tool_call_id
+ * @param {number} toolCallId
  * @param {*}      promise
+ * @param {string} threadId
+ * @param {string} threadRunId
+ * @param {string} service
+ * @param {string} apiKey
  * @return {Object} The resulting action
  */
-function* setToolCallResult( tool_call_id, promise ) {
-	yield { type: 'TOOL_BEGIN_REQUEST', id: tool_call_id };
+function* setToolCallResult(
+	toolCallId,
+	promise,
+	threadId,
+	threadRunId,
+	service,
+	apiKey
+) {
+	yield { type: 'TOOL_BEGIN_REQUEST', id: toolCallId };
 	try {
 		const result = yield { type: 'RESOLVE_TOOL_CALL_RESULT', promise };
-		return { type: 'TOOL_END_REQUEST', id: tool_call_id, result };
+		if ( threadId && threadRunId && service && apiKey ) {
+			yield {
+				type: 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST',
+			};
+			const updatedRun = yield {
+				type: 'SUBMIT_TOOL_OUTPUTS_CALL',
+				service,
+				apiKey,
+				threadId,
+				threadRunId,
+				toolCallId,
+				result,
+			};
+			yield {
+				type: 'SUBMIT_TOOL_OUTPUTS_END_REQUEST',
+				threadRun: updatedRun,
+			};
+		}
+		return { type: 'TOOL_END_REQUEST', id: toolCallId, result };
 	} catch ( error ) {
 		return {
 			type: 'TOOL_ERROR',
-			id: tool_call_id,
+			id: toolCallId,
 			error: error.message,
 		};
 	}
@@ -171,6 +281,21 @@ function* setToolCallResult( tool_call_id, promise ) {
 function filterMessage( message ) {
 	if ( typeof message.content === 'undefined' || message.content === null ) {
 		message.content = '';
+	}
+	// the message.content is sometimes an array like this:
+	// [{ type: 'text', text: { annotations: [], value: 'foo' }}]
+	// it needs to be transformed to this:
+	// [{ type: 'text', text: 'foo' }]
+	if ( Array.isArray( message.content ) ) {
+		message.content = message.content.map( ( content ) => {
+			if (
+				content.type === 'text' &&
+				typeof content.text?.value === 'string'
+			) {
+				content.text = content.text.value;
+			}
+			return content;
+		} );
 	}
 	return message;
 }
@@ -184,7 +309,7 @@ function* addMessage( message, threadId, service, apiKey ) {
 		message,
 	};
 	// add the message to the active thread
-	if ( threadId && message.role === 'user' ) {
+	if ( threadId ) {
 		yield { type: 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST' };
 		try {
 			yield {
@@ -309,8 +434,13 @@ const addMessageReducer = ( state, message ) => {
 
 	// append any tool calls
 	if ( message.tool_calls ) {
+		const tool_call_ids = message.tool_calls.map(
+			( tool_call ) => tool_call.id
+		);
 		newState.tool_calls = [
-			...state.tool_calls,
+			...newState.tool_calls.filter( ( tool_call ) => {
+				return ! tool_call_ids.includes( tool_call.id );
+			} ),
 			...message.tool_calls.map( ( tool_call ) => ( {
 				...tool_call,
 				function: {
@@ -322,6 +452,18 @@ const addMessageReducer = ( state, message ) => {
 	}
 
 	return newState;
+};
+
+const setThreadId = ( state, action ) => {
+	localStorage.setItem( 'threadId', action.threadId );
+	return {
+		...state,
+		threadId: action.threadId,
+		threadRuns: [],
+		threadMessages: [],
+		threadRunsUpdated: null,
+		threadMessagesUpdated: null,
+	};
 };
 
 export const reducer = ( state = initialState, action ) => {
@@ -344,13 +486,12 @@ export const reducer = ( state = initialState, action ) => {
 			};
 		case 'TOOL_END_REQUEST':
 			return {
-				...state,
-				toolRunning: false,
 				...addMessageReducer( state, {
 					role: 'tool',
 					tool_call_id: action.id,
 					content: formatToolResultContent( action.result ),
 				} ),
+				toolRunning: false,
 				tool_calls: [
 					...state.tool_calls.filter(
 						( tool_call ) => tool_call.id !== action.id
@@ -373,6 +514,21 @@ export const reducer = ( state = initialState, action ) => {
 						} ) ),
 				].filter( ( tool_call ) => typeof tool_call !== 'undefined' ),
 			};
+		case 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST':
+			return { ...state, running: true };
+		case 'SUBMIT_TOOL_OUTPUTS_END_REQUEST':
+			return {
+				...state,
+				running: false,
+				threadRuns: [
+					...state.threadRuns.filter(
+						( tr ) => tr.id !== action.threadRun.id
+					),
+					action.threadRun,
+				],
+			};
+		case 'SUBMIT_TOOL_OUTPUTS_ERROR':
+			return { ...state, running: false, error: action.error };
 		case 'ADD_MESSAGE':
 			return addMessageReducer( state, action.message );
 		case 'CLEAR_MESSAGES':
@@ -383,11 +539,7 @@ export const reducer = ( state = initialState, action ) => {
 				tool_calls: [],
 			};
 		case 'SET_THREAD_ID':
-			localStorage.setItem( 'threadId', action.threadId );
-			return {
-				...state,
-				threadId: action.threadId,
-			};
+			return setThreadId( state, action );
 		case 'SET_ASSISTANT_ID':
 			return {
 				...state,
@@ -396,8 +548,7 @@ export const reducer = ( state = initialState, action ) => {
 		case 'CREATE_THREAD_BEGIN_REQUEST':
 			return { ...state, running: true };
 		case 'CREATE_THREAD_END_REQUEST':
-			localStorage.setItem( 'threadId', action.threadId );
-			return { ...state, running: false, threadId: action.threadId };
+			return { ...setThreadId( state, action ), running: false };
 		case 'CREATE_THREAD_ERROR':
 			return { ...state, running: false, error: action.error };
 		case 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST':
@@ -412,7 +563,8 @@ export const reducer = ( state = initialState, action ) => {
 			return {
 				...state,
 				running: false,
-				threadRuns: [ ...state.threadRuns, action.threadRun ],
+				threadRunsUpdated: new Date(),
+				threadRuns: [ action.threadRun, ...state.threadRuns ],
 			};
 		case 'RUN_THREAD_ERROR':
 			return { ...state, running: false, error: action.error };
@@ -422,19 +574,9 @@ export const reducer = ( state = initialState, action ) => {
 			// check if action.threadRun has pending tool calls
 			const { threadRun } = action;
 
-			// first, update with the threadrun
-			const newState = {
-				...state,
-				running: false,
-				threadRuns: [
-					...state.threadRuns.filter(
-						( tr ) => tr.id !== threadRun.id
-					),
-					action.threadRun,
-				],
-			};
-
 			// now optionally update with tool call messages
+			// this simulates an assistant request with tool calls coming from the Chat Completion API
+			// conversely, when we get a tool call response via TOOL_END_REQUEST, we need to send that to the threads/$threadId/runs/$runId/submit_tool_outputs endpoint
 			if (
 				threadRun.status === 'requires_action' &&
 				threadRun.required_action.type === 'submit_tool_outputs'
@@ -447,10 +589,63 @@ export const reducer = ( state = initialState, action ) => {
 					role: 'assistant',
 					tool_calls,
 				};
-				return addMessageReducer( newState, assistantMessage );
+				state = addMessageReducer( state, assistantMessage );
 			}
-			return newState;
+			return {
+				...state,
+				running: false,
+				threadRuns: [
+					...state.threadRuns.filter(
+						( tr ) => tr.id !== threadRun.id
+					),
+					action.threadRun,
+				],
+			};
 		case 'GET_THREAD_RUN_ERROR':
+			return { ...state, running: false, error: action.error };
+		case 'GET_THREAD_RUNS_BEGIN_REQUEST':
+			return { ...state, running: true };
+		case 'GET_THREAD_RUNS_END_REQUEST':
+			const threadsRequiringAction = action.threadRuns.filter(
+				( tr ) =>
+					tr.status === 'requires_action' &&
+					tr.required_action.type === 'submit_tool_outputs'
+			);
+			const tool_calls = threadsRequiringAction.flatMap(
+				( tr ) => tr.required_action.submit_tool_outputs.tool_calls
+			);
+
+			if ( tool_calls.length ) {
+				const assistantMessage = {
+					role: 'assistant',
+					tool_calls,
+				};
+				state = addMessageReducer( state, assistantMessage );
+			}
+
+			return {
+				...state,
+				running: false,
+				threadRunsUpdated: new Date(),
+				threadRuns: action.threadRuns,
+			};
+		case 'GET_THREAD_RUNS_ERROR':
+			return { ...state, running: false, error: action.error };
+		case 'GET_THREAD_MESSAGES_BEGIN_REQUEST':
+			return { ...state, running: true };
+		case 'GET_THREAD_MESSAGES_END_REQUEST':
+			// use addMessageReducer( state, message ) to add each message to the history
+			// and update the tool_calls list
+			action.threadMessages.forEach( ( message ) => {
+				state = addMessageReducer( state, message );
+			} );
+			return {
+				...state,
+				running: false,
+				threadMessagesUpdated: new Date(),
+				threadMessages: action.threadMessages,
+			};
+		case 'GET_THREAD_MESSAGES_ERROR':
 			return { ...state, running: false, error: action.error };
 		default:
 			return state;
@@ -466,8 +661,29 @@ const getToolCalls = ( state ) => {
 	return state.tool_calls;
 };
 
+const hasActiveRun = ( state ) => {
+	/*
+	 * Thread Run Statuses
+	 * STATUS	DEFINITION
+	 * queued	When Runs are first created or when you complete the required_action, they are moved to a queued status. They should almost immediately move to in_progress.
+	 * in_progress	While in_progress, the Assistant uses the model and tools to perform steps. You can view progress being made by the Run by examining the Run Steps.
+	 * completed	The Run successfully completed! You can now view all Messages the Assistant added to the Thread, and all the steps the Run took. You can also continue the conversation by adding more user Messages to the Thread and creating another Run.
+	 * requires_action	When using the Function calling tool, the Run will move to a required_action state once the model determines the names and arguments of the functions to be called. You must then run those functions and submit the outputs before the run proceeds. If the outputs are not provided before the expires_at timestamp passes (roughly 10 mins past creation), the run will move to an expired status.
+	 * expired	This happens when the function calling outputs were not submitted before expires_at and the run expires. Additionally, if the runs take too long to execute and go beyond the time stated in expires_at, our systems will expire the run.
+	 * cancelling	You can attempt to cancel an in_progress run using the Cancel Run endpoint. Once the attempt to cancel succeeds, status of the Run moves to cancelled. Cancellation is attempted but not guaranteed.
+	 * cancelled	Run was successfully cancelled.
+	 * failed	You can view the reason for the failure by looking at the last_error object in the Run. The timestamp for the failure will be recorded under failed_at.
+	 * incomplete	Run ended due to max_prompt_tokens or max_completion_tokens reached. You can view the specific reason by looking at the incomplete_details object in the Run.
+	 */
+	const currentThreadRun = state.threadRuns[ 0 ];
+	return (
+		currentThreadRun &&
+		THREAD_RUN_ACTIVE_STATUSES.includes( currentThreadRun.status )
+	);
+};
+
 export const selectors = {
-	isRunning: ( state ) => state.running,
+	isRunning: ( state ) => state.running || hasActiveRun( state ),
 	isToolRunning: ( state ) => state.toolRunning,
 	getError: ( state ) => state.error,
 	getMessages: ( state ) => state.history,
@@ -478,6 +694,7 @@ export const selectors = {
 			? lastMessage.content
 			: null;
 	},
+	hasActiveRun,
 	getToolCalls,
 	getToolCallResult,
 	getToolCallResults: ( state ) => {
@@ -498,19 +715,12 @@ export const selectors = {
 	getThreadId: ( state ) => state.threadId,
 	getAssistantId: ( state ) => state.assistantId,
 	getThreadRuns: ( state ) => state.threadRun,
-	getThreadRun: ( state, threadRunId ) => {
-		return state.threadRuns.find(
-			( threadRun ) => threadRun.id === threadRunId
+	getThreadRunsUpdated: ( state ) => state.threadRunsUpdated,
+	getThreadMessagesUpdated: ( state ) => state.threadMessagesUpdated,
+	getActiveThreadRun: ( state ) => {
+		return state.threadRuns.find( ( threadRun ) =>
+			THREAD_RUN_ACTIVE_STATUSES.includes( threadRun.status )
 		);
-	},
-	getThreadRunId: ( state ) => {
-		return state.threadRuns[ state.threadRuns.length - 1 ]?.id
-			? state.threadRuns[ state.threadRuns.length - 1 ].id
-			: null;
-	},
-	getCurrentThreadRun: ( state ) => {
-		// statuses: queued, in_progress, requires_action, cancelling, cancelled, failed, completed, incomplete, or expired
-		return state.threadRuns[ state.threadRuns.length - 1 ];
 	},
 };
 
@@ -532,6 +742,8 @@ export const actions = {
 	runCreateThread,
 	runCreateThreadRun,
 	runGetThreadRun,
+	runGetThreadRuns,
+	runGetThreadMessages,
 	addMessage,
 	clearMessages: () => ( {
 		type: 'CLEAR_MESSAGES',
