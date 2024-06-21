@@ -6,13 +6,13 @@ export const ANALYZE_URL_TOOL_NAME = 'analyzeUrl';
  * Note that this endpoint is Automattician-only
  */
 
-export const makeAnalyzeUrlRequest = async ( { url, token } ) => {
+export const makeAnalyzeUrlRequest = async ( { url, apiKey } ) => {
 	const response = await fetch(
 		'https://public-api.wordpress.com/wpcom/v2/analyze-url/describe',
 		{
 			method: 'POST',
 			headers: {
-				Authorization: `Bearer ${ token }`,
+				Authorization: `Bearer ${ apiKey }`,
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify( { url } ),

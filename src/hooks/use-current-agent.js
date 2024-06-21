@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-
+import { useCallback, useEffect, useMemo, useState } from 'react';
+// import { useEffect,  } from 'react';
 /**
  * Internal dependencies
  */
@@ -25,7 +25,12 @@ import {
  */
 
 const useCurrentAgent = ( { chat, toolkit } ) => {
-	return useMemo( () => {
+	const [ tools, setTools ] = useState( [] );
+	const [ instructions, setInstructions ] = useState( '' );
+	const [ additionalInstructions, setAdditionalInstructions ] =
+		useState( '' );
+
+	const agent = useMemo( () => {
 		switch ( toolkit.values.agent.id ) {
 			case WAPUU_AGENT_ID:
 				return new WapuuAgent( chat, toolkit );
@@ -45,6 +50,82 @@ const useCurrentAgent = ( { chat, toolkit } ) => {
 				return new WapuuAgent( chat, toolkit );
 		}
 	}, [ chat, toolkit ] );
+
+	useEffect( () => {
+		if ( agent ) {
+			/**
+			 * Compute new state
+			 */
+			const newTools = agent.getTools( toolkit.values );
+			const newInstructions = agent
+				.getInstructions()
+				.format( toolkit.values );
+			const newAdditionalInstructions = agent
+				.getAdditionalInstructions()
+				.format( toolkit.values );
+
+			console.warn( 'generated values', {
+				newTools,
+				newInstructions,
+				newAdditionalInstructions,
+			} );
+
+			const newAssistantId = agent.getAssistantId();
+
+			if ( ! newAssistantId ) {
+				throw new Error( 'Assistant ID is required' );
+			}
+
+			if ( newAssistantId && newAssistantId !== chat.assistantId ) {
+				chat.setAssistantId( newAssistantId );
+			}
+
+			if ( newInstructions && newInstructions !== instructions ) {
+				// console.warn( '🧠 System prompt', newSystemPrompt );
+				setInstructions( newInstructions );
+			}
+
+			if ( newAdditionalInstructions !== additionalInstructions ) {
+				// console.warn( '🧠 Next step prompt', newNextStepPrompt );
+				setAdditionalInstructions( newAdditionalInstructions );
+			}
+
+			if ( JSON.stringify( newTools ) !== JSON.stringify( tools ) ) {
+				// console.warn( '🧠 Tools', newTools );
+				setTools( newTools );
+			}
+		}
+	}, [
+		agent,
+		additionalInstructions,
+		instructions,
+		tools,
+		toolkit.values,
+		chat,
+	] );
+
+	const onStart = useCallback( () => {
+		if ( agent ) {
+			agent.onStart();
+		}
+	}, [ agent ] );
+
+	const informUser = useCallback(
+		( message ) => {
+			if ( agent ) {
+				agent.informUser( message );
+			}
+		},
+		[ agent ]
+	);
+
+	return {
+		onStart,
+		informUser,
+		tools,
+		instructions,
+		additionalInstructions,
+	};
 };
 
 export default useCurrentAgent;

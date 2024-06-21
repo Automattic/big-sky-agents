@@ -1,17 +1,15 @@
-import StandardAgent from './standard-agent.js';
-import { ANALYZE_URL_TOOL_NAME } from '../agents/tools/analyze-url.js';
-import { CONFIRM_TOOL_NAME } from '../agents/tools/confirm.js';
+import BuilderAgent from './builder-agent.js';
 import {
-	ADD_PAGE_SECTION_TOOL_NAME,
-	ADD_SITE_PAGE_TOOL_NAME,
-	SET_PAGE_CATEGORY_TOOL_NAME,
-	SET_PAGE_DESCRIPTION_TOOL_NAME,
-	SET_PAGE_SECTIONS_TOOL_NAME,
-	SET_PAGE_TITLE_TOOL_NAME,
-	SET_SITE_PAGES_TOOL_NAME,
+	AddPageSectionTool,
+	AddSitePageTool,
+	SetPageCategoryTool,
+	SetPageDescriptionTool,
+	SetPageSectionsTool,
+	SetPageTitleTool,
+	SetSitePagesTool,
 } from './tools/site-tools.js';
 import { WORDPRESS_SITE_SPEC_AGENT_ID } from './default-agents.js';
-import { DotPromptTemplate, FStringPromptTemplate } from './prompt-template.js';
+import { DotPromptTemplate } from './prompt-template.js';
 
 const defaultChoices = [ 'Update the site description', 'Add a page' ];
 
@@ -26,36 +24,38 @@ Sections:
 	inputVariables: [ 'title', 'description', 'category', 'sections' ],
 } );
 
-const SystemPrompt = new FStringPromptTemplate( {
+const SystemPrompt = new DotPromptTemplate( {
 	template: `You are an expert at gathering requirements from the user to update a web site or page.
-Your current goal is: {agent.goal}.
+Your current goal is: {{= it.agent.goal }}.
 You are excited to help the user and are encouraging about their progress. You write content that is lively, fun and engaging.
 Complete the task with minimal input using the available tools.`,
+	inputVariables: [ 'agent' ],
 } );
 
-const NextStepPrompt = new FStringPromptTemplate( {
-	template: `Please attempt to complete the goal: {agent.goal}.
+const NextStepPrompt = new DotPromptTemplate( {
+	template: `Please attempt to complete the goal: {{= it.agent.goal }}.
 Only ask the user if you absolutely have to.
 Use the inform user tool to inform the user of your decisions.
 Use the ask user tool to ask the user for information.
 Use the "finish" tool when you think you are done.
 Format all content in Markdown. The current state of the Page is:
-{page}`,
+{{= it.page }}`,
+	inputVariables: [ 'agent', 'page' ],
 	formatters: {
 		page: PageSpecPrompt,
 	},
 } );
 
-class PageSpecAgent extends StandardAgent {
+class PageSpecAgent extends BuilderAgent {
 	getId() {
 		return WORDPRESS_SITE_SPEC_AGENT_ID;
 	}
 
-	getSystemPrompt() {
+	getInstructions() {
 		return SystemPrompt;
 	}
 
-	getNextStepPrompt() {
+	getAdditionalInstructions() {
 		return NextStepPrompt;
 	}
 
@@ -63,17 +63,13 @@ class PageSpecAgent extends StandardAgent {
 		return [
 			...super.getTools( values ),
 			// TODO: only enable these tools under certain conditions, e.g. only confirm when page is valid
-			...super.findTools(
-				ANALYZE_URL_TOOL_NAME,
-				CONFIRM_TOOL_NAME,
-				SET_SITE_PAGES_TOOL_NAME,
-				ADD_SITE_PAGE_TOOL_NAME,
-				SET_PAGE_TITLE_TOOL_NAME,
-				SET_PAGE_DESCRIPTION_TOOL_NAME,
-				SET_PAGE_CATEGORY_TOOL_NAME,
-				SET_PAGE_SECTIONS_TOOL_NAME,
-				ADD_PAGE_SECTION_TOOL_NAME
-			),
+			AddPageSectionTool,
+			AddSitePageTool,
+			SetPageCategoryTool,
+			SetPageDescriptionTool,
+			SetPageSectionsTool,
+			SetPageTitleTool,
+			SetSitePagesTool,
 		];
 	}
 

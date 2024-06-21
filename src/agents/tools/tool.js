@@ -39,23 +39,22 @@ export const createTool = ( { name, description, parameters } ) => {
 /**
  * Create a tool with a single parameter
  *
- * @param {string} propName    The name of the parameter
  * @param {string} name        The name of the tool
  * @param {string} description The description of the tool
  * @return {Object} The tool object
  */
-export const createSimpleTool = ( propName, name, description ) => {
+export const createSimpleTool = ( name, description ) => {
 	return createTool( {
 		name,
 		description,
 		parameters: {
 			type: 'object',
 			properties: {
-				[ propName ]: {
+				value: {
 					type: 'string',
 				},
 			},
-			required: [ propName ],
+			required: [ 'value' ],
 		},
 	} );
 };

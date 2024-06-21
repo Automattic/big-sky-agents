@@ -1,12 +1,14 @@
 import agents, { WAPUU_AGENT_ID } from '../agents/default-agents.js';
+
+const DEFAULT_AGENT_ID = WAPUU_AGENT_ID;
 const DEFAULT_AGENT_NAME = 'Unknown Agent';
+const DEFAULT_GOAL = "Find out the user's goal";
 
 const initialState = {
-	agentId: WAPUU_AGENT_ID,
-	agentGoal: null,
+	agentId: DEFAULT_AGENT_ID,
+	agentGoal: DEFAULT_GOAL,
 	agentThought: null,
 	enabled: true,
-	started: false,
 	agents,
 };
 
@@ -39,12 +41,6 @@ export const actions = {
 			enabled,
 		};
 	},
-	setStarted: ( started ) => {
-		return {
-			type: 'SET_AGENT_STARTED',
-			started,
-		};
-	},
 };
 
 export const reducer = ( state = initialState, action ) => {
@@ -57,8 +53,6 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, agentThought: action.thought };
 		case 'SET_AGENT_ENABLED':
 			return { ...state, enabled: action.enabled };
-		case 'SET_AGENT_STARTED':
-			return { ...state, started: action.started };
 		default:
 			return state;
 	}
@@ -85,8 +79,5 @@ export const selectors = {
 	},
 	isEnabled: ( state ) => {
 		return state.enabled;
-	},
-	isStarted: ( state ) => {
-		return state.started;
 	},
 };

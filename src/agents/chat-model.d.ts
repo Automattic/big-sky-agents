@@ -50,8 +50,8 @@ declare class ChatModel {
 		model: ChatModelType;
 		messages: Message[];
 		tools?: Tool[];
-		systemPrompt: string;
-		agentLoopPrompt?: string;
+		instructions: string;
+		additionalInstructions?: string;
 		temperature?: number;
 		maxTokens?: number;
 		feature?: string;

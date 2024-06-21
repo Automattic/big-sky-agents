@@ -1,9 +1,4 @@
 /**
- * External dependencies
- */
-import Markdown from 'react-markdown';
-
-/**
  * WordPress dependencies
  */
 import { Flex, FlexBlock, Notice } from '@wordpress/components';
@@ -14,9 +9,8 @@ import { useMemo } from 'react';
  */
 import AskUserQuestion from './ask-question.jsx';
 import Confirm from './confirm.jsx';
-import ToolNotices from './tool-notices.jsx';
+import MessageContent from './message-content.jsx';
 import { ASK_USER_TOOL_NAME } from '../agents/tools/ask-user.js';
-import { INFORM_TOOL_NAME } from '../agents/tools/inform-user.js';
 import { CONFIRM_TOOL_NAME } from '../agents/tools/confirm.js';
 import './agent-ui.scss';
 
@@ -24,7 +18,7 @@ const AgentMessage = ( { message, isActive = true, ...props } ) =>
 	isActive && (
 		<div { ...props }>
 			<blockquote className="big-sky__oval-thought big-sky__agent-thought">
-				<Markdown>{ message }</Markdown>
+				<MessageContent content={ message } />
 			</blockquote>
 		</div>
 	);
@@ -32,24 +26,38 @@ const AgentMessage = ( { message, isActive = true, ...props } ) =>
 const AgentQuestion = ( { question, children, ...props } ) => (
 	<div { ...props }>
 		<blockquote className="big-sky__oval-speech big-sky__agent-question">
-			<Markdown>{ question }</Markdown>
+			<MessageContent content={ question } />
 		</blockquote>
 		{ children }
 	</div>
 );
 
-const AgentThinking = ( { running, toolRunning, ...props } ) => (
+const AgentThinking = ( {
+	running,
+	toolRunning,
+	loading,
+	enabled,
+	...props
+} ) => (
 	<div { ...props }>
 		<div
 			className={ `big-sky__agent-thinking ${
 				running ? 'big-sky__agent-thinking-running' : ''
-			} ${ toolRunning ? 'big-sky__agent-thinking-tool-running' : '' }` }
+			} ${ toolRunning ? 'big-sky__agent-thinking-tool-running' : '' } ${
+				enabled
+					? 'big-sky__agent-thinking-enabled'
+					: 'big-sky__agent-thinking-disabled'
+			} ${
+				loading
+					? 'big-sky__agent-thinking-loading'
+					: 'big-sky__agent-thinking-loaded'
+			}` }
 		></div>
 	</div>
 );
 
-const getNextPendingRequest = ( pendingToolRequests, toolName ) => {
-	return pendingToolRequests?.find(
+const getNextPendingRequest = ( pendingToolCalls, toolName ) => {
+	return pendingToolCalls?.find(
 		( request ) => request.function.name === toolName
 	);
 };
@@ -57,39 +65,40 @@ const getNextPendingRequest = ( pendingToolRequests, toolName ) => {
 function AgentUI( {
 	chat: {
 		error,
+		enabled,
+		loading,
 		running,
 		toolRunning,
-		agentMessage,
-		pendingToolRequests,
+		assistantMessage,
+		pendingToolCalls,
 		userSay,
-		setToolCallResult,
+		setToolResult,
 		onReset: onResetChat,
 	},
-	agent: { onConfirm, onStart: onAgentStart },
+	agent: { informUser, onConfirm },
 	toolkit: {
 		onReset: onResetTools,
 		values: { agentName, agentThought },
-		callbacks: { [ INFORM_TOOL_NAME ]: setAgentThought },
 	},
 } ) {
 	const { agentQuestion, agentConfirm } = useMemo( () => {
 		return {
 			agentQuestion: getNextPendingRequest(
-				pendingToolRequests,
+				pendingToolCalls,
 				ASK_USER_TOOL_NAME
 			),
 			agentConfirm: getNextPendingRequest(
-				pendingToolRequests,
+				pendingToolCalls,
 				CONFIRM_TOOL_NAME
 			),
 		};
-	}, [ pendingToolRequests ] );
+	}, [ pendingToolCalls ] );
 
 	return (
 		<div
 			className={ `big-sky__agent-ui big-sky__agent-ui-${
 				running ? 'active' : 'inactive'
-			}` }
+			} big-sky__agent-ui-${ loading ? 'loading' : 'loaded ' }` }
 		>
 			{ error && (
 				<Notice
@@ -97,7 +106,6 @@ function AgentUI( {
 					isDismissible={ true }
 					onRemove={ () => {
 						onResetChat();
-						onAgentStart();
 					} }
 				>
 					{ error }
@@ -113,12 +121,12 @@ function AgentUI( {
 							isActive={
 								! agentQuestion &&
 								! agentConfirm &&
-								! agentMessage
+								! assistantMessage
 							}
 						/>
 					) }
-					{ agentMessage && (
-						<AgentQuestion question={ agentMessage }>
+					{ assistantMessage && (
+						<AgentQuestion question={ assistantMessage }>
 							<AskUserQuestion
 								question=""
 								onCancel={ () => {
@@ -142,7 +150,7 @@ function AgentUI( {
 								{ ...agentQuestion.function.arguments }
 								question=""
 								onCancel={ () => {
-									setToolCallResult(
+									setToolResult(
 										agentQuestion.id,
 										'(canceled)'
 									);
@@ -151,11 +159,8 @@ function AgentUI( {
 								} }
 								onAnswer={ ( answer, files ) => {
 									// clear the current thought
-									setAgentThought( { message: null } );
-									setToolCallResult(
-										agentQuestion.id,
-										answer
-									);
+									informUser( null );
+									setToolResult( agentQuestion.id, answer );
 									userSay( answer, files );
 								} }
 							/>
@@ -167,17 +172,24 @@ function AgentUI( {
 						>
 							<Confirm
 								toolCall={ agentConfirm }
-								onConfirm={ onConfirm }
+								onConfirm={ ( confirmed ) => {
+									informUser( null );
+									setToolResult( agentConfirm.id, confirmed );
+									onConfirm( confirmed );
+								} }
 							/>
 						</AgentQuestion>
 					) }
-					{ ! agentMessage && ! agentQuestion && ! agentConfirm && (
-						<AgentThinking
-							running={ running }
-							toolRunning={ toolRunning }
-						/>
-					) }
-					<ToolNotices />
+					{ ! assistantMessage &&
+						! agentQuestion &&
+						! agentConfirm && (
+							<AgentThinking
+								enabled={ enabled }
+								loading={ loading }
+								running={ running }
+								toolRunning={ toolRunning }
+							/>
+						) }
 				</FlexBlock>
 			</Flex>
 		</div>

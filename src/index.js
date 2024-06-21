@@ -1,7 +1,7 @@
 /**
  * Run the agent
  */
-export { default as useAgentExecutor } from './hooks/use-agent-executor.js';
+export { default as useChatExecutor } from './hooks/use-chat-executor.js';
 
 /**
  * ChatModel and hooks
@@ -50,7 +50,6 @@ export { default as useChatIcon } from './hooks/use-chat-icon.js';
  * Core Classes
  */
 export { default as Agent } from './agents/agent.js';
-export { default as StandardAgent } from './agents/standard-agent.js';
 
 /**
  * Prompt Templates

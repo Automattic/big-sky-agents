@@ -17,11 +17,11 @@ const ChatModelControls = ( {
 	model,
 	service,
 	temperature,
-	token,
+	apiKey,
 	onServiceChanged,
 	onModelChanged,
 	onTemperatureChanged,
-	onTokenChanged,
+	onApiKeyChanged,
 } ) => {
 	return (
 		<>
@@ -79,10 +79,10 @@ const ChatModelControls = ( {
 				/>
 			</HStack>
 			<InputControl
-				label="API Token"
+				label="API Key"
 				placeholder="sk-..."
-				value={ token }
-				onChange={ onTokenChanged }
+				value={ apiKey }
+				onChange={ onApiKeyChanged }
 			/>
 		</>
 	);

@@ -16,11 +16,11 @@ import {
 	AddSitePageTool,
 	SetSiteColorsTool,
 	SetSitePagesTool,
-	SiteDescriptionTool,
-	SiteLocationTool,
-	SiteTitleTool,
-	SiteTopicTool,
-	SiteTypeTool,
+	SetSiteDescriptionTool,
+	SetSiteLocationTool,
+	SetSiteTitleTool,
+	SetSiteTopicTool,
+	SetSiteTypeTool,
 } from '../agents/tools/site-tools.js';
 
 import uuidv4 from '../utils/uuid.js';
@@ -82,24 +82,24 @@ const useSimpleSiteToolkit = ( /* { pageId } */ ) => {
 				}
 				return 'Site colors updated';
 			},
-			[ SiteTitleTool.function.name ]: ( { title } ) => {
+			[ SetSiteTitleTool.function.name ]: ( { title } ) => {
 				setSiteTitle( title );
 				return `Site title set to "${ title }"`;
 			},
-			[ SiteDescriptionTool.function.name ]: ( { description } ) => {
+			[ SetSiteDescriptionTool.function.name ]: ( { description } ) => {
 				console.warn( 'setSiteDescription', { description } );
 				setSiteDescription( description );
 				return `Site description set to "${ description }"`;
 			},
-			[ SiteTopicTool.function.name ]: ( { topic } ) => {
+			[ SetSiteTopicTool.function.name ]: ( { topic } ) => {
 				setSiteTopic( topic );
 				return `Site topic set to "${ topic }"`;
 			},
-			[ SiteTypeTool.function.name ]: ( { siteType: newSiteType } ) => {
+			[ SetSiteTypeTool.function.name ]: ( { siteType: newSiteType } ) => {
 				setSiteType( newSiteType );
 				return `Site type set to "${ newSiteType }"`;
 			},
-			[ SiteLocationTool.function.name ]: ( { location } ) => {
+			[ SetSiteLocationTool.function.name ]: ( { location } ) => {
 				setSiteLocation( location );
 				return `Site location set to "${ location }"`;
 			},
@@ -167,11 +167,11 @@ const useSimpleSiteToolkit = ( /* { pageId } */ ) => {
 
 	const tools = useMemo( () => {
 		return [
-			SiteTitleTool,
-			SiteDescriptionTool,
-			SiteTopicTool,
-			SiteLocationTool,
-			SiteTypeTool,
+			SetSiteTitleTool,
+			SetSiteDescriptionTool,
+			SetSiteTopicTool,
+			SetSiteLocationTool,
+			SetSiteTypeTool,
 			SetSiteColorsTool,
 			SetSitePagesTool,
 			AddSitePageTool,

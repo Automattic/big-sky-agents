@@ -18,16 +18,16 @@ const formatToolResultContent = ( result ) => {
 		: `${ result }`;
 };
 
-const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
+const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 	const [ started, setStarted ] = useState( false );
 	const [ running, setRunning ] = useState( false );
 	const [ error, setError ] = useState();
-	const [ pendingToolRequests, setPendingToolRequests ] = useState( [] );
+	const [ pendingToolCalls, setPendingToolCalls ] = useState( [] );
 	const [ history, setHistory ] = useState( [] );
 	const [ enabled, setEnabled ] = useState( true );
 	const [ assistantMessage, setAssistantMessage ] = useState();
 	const runningRef = useRef( false );
-	const chatModel = useChatModel( { token, service } );
+	const chatModel = useChatModel( { apiKey, service, feature } );
 
 	const call = useCallback( ( name, args, id ) => {
 		console.log( '🤖 Adding Tool Call', name, args, id );
@@ -49,7 +49,7 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 				],
 			},
 		] );
-		setPendingToolRequests( ( toolCalls ) => [
+		setPendingToolCalls( ( toolCalls ) => [
 			...toolCalls,
 			{
 				id,
@@ -62,7 +62,7 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 		] );
 	}, [] );
 
-	const setToolCallResultSync = useCallback(
+	const setToolCallResult = useCallback(
 		( toolCallId, result ) => {
 			console.log( '🤖 Setting Tool Call Result', toolCallId, result );
 			setHistory( ( messages ) => {
@@ -93,33 +93,29 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 			console.warn(
 				'filtering toolcalls to remove ID',
 				toolCallId,
-				pendingToolRequests
+				pendingToolCalls
 			);
-			setPendingToolRequests( ( toolCalls ) =>
+			setPendingToolCalls( ( toolCalls ) =>
 				toolCalls.filter( ( toolCall ) => toolCall.id !== toolCallId )
 			);
 		},
-		[ pendingToolRequests ]
+		[ pendingToolCalls ]
 	);
 
-	const setToolCallResult = useCallback(
+	const setToolResult = useCallback(
 		( toolCallId, result ) => {
 			console.log( '🤖 Resolve Tool Call Result', toolCallId );
 			// check if result is a Promise
 			if ( result instanceof Promise ) {
 				result.then( ( value ) => {
-					setToolCallResultSync( toolCallId, value );
+					setToolCallResult( toolCallId, value );
 				} );
 			} else {
-				setToolCallResultSync( toolCallId, result );
+				setToolCallResult( toolCallId, result );
 			}
 		},
-		[ setToolCallResultSync ]
+		[ setToolCallResult ]
 	);
-
-	const clearPendingToolRequests = useCallback( () => {
-		setPendingToolRequests( [] );
-	}, [] );
 
 	const clearMessages = useCallback( () => {
 		setHistory( [] );
@@ -156,16 +152,16 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 		}
 	}, [] );
 
-	const runAgent = useCallback(
-		( messages, tools, systemPrompt, nextStepPrompt ) => {
+	const runChat = useCallback(
+		( tools, instructions, additionalInstructions ) => {
 			if (
 				! chatModel || // no Chat Model
 				! enabled || // disabled
 				running || // already running
 				error || // error
 				runningRef.current || // also already running
-				! messages.length > 0 || // nothing to process
-				pendingToolRequests.length > 0 || // waiting on tool calls
+				! history.length > 0 || // nothing to process
+				pendingToolCalls.length > 0 || // waiting on tool calls
 				assistantMessage // the assistant has a question for the user
 			) {
 				// console.warn( 'not running agent', {
@@ -186,12 +182,11 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 			chatModel
 				.run( {
 					model,
-					messages,
+					messages: history,
 					tools,
-					systemPrompt,
-					nextStepPrompt,
+					instructions,
+					additionalInstructions,
 					temperature,
-					feature,
 				} )
 				.then( ( message ) => {
 					runningRef.current = false;
@@ -200,7 +195,7 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 					setAssistantMessage( message.content );
 					setHistory( ( hist ) => [ ...hist, message ] );
 					if ( message.tool_calls ) {
-						setPendingToolRequests( ( toolCalls ) => [
+						setPendingToolCalls( ( toolCalls ) => [
 							...toolCalls,
 							...message.tool_calls.map( ( tool_call ) => ( {
 								...tool_call,
@@ -224,18 +219,16 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 			error,
 			chatModel,
 			model,
-			pendingToolRequests,
+			pendingToolCalls,
 			running,
 			temperature,
-			feature,
 		]
 	);
 
 	const onReset = useCallback( () => {
-		clearPendingToolRequests();
 		clearMessages();
 		setError( null );
-	}, [ clearMessages, clearPendingToolRequests ] );
+	}, [ clearMessages ] );
 
 	return {
 		// running state
@@ -250,15 +243,14 @@ const useSimpleChat = ( { token, service, model, temperature, feature } ) => {
 		history,
 		clearMessages,
 		userSay,
-		agentMessage: assistantMessage,
+		assistantMessage,
 
 		// tools
 		call,
-		setToolCallResult,
-		pendingToolRequests,
-		clearPendingToolRequests,
+		setToolResult,
+		pendingToolCalls,
 
-		runAgent, // run a chat completion with tool, systemPrompt and nextStepPrompt
+		runChat, // run a chat completion with tool, instructions and additionalInstructions
 
 		onReset,
 	};

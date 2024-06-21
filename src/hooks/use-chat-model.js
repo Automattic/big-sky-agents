@@ -8,24 +8,34 @@ import { useEffect, useState } from 'react';
  */
 import ChatModel from '../agents/chat-model.js';
 
-const useChatModel = ( { token, service } ) => {
+const useChatModel = ( { apiKey, service, feature, sessionId } ) => {
 	const [ chatModel, setChatModel ] = useState();
 
 	useEffect( () => {
 		if (
 			chatModel &&
 			chatModel.service === service &&
-			chatModel.apiKey === token
+			chatModel.apiKey === apiKey &&
+			chatModel.feature === feature &&
+			chatModel.sessionId === sessionId
 		) {
 			return;
 		}
-		if ( ! token ) {
+		if ( ! apiKey ) {
 			return;
 		}
 		// eslint-disable-next-line no-console
-		console.log( '🤖 Creating Chat Model', service, token );
-		setChatModel( ChatModel.getInstance( service, token ) );
-	}, [ token, chatModel, service ] );
+		console.log(
+			'🤖 Creating Chat Model',
+			service,
+			apiKey,
+			feature,
+			sessionId
+		);
+		setChatModel(
+			ChatModel.getInstance( service, apiKey, feature, sessionId )
+		);
+	}, [ apiKey, chatModel, service, feature, sessionId ] );
 
 	return chatModel;
 };

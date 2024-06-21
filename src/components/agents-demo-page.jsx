@@ -1,10 +1,10 @@
 import AgentsDemoUI from './agents-demo-ui.jsx';
 import './agents-demo-page.scss';
 
-const AgentsDemoPage = ( { token } ) => {
+const AgentsDemoPage = ( { apiKey } ) => {
 	return (
 		<div className="agents-demo-page">
-			<AgentsDemoUI token={ token } />
+			<AgentsDemoUI apiKey={ apiKey } />
 		</div>
 	);
 };

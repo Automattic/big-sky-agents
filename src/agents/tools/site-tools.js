@@ -24,33 +24,28 @@ const availablePageSectionsPrompt = patternCategories
 	.map( ( category ) => `- ${ category.slug }` )
 	.join( '\n' );
 
-export const SiteTitleTool = createSimpleTool(
-	'title',
+export const SetSiteTitleTool = createSimpleTool(
 	SET_SITE_TITLE_TOOL_NAME,
-	'Site Title'
+	'Set the Site Title'
 );
 
-export const SiteDescriptionTool = createSimpleTool(
-	'description',
+export const SetSiteDescriptionTool = createSimpleTool(
 	SET_SITE_DESCRIPTION_TOOL_NAME,
-	'Page Description'
+	'Set the Site Description'
 );
-export const SiteTopicTool = createSimpleTool(
-	'topic',
+export const SetSiteTopicTool = createSimpleTool(
 	SET_SITE_TOPIC_TOOL_NAME,
-	'Site Topic'
+	'Set the Site Topic'
 );
 
-export const SiteLocationTool = createSimpleTool(
-	'location',
+export const SetSiteLocationTool = createSimpleTool(
 	SET_SITE_LOCATION_TOOL_NAME,
-	'Site Location'
+	'Set the Site Location'
 );
 
-export const SiteTypeTool = createSimpleTool(
-	'type',
+export const SetSiteTypeTool = createSimpleTool(
 	SET_SITE_TYPE_TOOL_NAME,
-	'Site Type'
+	'Set the Site Type'
 );
 
 export const SetSiteColorsTool = createTool( {
@@ -181,19 +176,16 @@ export const AddPageSectionTool = createTool( {
 } );
 
 export const SetPageTitleTool = createSimpleTool(
-	'title',
 	SET_PAGE_TITLE_TOOL_NAME,
 	'Set Page Title'
 );
 
 export const SetPageDescriptionTool = createSimpleTool(
-	'description',
 	SET_PAGE_DESCRIPTION_TOOL_NAME,
 	'Set Page Description'
 );
 
 export const SetPageCategoryTool = createSimpleTool(
-	'category',
 	SET_PAGE_CATEGORY_TOOL_NAME,
 	'Set Page Category'
 );

@@ -16,15 +16,17 @@ import { ChatModelType, ChatModelService } from './agents/chat-model';
  * Hooks
  */
 
-export declare function useAgentExecutor( options: {
+export declare function useChatExecutor( options: {
 	agent: Agent;
 	chat: Chat;
 	toolkit: AgentToolkit;
 } ): void;
 
 export declare function useChatModel( options: {
-	token: string | undefined;
+	apiKey: string | undefined;
 	service: string;
+	feature?: string;
+	sessionId?: string;
 } ): any;
 
 interface ChatIconHook {
@@ -53,18 +55,40 @@ export declare function useReduxAgentToolkit( options: {
  */
 
 interface ChatOptions {
-	token: string | undefined;
+	apiKey: string | undefined;
 	service: ChatModelService;
 	model: ChatModelType;
 	temperature?: number;
 	feature?: string;
 }
 
-export interface Message {
-	role: 'assistant' | 'tool' | 'user';
+// define MessageRole enum
+enum MessageRole {
+	ASSISTANT = 'assistant',
+	USER = 'user',
+	TOOL = 'tool',
+}
+
+interface BaseMessage {
+	role: MessageRole;
 	content: string | MessageContentPart[];
+}
+
+interface AssistantMessage extends BaseMessage {
+	role: MessageRole.ASSISTANT;
 	tool_calls?: ToolCall[];
 }
+
+interface UserMessage extends BaseMessage {
+	role: MessageRole.USER;
+}
+
+interface ToolMessage extends BaseMessage {
+	role: MessageRole.TOOL;
+	tool_call_id: string;
+}
+
+export type Message = AssistantMessage | UserMessage | ToolMessage;
 
 interface TextMessageContentPart {
 	type: 'text';
@@ -109,21 +133,19 @@ interface Chat {
 	enabled: boolean;
 	setEnabled: ( enabled: boolean ) => void;
 	started: boolean;
-	setStarted: ( started: boolean ) => void;
 	error?: any;
 	history: Message[];
 	clearMessages: () => void;
 	userSay: ( content: string, image_urls?: string[] ) => void;
-	agentMessage?: string | MessageContentPart[];
+	assistantMessage?: string | MessageContentPart[];
 	call: ( name: string, args: any, id?: string ) => void;
 	setToolCallResult: ( toolCallId: string, result: any ) => void;
-	pendingToolRequests: ToolCall[];
-	clearPendingToolRequests: () => void;
-	runAgent: (
+	pendingToolCalls: ToolCall[];
+	runChat: (
 		messages: Message[],
 		tools: any,
-		systemPrompt: string,
-		nextStepPrompt: string
+		instructions: string,
+		additionalInstructions: string
 	) => void;
 	onReset: () => void;
 }
@@ -155,6 +177,7 @@ export declare class FStringPromptTemplate extends StringPromptTemplate {
 
 export declare class DotPromptTemplate extends StringPromptTemplate {
 	constructor( options: { template: string; inputVariables: string[] } );
+	static fromString( tmpl: string, templateVariables?: Array, options?: any ): FStringPromptTemplate;
 }
 
 /**
@@ -168,8 +191,8 @@ declare class Agent {
 	userSay( message: string, file_urls?: string[] ): void;
 	getTools( values: any ): any[];
 	findTools( ...toolNames: string[] ): any[];
-	getSystemPrompt(): Formatter;
-	getNextStepPrompt(): Formatter;
+	getInstructions(): Formatter;
+	getAdditionalInstructions(): Formatter;
 	onStart(): void;
 }
 
@@ -223,11 +246,11 @@ type ChatModelControlsProps = {
 	model: string;
 	service: string;
 	temperature: number;
-	token: string;
+	apiKey: string;
 	onServiceChanged: ( service: string ) => void;
 	onModelChanged: ( model: string ) => void;
 	onTemperatureChanged: ( temperature: number ) => void;
-	onTokenChanged: ( token: string ) => void;
+	onApiKeyChanged: ( apiKey: string ) => void;
 };
 
 export declare function ChatModelControls(

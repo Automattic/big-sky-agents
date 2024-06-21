@@ -20,10 +20,10 @@ import agents from '../agents/default-agents.js';
  *
  * @param {Object} options
  * @param {string} options.pageId
- * @param {string} options.token
+ * @param {string} options.apiKey
  * @return {Object} tools, values, callbacks, onReset
  */
-const useSimpleToolkit = ( { pageId, token } ) => {
+const useSimpleToolkit = ( { pageId, apiKey } ) => {
 	// basic tools like askUser, informUser, setAgentGoal, etc.
 	const {
 		onReset: onResetAgent,
@@ -45,7 +45,7 @@ const useSimpleToolkit = ( { pageId, token } ) => {
 		tools: analyzeSiteTools,
 		values: analyzeSiteValues,
 		callbacks: analyzeSiteCallbacks,
-	} = useAnalyzeSiteToolkit( { token } );
+	} = useAnalyzeSiteToolkit( { apiKey } );
 
 	// reset pending tool calls
 	const onReset = useCallback( () => {

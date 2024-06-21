@@ -1,19 +1,19 @@
 import { ASK_USER_TOOL_NAME } from './tools/ask-user.js';
-import StandardAgent from './standard-agent.js';
+import Agent from './agent.js';
 import { WORDPRESS_TUTOR_AGENT_ID } from './default-agents.js';
-import { FStringPromptTemplate } from './prompt-template.js';
+import { DotPromptTemplate } from './prompt-template.js';
 
-const systemPrompt = FStringPromptTemplate.fromString(
+const instructions = DotPromptTemplate.fromString(
 	`You are a helpful WordPress tutor. You are an expert in all things WordPress.`
 );
 
-class TutorAgent extends StandardAgent {
+class TutorAgent extends Agent {
 	getId() {
 		return WORDPRESS_TUTOR_AGENT_ID;
 	}
 
-	getSystemPrompt() {
-		return systemPrompt;
+	getInstructions() {
+		return instructions;
 	}
 
 	onStart() {

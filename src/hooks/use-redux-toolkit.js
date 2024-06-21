@@ -10,7 +10,7 @@ import useReduxSiteToolkit from './use-redux-site-toolkit.js';
 import useAnalyzeSiteToolkit from './use-analyze-site-toolkit.js';
 import useReduxAgentToolkit from './use-redux-agent-toolkit.js';
 
-const useReduxToolkit = ( { pageId, token } ) => {
+const useReduxToolkit = ( { pageId, apiKey } ) => {
 	// set and get site title, description, topic, type, location, colors, pages, page sections
 	const {
 		onReset: onSiteSpecReset,
@@ -32,7 +32,7 @@ const useReduxToolkit = ( { pageId, token } ) => {
 		tools: analyzeSiteTools,
 		values: analyzeSiteValues,
 		callbacks: analyzeSiteCallbacks,
-	} = useAnalyzeSiteToolkit( { token } );
+	} = useAnalyzeSiteToolkit( { apiKey } );
 
 	// these are fed to the templating engine on each render of the system/after-call prompt
 	const values = useMemo(
