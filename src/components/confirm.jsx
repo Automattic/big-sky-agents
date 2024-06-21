@@ -1,9 +1,6 @@
 import { Button, Card, CardBody, CardFooter } from '@wordpress/components';
-import { store as agentStore } from '../store/index.js';
-import { useDispatch } from '@wordpress/data';
 
-function Confirm( { toolCall, onConfirm } ) {
-	const setToolCallResult = useDispatch( agentStore ).setToolCallResult;
+function Confirm( { toolCall, onConfirm, setToolResult } ) {
 	const message = toolCall.function.arguments.message;
 
 	return (
@@ -18,7 +15,7 @@ function Confirm( { toolCall, onConfirm } ) {
 					<Button
 						variant="secondary"
 						onClick={ () => {
-							setToolCallResult(
+							setToolResult(
 								toolCall.id,
 								`The user rejected the proposed changes`
 							);
@@ -30,7 +27,7 @@ function Confirm( { toolCall, onConfirm } ) {
 					<Button
 						variant="primary"
 						onClick={ () => {
-							setToolCallResult(
+							setToolResult(
 								toolCall.id,
 								`The user confirmed the proposed changes`
 							);

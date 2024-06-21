@@ -4,23 +4,21 @@ import { useEffect, useState } from 'react';
 const useAssistantExecutor = ( {
 	agent,
 	chat: {
-		started,
-		setStarted,
 		enabled,
 		running,
-		pendingToolRequests,
-		setToolCallResult,
 		runAssistant,
+
 		// threads
 		threadId,
 		createThread,
 
 		// assistants
 		assistantId,
+
 		// createAssistant,
 		setAssistantId,
 	},
-	toolkit: { values, callbacks },
+	toolkit: { values },
 } ) => {
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
@@ -109,44 +107,6 @@ const useAssistantExecutor = ( {
 		additionalInstructions,
 		tools,
 	] );
-
-	useEffect( () => {
-		// process tool calls for any tools with callbacks
-		// note that tools without callbacks will be processed outside this loop,
-		// and will need responses before the ChatModel can run again
-		if ( ! running && pendingToolRequests.length > 0 ) {
-			pendingToolRequests.forEach( ( tool_call ) => {
-				if ( tool_call.inProgress ) {
-					return;
-				}
-
-				if ( tool_call.error ) {
-					// console.error( '⚙️ Tool call error', tool_call.error );
-					throw new Error( tool_call.error );
-				}
-
-				const callback = callbacks[ tool_call.function.name ];
-
-				if ( typeof callback === 'function' ) {
-					setToolCallResult(
-						tool_call.id,
-						callback( tool_call.function.arguments )
-					);
-				}
-			} );
-		}
-	}, [ callbacks, pendingToolRequests, running, setToolCallResult ] );
-
-	/**
-	 * Call agent.onStart() when we render.
-	 */
-	// useEffect( () => {
-	// 	if ( agent && ! running && ! started && ! assistantId ) {
-	// 		// console.warn( '🧠 Starting agent', agent, started );
-	// 		setStarted( true );
-	// 		agent.onStart();
-	// 	}
-	// }, [ agent, running, setStarted, started, assistantId ] );
 };
 
 export default useAssistantExecutor;

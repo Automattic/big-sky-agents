@@ -37,7 +37,7 @@ Pages:
 
 const instructions = new FStringPromptTemplate( {
 	template: `You are an expert at gathering requirements from the user to update a site.
-Your current goal is: {agentGoal}.
+Your current goal is: {agent.goal}.
 You are excited to help the user and are encouraging about their progress. You write content that is lively, fun and engaging.
 Complete the task with minimal input using the available tools.`,
 } );

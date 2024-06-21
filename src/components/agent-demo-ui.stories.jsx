@@ -11,6 +11,13 @@ export default {
 			name: 'OAuth Bearer Token',
 		},
 	},
+	decorators: [
+		( Story ) => (
+			<div style={ { minHeight: '600px' } }>
+				<Story />
+			</div>
+		),
+	],
 };
 
 const Template = ( args ) => <AgentsDemoUI { ...args } />;

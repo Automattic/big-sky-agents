@@ -147,6 +147,24 @@ const formatHistory = ( history, model ) => {
 		console.warn( 'remapped history', history );
 	}
 
+	// JSON-serialize any tool call arguments in messages[X].tool_calls[Y].function.arguments
+	history = history.map( ( message ) => {
+		if ( message.tool_calls ) {
+			return {
+				...message,
+				tool_calls: message.tool_calls.map( ( tool_call ) => {
+					if ( typeof tool_call.function.arguments !== 'string' ) {
+						tool_call.function.arguments = JSON.stringify(
+							tool_call.function.arguments
+						);
+					}
+					return tool_call;
+				} ),
+			};
+		}
+		return message;
+	} );
+
 	return history;
 };
 

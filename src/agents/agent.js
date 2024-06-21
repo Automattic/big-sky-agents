@@ -1,4 +1,5 @@
 import { ASK_USER_TOOL_NAME } from './tools/ask-user.js';
+import { WAPUU_ASSISTANT_ID } from './default-agents.js';
 import { FStringPromptTemplate } from './prompt-template.js';
 
 const instructions = FStringPromptTemplate.fromString(
@@ -20,7 +21,7 @@ class Agent {
 	}
 
 	getAssistantId() {
-		return null;
+		return WAPUU_ASSISTANT_ID;
 	}
 
 	getInstructions() {

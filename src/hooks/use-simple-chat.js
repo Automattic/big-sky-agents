@@ -22,7 +22,7 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 	const [ started, setStarted ] = useState( false );
 	const [ running, setRunning ] = useState( false );
 	const [ error, setError ] = useState();
-	const [ pendingToolRequests, setPendingToolRequests ] = useState( [] );
+	const [ pendingToolCalls, setPendingToolCalls ] = useState( [] );
 	const [ history, setHistory ] = useState( [] );
 	const [ enabled, setEnabled ] = useState( true );
 	const [ assistantMessage, setAssistantMessage ] = useState();
@@ -49,7 +49,7 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 				],
 			},
 		] );
-		setPendingToolRequests( ( toolCalls ) => [
+		setPendingToolCalls( ( toolCalls ) => [
 			...toolCalls,
 			{
 				id,
@@ -62,7 +62,7 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 		] );
 	}, [] );
 
-	const setToolCallResultSync = useCallback(
+	const setToolCallResult = useCallback(
 		( toolCallId, result ) => {
 			console.log( '🤖 Setting Tool Call Result', toolCallId, result );
 			setHistory( ( messages ) => {
@@ -93,33 +93,29 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 			console.warn(
 				'filtering toolcalls to remove ID',
 				toolCallId,
-				pendingToolRequests
+				pendingToolCalls
 			);
-			setPendingToolRequests( ( toolCalls ) =>
+			setPendingToolCalls( ( toolCalls ) =>
 				toolCalls.filter( ( toolCall ) => toolCall.id !== toolCallId )
 			);
 		},
-		[ pendingToolRequests ]
+		[ pendingToolCalls ]
 	);
 
-	const setToolCallResult = useCallback(
+	const setToolResult = useCallback(
 		( toolCallId, result ) => {
 			console.log( '🤖 Resolve Tool Call Result', toolCallId );
 			// check if result is a Promise
 			if ( result instanceof Promise ) {
 				result.then( ( value ) => {
-					setToolCallResultSync( toolCallId, value );
+					setToolCallResult( toolCallId, value );
 				} );
 			} else {
-				setToolCallResultSync( toolCallId, result );
+				setToolCallResult( toolCallId, result );
 			}
 		},
-		[ setToolCallResultSync ]
+		[ setToolCallResult ]
 	);
-
-	const clearPendingToolRequests = useCallback( () => {
-		setPendingToolRequests( [] );
-	}, [] );
 
 	const clearMessages = useCallback( () => {
 		setHistory( [] );
@@ -165,7 +161,7 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 				error || // error
 				runningRef.current || // also already running
 				! messages.length > 0 || // nothing to process
-				pendingToolRequests.length > 0 || // waiting on tool calls
+				pendingToolCalls.length > 0 || // waiting on tool calls
 				assistantMessage // the assistant has a question for the user
 			) {
 				// console.warn( 'not running agent', {
@@ -199,7 +195,7 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 					setAssistantMessage( message.content );
 					setHistory( ( hist ) => [ ...hist, message ] );
 					if ( message.tool_calls ) {
-						setPendingToolRequests( ( toolCalls ) => [
+						setPendingToolCalls( ( toolCalls ) => [
 							...toolCalls,
 							...message.tool_calls.map( ( tool_call ) => ( {
 								...tool_call,
@@ -223,17 +219,16 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 			error,
 			chatModel,
 			model,
-			pendingToolRequests,
+			pendingToolCalls,
 			running,
 			temperature,
 		]
 	);
 
 	const onReset = useCallback( () => {
-		clearPendingToolRequests();
 		clearMessages();
 		setError( null );
-	}, [ clearMessages, clearPendingToolRequests ] );
+	}, [ clearMessages ] );
 
 	return {
 		// running state
@@ -252,9 +247,8 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 
 		// tools
 		call,
-		setToolCallResult,
-		pendingToolRequests,
-		clearPendingToolRequests,
+		setToolResult,
+		pendingToolCalls,
 
 		runAgent, // run a chat completion with tool, instructions and additionalInstructions
 

@@ -32,7 +32,9 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 		enabled,
 		setEnabled,
 		createThread,
+		deleteThread,
 		createThreadRun,
+		updateThreadRun,
 		updateThreadRuns,
 		updateThreadMessages,
 		threadRun,
@@ -95,12 +97,16 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 								{ threadId }
 								<br />
 								<button
+									disabled={ running }
 									onClick={ () => updateThreadMessages() }
 								>
 									refresh messages
 								</button>
-								<button onClick={ () => createThread() }>
-									recreate
+								<button
+									disabled={ running }
+									onClick={ () => deleteThread() }
+								>
+									delete
 								</button>
 							</>
 						) : (
@@ -120,17 +126,34 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 							<>
 								{ threadRun.id } { threadRun.status }
 								<br />
-								<button onClick={ () => updateThreadRuns() }>
+								<button
+									disabled={ running }
+									onClick={ () => updateThreadRun() }
+								>
 									refresh
 								</button>
-								<button onClick={ () => createThreadRun() }>
-									restart
+								<button
+									disabled={ running }
+									onClick={ () => createThreadRun() }
+								>
+									start
 								</button>
 							</>
 						) : (
-							<button onClick={ () => createThreadRun() }>
-								start
-							</button>
+							<>
+								<button
+									disabled={ running }
+									onClick={ () => updateThreadRuns() }
+								>
+									refresh
+								</button>
+								<button
+									disabled={ running }
+									onClick={ () => createThreadRun() }
+								>
+									start
+								</button>
+							</>
 						) }
 					</span>
 				</BaseControl>

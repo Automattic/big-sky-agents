@@ -12,6 +12,7 @@ import PageSpecPreview from './page-spec-preview.jsx';
 import AgentUI from './agent-ui.jsx';
 import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
+import ChatHistory from './chat-history.jsx';
 import {
 	AssistantModelService,
 	AssistantModelType,
@@ -20,6 +21,8 @@ import PageList from './page-list.jsx';
 import useReduxToolkit from '../hooks/use-redux-toolkit.js';
 import useCurrentAgent from '../hooks/use-current-agent.js';
 import useAssistantExecutor from '../hooks/use-assistant-executor.js';
+import useToolExecutor from '../hooks/use-tool-executor.js';
+import useAgentStarter from '../hooks/use-agent-starter.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useReduxChat from '../hooks/use-redux-chat.js';
@@ -29,9 +32,12 @@ import './agents-demo-ui.scss';
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
  *
  * This component displays the user interface for the Assistants Demo, which allows users to interact with assistants and preview generated content.
+ *
+ * <!--
  * @param {Object}   root0                 The component props.
  * @param {string}   root0.apiKey          The token to use for the chat model.
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
+ *                                         -->
  */
 const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
@@ -75,6 +81,16 @@ const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
 		chat,
 		agent,
 		toolkit,
+	} );
+
+	useToolExecutor( {
+		chat,
+		toolkit,
+	} );
+
+	useAgentStarter( {
+		agent,
+		chat,
 	} );
 
 	const { pages } = useSelect( ( select ) => {
@@ -146,6 +162,10 @@ const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
 					</div>
 				) }
 			</Flex>
+			<ChatHistory
+				history={ chat.history }
+				toolOutputs={ chat.toolOutputs }
+			/>
 			{ controlsVisible && (
 				<div className="big-sky__agent-debug">
 					<AgentControls

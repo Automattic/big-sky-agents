@@ -52,7 +52,7 @@ class AssistantModel {
 	}
 
 	/**
-	 * https://api.openai.com/v1/threads
+	 * Create a thread
 	 * see: https://platform.openai.com/docs/api-reference/threads/createThread
 	 */
 	async createThread() {
@@ -67,6 +67,24 @@ class AssistantModel {
 			}
 		);
 		return await this.getResponse( createThreadRequest, 'thread' );
+	}
+
+	/**
+	 * Delete a thread
+	 * see: https://platform.openai.com/docs/api-reference/threads/deleteThread
+	 * @param {string} threadId
+	 * @return {Promise<Object>} The response object
+	 */
+	async deleteThread( threadId ) {
+		const headers = this.getHeaders();
+		const deleteThreadRequest = await fetch(
+			`${ this.getServiceUrl() }/threads/${ threadId }`,
+			{
+				method: 'DELETE',
+				headers,
+			}
+		);
+		return await this.getResponse( deleteThreadRequest );
 	}
 
 	/**
@@ -191,7 +209,7 @@ class AssistantModel {
 		return await this.getResponse( getMessagesRequest, 'list' );
 	}
 
-	async submitToolOutputs( threadId, runId, toolCallId, output ) {
+	async submitToolOutputs( threadId, runId, toolOutputs ) {
 		const headers = this.getHeaders();
 		const submitToolOutputsRequest = await fetch(
 			`${ this.getServiceUrl() }/threads/${ threadId }/runs/${ runId }/submit_tool_outputs`,
@@ -199,12 +217,7 @@ class AssistantModel {
 				method: 'POST',
 				headers,
 				body: JSON.stringify( {
-					tool_outputs: [
-						{
-							tool_call_id: toolCallId,
-							output,
-						},
-					],
+					tool_outputs: toolOutputs,
 				} ),
 			}
 		);

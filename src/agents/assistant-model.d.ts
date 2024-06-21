@@ -44,6 +44,17 @@ declare interface RunThreadRequest {
 	responseFormat?: object;
 }
 
+declare interface CreateAssistantRequest {
+	name: string;
+	description: string;
+	instructions: string;
+	tools: string[];
+	tool_resources: object;
+	metadata: object;
+	temperature: object;
+	response_format: object;
+}
+
 declare class AssistantModel {
 	constructor( options: { apiKey?: string } );
 	getDefaultModel(): AssistantModelType;
@@ -52,10 +63,13 @@ declare class AssistantModel {
 	getParams( request: ChatCompletionRequest ): Record< string, any >;
 	getHeaders( request: ChatCompletionRequest ): Record< string, string >;
 
+	async createAssistant( model: CreateAssistantRequest ): Promise< any >;
 	async createThread( request: CreateThreadRequest ): Promise< any >; // TODO CreateThreadResponse
+	async deleteThread( threadId: string ): Promise< any >;
 	async createThreadRun( request: RunThreadRequest ): Promise< any >;
 	async getThreadRuns( threadId: string ): Promise< any >;
 	async getThreadRun( threadId: string, runId: string ): Promise< any >;
+	async createThreadMessage( threadId: string, message: Message ): Promise< any >;
 	async getThreadMessages( threadId: string ): Promise< any >;
 	static getInstance(
 		service: AssistantModelService,

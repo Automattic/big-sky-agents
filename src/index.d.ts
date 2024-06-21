@@ -133,7 +133,6 @@ interface Chat {
 	enabled: boolean;
 	setEnabled: ( enabled: boolean ) => void;
 	started: boolean;
-	setStarted: ( started: boolean ) => void;
 	error?: any;
 	history: Message[];
 	clearMessages: () => void;
@@ -141,8 +140,7 @@ interface Chat {
 	agentMessage?: string | MessageContentPart[];
 	call: ( name: string, args: any, id?: string ) => void;
 	setToolCallResult: ( toolCallId: string, result: any ) => void;
-	pendingToolRequests: ToolCall[];
-	clearPendingToolRequests: () => void;
+	pendingToolCalls: ToolCall[];
 	runAgent: (
 		messages: Message[],
 		tools: any,

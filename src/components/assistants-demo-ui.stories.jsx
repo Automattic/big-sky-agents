@@ -11,6 +11,13 @@ export default {
 			name: 'OAuth API Key',
 		},
 	},
+	decorators: [
+		( Story ) => (
+			<div style={ { minHeight: '600px' } }>
+				<Story />
+			</div>
+		),
+	],
 };
 
 const Template = ( args ) => <AssistantsDemoUI { ...args } />;

@@ -3,7 +3,7 @@
  */
 import Markdown from 'react-markdown';
 
-const AgentMessageContent = ( { content } ) => {
+const MessageContent = ( { content } ) => {
 	/**
 	 * Formatted like this (OpenAI assistant style)
 	 * "content": [
@@ -70,4 +70,4 @@ const AgentMessageContent = ( { content } ) => {
 	} );
 };
 
-export default AgentMessageContent;
+export default MessageContent;
