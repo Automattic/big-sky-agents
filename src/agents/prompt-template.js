@@ -83,4 +83,12 @@ export class DotPromptTemplate extends StringPromptTemplate {
 		const engine = compileDotTemplate( template );
 		super( { engine, template, inputVariables, ...options } );
 	}
+
+	static fromString( template, inputVariables = [], options = {} ) {
+		return new DotPromptTemplate( {
+			template,
+			inputVariables,
+			...options,
+		} );
+	}
 }

@@ -13,13 +13,11 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		runChatCompletion,
 		runCreateThread,
 		runDeleteThread,
-		// runCreateAssistant,
 		setAssistantId,
 		runCreateThreadRun,
 		runGetThreadRun,
 		runGetThreadRuns,
 		runGetThreadMessages,
-		runAddMessageToThread,
 		runSubmitToolOutputs,
 	} = useDispatch( agentStore );
 
@@ -33,7 +31,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		history,
 		assistantMessage,
 		pendingToolCalls,
-		pendingThreadMessages,
+		additionalMessages,
 		requiredToolOutputs,
 		toolOutputs,
 		threadId,
@@ -42,9 +40,8 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		hasActiveRun,
 		threadRunsUpdated,
 		threadMessagesUpdated,
-		hasNewMessagesToProcess,
 	} = useSelect( ( select ) => {
-		const values = {
+		return {
 			error: select( agentStore ).getError(),
 			loading: select( agentStore ).isLoading(),
 			started: select( agentStore ).isStarted(),
@@ -54,8 +51,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			history: select( agentStore ).getMessages(),
 			assistantMessage: select( agentStore ).getAssistantMessage(),
 			pendingToolCalls: select( agentStore ).getPendingToolCalls(),
-			pendingThreadMessages:
-				select( agentStore ).getPendingThreadMessages(),
+			additionalMessages: select( agentStore ).getAdditionalMessages(),
 			requiredToolOutputs: select( agentStore ).getRequiredToolOutputs(),
 			toolOutputs: select( agentStore ).getToolOutputs(),
 			threadId: select( agentStore ).getThreadId(),
@@ -66,7 +62,6 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			threadMessagesUpdated:
 				select( agentStore ).getThreadMessagesUpdated(),
 		};
-		return values;
 	} );
 
 	const isServiceAvailable = useMemo( () => {
@@ -85,9 +80,11 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 
 	const isThreadRunComplete = useMemo( () => {
 		return (
-			isThreadDataLoaded && ! running && threadRun?.status === 'completed'
+			isThreadDataLoaded &&
+			! running &&
+			( ! threadRun || threadRun?.status === 'completed' )
 		);
-	}, [ isThreadDataLoaded, running, threadRun?.status ] );
+	}, [ isThreadDataLoaded, running, threadRun ] );
 
 	const isThreadRunInProgress = useMemo( () => {
 		return (
@@ -134,11 +131,18 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 
 	// update messages if they haven't been updated
 	useEffect( () => {
+		console.warn( 'update messages', {
+			isAssistantAvailable,
+			running,
+			threadId,
+			threadMessagesUpdated,
+		} );
 		if (
 			isAssistantAvailable &&
 			! running &&
 			threadId &&
-			threadMessagesUpdated === null
+			( ! threadMessagesUpdated ||
+				threadMessagesUpdated / 1000 < threadRun?.created_at )
 		) {
 			runGetThreadMessages( { service, apiKey, threadId } );
 		}
@@ -150,6 +154,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		service,
 		threadId,
 		threadMessagesUpdated,
+		threadRun?.created_at,
 	] );
 
 	// if there are required tool outputs, run the agent
@@ -240,74 +245,79 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 	] );
 
 	// if there's a threadId, and threadRunsUpdated and threadMessagesUpdated are set and we're not running, create a thread run
-	useEffect( () => {
-		if (
-			! running &&
-			isThreadDataLoaded &&
-			isThreadRunComplete &&
-			! pendingThreadMessages?.length &&
-			hasNewMessagesToProcess &&
-			! isAwaitingUserInput
-		) {
-			console.warn( 'Running threadRun', {
-				service,
-				apiKey,
-				assistantId,
-				threadId,
-				model,
-				temperature,
-				feature,
-				pendingThreadMessages,
-				pendingToolCalls,
-				history,
-			} );
-			runCreateThreadRun( {
-				service,
-				apiKey,
-				assistantId,
-				threadId,
-				model,
-				temperature,
-				feature,
-			} );
-		}
-	}, [
-		apiKey,
-		assistantId,
-		feature,
-		hasNewMessagesToProcess,
-		history,
-		isAwaitingUserInput,
-		isThreadDataLoaded,
-		isThreadRunComplete,
-		model,
-		pendingThreadMessages,
-		pendingToolCalls,
-		runCreateThreadRun,
-		running,
-		service,
-		temperature,
-		threadId,
-	] );
+	// useEffect( () => {
+	// 	if (
+	// 		isThreadRunComplete &&
+	// 		! pendingThreadMessages?.length &&
+	// 		hasNewMessagesToProcess &&
+	// 		! isAwaitingUserInput
+	// 	) {
+	// 		console.warn( 'Running threadRun', {
+	// 			service,
+	// 			apiKey,
+	// 			assistantId,
+	// 			threadId,
+	// 			model,
+	// 			temperature,
+	// 			feature,
+	// 			pendingThreadMessages,
+	// 			pendingToolCalls,
+	// 			history,
+	// 		} );
+	// 		runCreateThreadRun( {
+	// 			service,
+	// 			apiKey,
+	// 			assistantId,
+	// 			threadId,
+	// 			model,
+	// 			temperature,
+	// 			feature,
+	// 		} );
+	// 	}
+	// }, [
+	// 	apiKey,
+	// 	assistantId,
+	// 	feature,
+	// 	hasNewMessagesToProcess,
+	// 	history,
+	// 	isAwaitingUserInput,
+	// 	isThreadDataLoaded,
+	// 	isThreadRunComplete,
+	// 	model,
+	// 	pendingThreadMessages,
+	// 	pendingToolCalls,
+	// 	runCreateThreadRun,
+	// 	running,
+	// 	service,
+	// 	temperature,
+	// 	threadId,
+	// 	threadRun,
+	// ] );
 
 	// if there are pendingThreadMessages, send them using runAddMessageToThread
-	useEffect( () => {
-		if ( isThreadRunComplete && pendingThreadMessages.length > 0 ) {
-			runAddMessageToThread( {
-				service,
-				apiKey,
-				threadId,
-				message: pendingThreadMessages[ 0 ],
-			} );
-		}
-	}, [
-		apiKey,
-		isThreadRunComplete,
-		pendingThreadMessages,
-		runAddMessageToThread,
-		service,
-		threadId,
-	] );
+	// useEffect( () => {
+	// 	if ( isThreadRunComplete && pendingThreadMessages.length > 0 ) {
+	// 		console.warn( 'Sending pending thread messages', {
+	// 			service,
+	// 			apiKey,
+	// 			threadId,
+	// 			pendingThreadMessages,
+	// 		} );
+	// 		runAddMessageToThread( {
+	// 			service,
+	// 			apiKey,
+	// 			threadId,
+	// 			message: pendingThreadMessages[ 0 ],
+	// 		} );
+	// 	}
+	// }, [
+	// 	apiKey,
+	// 	isThreadRunComplete,
+	// 	pendingThreadMessages,
+	// 	runAddMessageToThread,
+	// 	service,
+	// 	threadId,
+	// ] );
 
 	// if we have a thread, and threadRunId is false, and running is false, create a thread run
 	// useEffect( () => {
@@ -316,15 +326,15 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 	// 	}
 	// }, [ threadId, threadRun, running, runCreateThreadRun ] );
 
-	const runAgent = useCallback(
-		( messages, tools, instructions, additionalInstructions ) => {
+	const runChat = useCallback(
+		( tools, instructions, additionalInstructions ) => {
 			if (
 				! service || // no ChatModel
 				! apiKey || // no apiKey
 				! enabled || // disabled
 				running || // already running
 				error || // there's an error
-				! messages.length > 0 || // nothing to process
+				! history.length > 0 || // nothing to process
 				pendingToolCalls.length > 0 || // waiting on tool calls
 				assistantMessage // the assistant has a question for the user
 			) {
@@ -342,7 +352,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			runChatCompletion( {
 				model,
 				temperature,
-				messages,
+				messages: history,
 				tools,
 				instructions,
 				additionalInstructions,
@@ -352,44 +362,39 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			} );
 		},
 		[
-			model,
-			temperature,
 			service,
 			apiKey,
 			enabled,
 			running,
 			error,
-			pendingToolCalls,
+			history,
+			pendingToolCalls.length,
 			assistantMessage,
 			runChatCompletion,
+			model,
+			temperature,
 			feature,
 		]
 	);
 
 	const createThreadRun = useCallback(
 		( tools, instructions, additionalInstructions ) => {
-			if ( ! isAssistantAvailable ) {
-				console.warn( 'assistant not available', {
-					service,
-					apiKey,
-					assistantId,
-					running,
-					error,
-					enabled,
-				} );
+			console.warn( 'might create thread run', {
+				assistantMessage,
+				isAssistantAvailable,
+				isThreadRunComplete,
+				isAwaitingUserInput,
+				additionalMessages,
+			} );
+			if (
+				! isAssistantAvailable ||
+				! isThreadRunComplete ||
+				isAwaitingUserInput ||
+				! additionalMessages.length
+			) {
 				return;
 			}
-			// if we have an active run, refuse
-			if ( threadRun && ! isThreadRunComplete ) {
-				console.warn( 'active run exists', { threadRun } );
-				return;
-			}
-			// first, create a thread (TODO: update existing thread!)
-			// if ( ! threadId ) {
-			// 	runCreateThread( { service, apiKey: token } );
-			// } else {
-			// 	console.warn( 'thread already exists', { threadId } );
-			// }
+
 			console.warn( 'creating thread run', {
 				service,
 				apiKey,
@@ -400,6 +405,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 				tools,
 				instructions,
 				additionalInstructions,
+				additionalMessages,
 				feature,
 			} );
 
@@ -413,24 +419,22 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 				tools,
 				instructions,
 				additionalInstructions,
+				additionalMessages,
 				feature,
 			} );
 		},
 		[
 			apiKey,
 			assistantId,
-			enabled,
-			error,
 			feature,
 			isAssistantAvailable,
 			isThreadRunComplete,
 			model,
+			additionalMessages,
 			runCreateThreadRun,
-			running,
 			service,
 			temperature,
 			threadId,
-			threadRun,
 		]
 	);
 
@@ -484,7 +488,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 	// 		threadId &&
 	// 		history.length > 0 &&
 	// 		! running &&
-	// 		! pendingThreadMessages.length
+	// 		! additionalMessages.length
 	// 	) {
 	// 		const lastMessage = history[ history.length - 1 ];
 	// 		if ( lastMessage.type === 'user' && ! lastMessage.sent ) {
@@ -514,7 +518,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 	// 	model,
 	// 	temperature,
 	// 	feature,
-	// 	pendingThreadMessages.length,
+	// 	additionalMessages.length,
 	// ] );
 
 	const onReset = useCallback( () => {
@@ -544,14 +548,14 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		history,
 		clearMessages,
 		userSay,
-		agentMessage: assistantMessage,
+		assistantMessage,
 
 		// tools
 		call: addToolCall,
 		setToolResult,
 		pendingToolCalls,
 		toolOutputs,
-		runAgent, // run a chat completion with messages, tools, instructions and additionalInstructions
+		runChat, // run a chat completion with messages, tools, instructions and additionalInstructions
 
 		// assistants
 		threadId,

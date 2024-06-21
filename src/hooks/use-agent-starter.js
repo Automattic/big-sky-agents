@@ -1,15 +1,17 @@
 import { useEffect } from 'react';
 
-const useAgentStarter = ( { agent, chat: { started, loading, running } } ) => {
+const useAgentStarter = ( {
+	agent: { onStart },
+	chat: { started, loading, running },
+} ) => {
 	/**
 	 * Call agent.onStart() when we render.
 	 */
 	useEffect( () => {
-		console.warn( 'useAgentStarter', { agent, running, started, loading } );
-		if ( agent && ! running && ! loading && ! started ) {
-			agent.onStart();
+		if ( onStart && ! running && ! loading && ! started ) {
+			onStart();
 		}
-	}, [ agent, running, started, loading ] );
+	}, [ running, started, loading, onStart ] );
 };
 
 export default useAgentStarter;

@@ -59,6 +59,7 @@ const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
 		temperature,
 		feature,
 	} );
+
 	const toolkit = useReduxToolkit( { apiKey, pageId: selectedPageId } );
 
 	const agent = useCurrentAgent( {

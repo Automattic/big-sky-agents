@@ -1,13 +1,13 @@
-import StandardAgent from './standard-agent.js';
+import Agent from './agent.js';
 import AnalyzeUrlTool from './tools/analyze-url.js';
 import { WOO_STORE_AGENT_ID } from './default-agents.js';
-import { FStringPromptTemplate } from './prompt-template.js';
+import { DotPromptTemplate } from './prompt-template.js';
 
-const instructions = FStringPromptTemplate.fromString(
+const instructions = DotPromptTemplate.fromString(
 	`You are a helpful eCommerce assistant. You are an expert in all things WooCommerce.`
 );
 
-class WooAgent extends StandardAgent {
+class WooAgent extends Agent {
 	getId() {
 		return WOO_STORE_AGENT_ID;
 	}

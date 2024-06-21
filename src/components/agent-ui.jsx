@@ -11,7 +11,6 @@ import AskUserQuestion from './ask-question.jsx';
 import Confirm from './confirm.jsx';
 import MessageContent from './message-content.jsx';
 import { ASK_USER_TOOL_NAME } from '../agents/tools/ask-user.js';
-import { INFORM_TOOL_NAME } from '../agents/tools/inform-user.js';
 import { CONFIRM_TOOL_NAME } from '../agents/tools/confirm.js';
 import './agent-ui.scss';
 
@@ -70,17 +69,16 @@ function AgentUI( {
 		loading,
 		running,
 		toolRunning,
-		agentMessage,
+		assistantMessage,
 		pendingToolCalls,
 		userSay,
 		setToolResult,
 		onReset: onResetChat,
 	},
-	agent: { onConfirm, onStart: onAgentStart },
+	agent: { informUser, onConfirm },
 	toolkit: {
 		onReset: onResetTools,
 		values: { agentName, agentThought },
-		callbacks: { [ INFORM_TOOL_NAME ]: setAgentThought },
 	},
 } ) {
 	const { agentQuestion, agentConfirm } = useMemo( () => {
@@ -108,7 +106,6 @@ function AgentUI( {
 					isDismissible={ true }
 					onRemove={ () => {
 						onResetChat();
-						onAgentStart();
 					} }
 				>
 					{ error }
@@ -124,12 +121,12 @@ function AgentUI( {
 							isActive={
 								! agentQuestion &&
 								! agentConfirm &&
-								! agentMessage
+								! assistantMessage
 							}
 						/>
 					) }
-					{ agentMessage && (
-						<AgentQuestion question={ agentMessage }>
+					{ assistantMessage && (
+						<AgentQuestion question={ assistantMessage }>
 							<AskUserQuestion
 								question=""
 								onCancel={ () => {
@@ -162,7 +159,7 @@ function AgentUI( {
 								} }
 								onAnswer={ ( answer, files ) => {
 									// clear the current thought
-									setAgentThought( { message: null } );
+									informUser( null );
 									setToolResult( agentQuestion.id, answer );
 									userSay( answer, files );
 								} }
@@ -176,21 +173,23 @@ function AgentUI( {
 							<Confirm
 								toolCall={ agentConfirm }
 								onConfirm={ ( confirmed ) => {
-									setAgentThought( { message: null } );
+									informUser( null );
 									setToolResult( agentConfirm.id, confirmed );
 									onConfirm( confirmed );
 								} }
 							/>
 						</AgentQuestion>
 					) }
-					{ ! agentMessage && ! agentQuestion && ! agentConfirm && (
-						<AgentThinking
-							enabled={ enabled }
-							loading={ loading }
-							running={ running }
-							toolRunning={ toolRunning }
-						/>
-					) }
+					{ ! assistantMessage &&
+						! agentQuestion &&
+						! agentConfirm && (
+							<AgentThinking
+								enabled={ enabled }
+								loading={ loading }
+								running={ running }
+								toolRunning={ toolRunning }
+							/>
+						) }
 				</FlexBlock>
 			</Flex>
 		</div>

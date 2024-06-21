@@ -137,11 +137,11 @@ interface Chat {
 	history: Message[];
 	clearMessages: () => void;
 	userSay: ( content: string, image_urls?: string[] ) => void;
-	agentMessage?: string | MessageContentPart[];
+	assistantMessage?: string | MessageContentPart[];
 	call: ( name: string, args: any, id?: string ) => void;
 	setToolCallResult: ( toolCallId: string, result: any ) => void;
 	pendingToolCalls: ToolCall[];
-	runAgent: (
+	runChat: (
 		messages: Message[],
 		tools: any,
 		instructions: string,
@@ -177,6 +177,7 @@ export declare class FStringPromptTemplate extends StringPromptTemplate {
 
 export declare class DotPromptTemplate extends StringPromptTemplate {
 	constructor( options: { template: string; inputVariables: string[] } );
+	static fromString( tmpl: string, templateVariables?: Array, options?: any ): FStringPromptTemplate;
 }
 
 /**

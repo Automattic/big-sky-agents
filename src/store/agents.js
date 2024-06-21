@@ -1,9 +1,12 @@
-import agents from '../agents/default-agents.js';
+import agents, { WAPUU_AGENT_ID } from '../agents/default-agents.js';
+
+const DEFAULT_AGENT_ID = WAPUU_AGENT_ID;
 const DEFAULT_AGENT_NAME = 'Unknown Agent';
+const DEFAULT_GOAL = "Find out the user's goal";
 
 const initialState = {
-	agentId: null,
-	agentGoal: null,
+	agentId: DEFAULT_AGENT_ID,
+	agentGoal: DEFAULT_GOAL,
 	agentThought: null,
 	enabled: true,
 	agents,

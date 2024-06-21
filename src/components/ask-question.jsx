@@ -15,7 +15,7 @@ import {
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { close } from '@wordpress/icons';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 function UserChoices( { choices, multiChoice, onChoice, onSubmit } ) {
 	const [ selectedChoices, setSelectedChoices ] = useState( [] );
@@ -153,6 +153,10 @@ function AskUserQuestion( {
 		[ files, setFiles ]
 	);
 
+	const submitDisabled = useMemo( () => {
+		return ! answer && ! selectedChoice && files.length === 0;
+	} );
+
 	return (
 		<div className="big-sky__agent-input">
 			<Card size="medium">
@@ -214,7 +218,11 @@ function AskUserQuestion( {
 					>
 						Autofill
 					</Button>
-					<Button variant="primary" onClick={ handleSubmit }>
+					<Button
+						disabled={ submitDisabled }
+						variant="primary"
+						onClick={ handleSubmit }
+					>
 						Submit
 					</Button>
 				</CardFooter>

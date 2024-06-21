@@ -152,15 +152,15 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 		}
 	}, [] );
 
-	const runAgent = useCallback(
-		( messages, tools, instructions, additionalInstructions ) => {
+	const runChat = useCallback(
+		( tools, instructions, additionalInstructions ) => {
 			if (
 				! chatModel || // no Chat Model
 				! enabled || // disabled
 				running || // already running
 				error || // error
 				runningRef.current || // also already running
-				! messages.length > 0 || // nothing to process
+				! history.length > 0 || // nothing to process
 				pendingToolCalls.length > 0 || // waiting on tool calls
 				assistantMessage // the assistant has a question for the user
 			) {
@@ -182,7 +182,7 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 			chatModel
 				.run( {
 					model,
-					messages,
+					messages: history,
 					tools,
 					instructions,
 					additionalInstructions,
@@ -243,14 +243,14 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 		history,
 		clearMessages,
 		userSay,
-		agentMessage: assistantMessage,
+		assistantMessage,
 
 		// tools
 		call,
 		setToolResult,
 		pendingToolCalls,
 
-		runAgent, // run a chat completion with tool, instructions and additionalInstructions
+		runChat, // run a chat completion with tool, instructions and additionalInstructions
 
 		onReset,
 	};

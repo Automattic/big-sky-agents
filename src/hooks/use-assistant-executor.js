@@ -1,9 +1,10 @@
 /* eslint-disable camelcase, no-console */
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 const useAssistantExecutor = ( {
-	agent,
+	agent: { tools, instructions, additionalInstructions },
 	chat: {
+		loading,
 		enabled,
 		running,
 		runAssistant,
@@ -11,24 +12,13 @@ const useAssistantExecutor = ( {
 		// threads
 		threadId,
 		createThread,
-
-		// assistants
-		assistantId,
-
-		// createAssistant,
-		setAssistantId,
+		threadRunId,
+		createThreadRun,
 	},
-	toolkit: { values },
 } ) => {
-	const [ tools, setTools ] = useState( [] );
-	const [ instructions, setInstructions ] = useState( '' );
-	const [ additionalInstructions, setAdditionalInstructions ] =
-		useState( '' );
-
 	// if there's no threadId, create one
 	useEffect( () => {
 		if ( ! running && ! threadId ) {
-			console.warn( 'creating thread' );
 			createThread();
 		}
 	}, [ createThread, running, threadId ] );
@@ -45,60 +35,25 @@ const useAssistantExecutor = ( {
 	// }, [ createAssistant, assistantId, agent, values, running, threadId ] );
 
 	useEffect( () => {
-		if ( agent ) {
-			/**
-			 * Compute new state
-			 */
-			const newTools = agent.getTools( values );
-			const newInstructions = agent.getInstructions().format( values );
-			const newAdditionalInstructions = agent
-				.getAdditionalInstructions()
-				.format( values );
-
-			const newAssistantId = agent.getAssistantId();
-
-			if ( ! newAssistantId ) {
-				throw new Error( 'Assistant ID is required' );
-			}
-
-			if ( newAssistantId && newAssistantId !== assistantId ) {
-				setAssistantId( newAssistantId );
-			}
-
-			if ( newInstructions && newInstructions !== instructions ) {
-				// console.warn( '🧠 System prompt', newSystemPrompt );
-				setInstructions( newInstructions );
-			}
-
-			if ( newAdditionalInstructions !== additionalInstructions ) {
-				// console.warn( '🧠 Next step prompt', newNextStepPrompt );
-				setAdditionalInstructions( newAdditionalInstructions );
-			}
-
-			if ( JSON.stringify( newTools ) !== JSON.stringify( tools ) ) {
-				// console.warn( '🧠 Tools', newTools );
-				setTools( newTools );
-			}
-		}
-	}, [
-		agent,
-		assistantId,
-		additionalInstructions,
-		setAssistantId,
-		instructions,
-		tools,
-		values,
-	] );
-
-	useEffect( () => {
 		if (
 			! enabled || // disabled
+			loading || // not loaded
 			running || // thinking
+			! threadId || // no thread
+			! threadRunId?.status === 'completed' || // already running
 			! instructions // at a minimum we need a system prompt
 		) {
-			// return;
+			// console.warn( 'not running assistant in executuor', {
+			// 	loading,
+			// 	enabled,
+			// 	running,
+			// 	threadId,
+			// 	threadRunId,
+			// 	instructions,
+			// } );
+			return;
 		}
-		// runAssistant( tools, instructions, additionalInstructions );
+		createThreadRun( tools, instructions, additionalInstructions );
 	}, [
 		enabled,
 		runAssistant,
@@ -106,6 +61,10 @@ const useAssistantExecutor = ( {
 		instructions,
 		additionalInstructions,
 		tools,
+		createThreadRun,
+		threadId,
+		loading,
+		threadRunId,
 	] );
 };
 

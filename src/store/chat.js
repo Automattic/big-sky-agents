@@ -43,13 +43,11 @@ const initialState = {
 	threadId: localStorage.getItem( 'threadId' ) || null, // The assistant thread ID
 	threadRuns: [], // The Assistant thread runs
 	threadRunsUpdated: null, // The last time the thread runs were updated
-	threadMessages: [], // The Assistant thread messages
 	threadMessagesUpdated: null, // The last time Assistant messages were updated
 	syncedThreadMessagesAt: null, // The last time synced messages were updated
 
 	// Chat-API-related
 	history: [],
-	toolCalls: [],
 	isToolRunning: false,
 	isFetchingChatCompletion: false,
 	isCreatingThread: false,
@@ -62,18 +60,7 @@ const initialState = {
 	isSubmittingToolOutputs: false,
 };
 
-// const formatToolResultContent = ( result ) => {
-// 	if ( typeof result === 'undefined' ) {
-// 		return '';
-// 	}
-// 	return typeof result === 'object'
-// 		? JSON.stringify( result )
-// 		: `${ result }`;
-// };
-
-const filterAssistantSyncedMessage = ( message ) => {
-	// filter message to just role, content, attachments and metadata
-
+const chatMessageToThreadMessage = ( message ) => {
 	let filteredContent = message.content;
 
 	// the message.content is sometimes an array like this:
@@ -91,19 +78,16 @@ const filterAssistantSyncedMessage = ( message ) => {
 			}
 			return content;
 		} );
-	}
-
-	if ( typeof filteredContent === 'string' ) {
+		// sometimes it's just a string. These, too, need to be converted to the correct format. The API appears to be inconsistent in this regard.
+	} else if ( typeof filteredContent === 'string' ) {
 		filteredContent = [
 			{
 				type: 'text',
 				text: filteredContent,
 			},
 		];
-	}
-
-	// if the content is empty but the message has tool calls, set filteredContent to "Invoked tool calls: " . ( summary of tool calls
-	if ( ! filteredContent.length && message.tool_calls ) {
+		// an assistant tool call message usually has no content, but this is invalid in thie assistant API
+	} else if ( ! filteredContent.length && message.tool_calls ) {
 		filteredContent = [
 			{
 				type: 'text',
@@ -163,10 +147,7 @@ export const controls = {
 	async CREATE_THREAD_MESSAGE_CALL( { service, apiKey, threadId, message } ) {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
 		// filter message to just role, content, attachments and metadata
-		return await assistantModel.createThreadMessage(
-			threadId,
-			filterAssistantSyncedMessage( message )
-		);
+		return await assistantModel.createThreadMessage( threadId, message );
 	},
 	async SUBMIT_TOOL_OUTPUTS_CALL( {
 		service,
@@ -331,6 +312,7 @@ function* runCreateThreadRun( { service, apiKey, ...request } ) {
 		};
 		yield {
 			type: 'RUN_THREAD_END_REQUEST',
+			additionalMessages: request.additionalMessages,
 			threadRun: runCreateThreadRunResponse,
 		};
 	} catch ( error ) {
@@ -409,16 +391,38 @@ function filterMessage( message ) {
 	// [{ type: 'text', text: 'foo' }]
 	// TODO: do the same thing when syncing back to the assistant API
 	if ( Array.isArray( filteredContent ) ) {
-		filteredContent = filteredContent.map( ( content ) => {
-			if (
-				content.type === 'text' &&
-				typeof content.text?.value === 'string'
-			) {
-				content.text = content.text.value;
-			}
-			return content;
-		} );
+		message = {
+			...message,
+			content: filteredContent.map( ( content ) => {
+				if (
+					content.type === 'text' &&
+					typeof content.text?.value === 'string'
+				) {
+					content.text = content.text.value;
+				}
+				return content;
+			} ),
+		};
 	}
+
+	if ( message.role === 'assistant' && message.tool_calls ) {
+		// replace with message.map rather than modifying in-place
+		message = {
+			...message,
+			tool_calls: message.tool_calls.map( ( toolCall ) => ( {
+				...toolCall,
+				id: toolCall.id || uuidv4(),
+				function: {
+					...toolCall.function,
+					arguments:
+						typeof toolCall.function?.arguments === 'string'
+							? JSON.parse( toolCall.function.arguments )
+							: toolCall.function.arguments,
+				},
+			} ) ),
+		};
+	}
+
 	return {
 		...message,
 		created_at: message.created_at || Date.now(),
@@ -438,17 +442,17 @@ function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
 	// add the message to the active thread
 	yield { type: 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST' };
 	try {
-		yield {
+		const newMessage = yield {
 			type: 'CREATE_THREAD_MESSAGE_CALL',
 			service,
 			apiKey,
 			threadId,
-			message,
+			message: chatMessageToThreadMessage( message ),
 		};
 		yield {
 			type: 'CREATE_THREAD_MESSAGE_END_REQUEST',
 			originalMessageId: message.id,
-			message,
+			message: newMessage,
 		};
 	} catch ( error ) {
 		console.error( 'Create thread error', error );
@@ -481,6 +485,18 @@ function* addUserMessage( content, image_urls = [] ) {
 
 const addMessageReducer = ( state, message ) => {
 	message = filterMessage( message );
+
+	console.warn( 'adding message', message );
+
+	// if the message has the same ID as an existing message, update it
+	const existingMessageIndex = state.history.findIndex(
+		( existingMessage ) => existingMessage.id === message.id
+	);
+
+	if ( existingMessageIndex !== -1 ) {
+		state.history[ existingMessageIndex ] = message;
+		return state;
+	}
 
 	// special processing for tools - add the tool call messages
 	if ( message.role === 'tool' && message.tool_call_id ) {
@@ -529,17 +545,6 @@ const addMessageReducer = ( state, message ) => {
 		);
 	}
 
-	// if a message has tool calls and the arguments are a string, parse the function arguments as JSON
-	if ( message.role === 'assistant' && message.tool_calls ) {
-		message.tool_calls.forEach( ( toolCall ) => {
-			if ( typeof toolCall.function?.arguments === 'string' ) {
-				toolCall.function.arguments = JSON.parse(
-					toolCall.function.arguments
-				);
-			}
-		} );
-	}
-
 	// not a tool result, just add the message to history
 	const newState = {
 		...state,
@@ -554,8 +559,8 @@ const setThreadId = ( state, action ) => {
 	return {
 		...state,
 		threadId: action.threadId,
+		history: [],
 		threadRuns: [],
-		threadMessages: [],
 		threadRunsUpdated: null,
 		threadMessagesUpdated: null,
 		syncedThreadMessagesAt: null,
@@ -645,7 +650,6 @@ export const reducer = ( state = initialState, action ) => {
 				threadRunId: null,
 				threadMessagesUpdated: null,
 				threadRunsUpdated: null,
-				threadMessages: [],
 				threadRuns: [],
 				syncedThreadMessagesAt: null,
 				history: [],
@@ -678,10 +682,29 @@ export const reducer = ( state = initialState, action ) => {
 		case 'RUN_THREAD_BEGIN_REQUEST':
 			return { ...state, isCreatingThreadRun: true };
 		case 'RUN_THREAD_END_REQUEST':
+			const additionalMessageIds = action.additionalMessages?.map(
+				( message ) => message.id
+			);
+
+			console.warn( 'removing messages', {
+				additionalMessageIds,
+			} );
+
 			return {
 				...state,
+				// for each message in action.additionalMessages, find them by id and set message.thread_id to action.threadRun.id
+				history: state.history.map( ( message ) => {
+					if ( additionalMessageIds.includes( message.id ) ) {
+						return {
+							...message,
+							thread_id: state.threadId,
+						};
+					}
+					return message;
+				} ),
 				isCreatingThreadRun: false,
 				threadRunsUpdated: Date.now(),
+				// threadMessagesUpdated: null, // force reloading of chat history
 				threadRuns: [ action.threadRun, ...state.threadRuns ],
 			};
 		case 'RUN_THREAD_ERROR':
@@ -781,7 +804,6 @@ export const reducer = ( state = initialState, action ) => {
 				...state,
 				isFetchingThreadMessages: false,
 				threadMessagesUpdated: Date.now(),
-				threadMessages: action.threadMessages,
 			};
 		case 'GET_THREAD_MESSAGES_ERROR':
 			return {
@@ -836,11 +858,6 @@ export const selectors = {
 		const isLoading =
 			state.threadId &&
 			( ! state.threadRunsUpdated || ! state.threadMessagesUpdated );
-		console.warn( 'is loading', isLoading, {
-			threadId: state.threadId,
-			threadRunsUpdated: state.threadRunsUpdated,
-			threadMessagesUpdated: state.threadMessagesUpdated,
-		} );
 		return isLoading;
 	},
 	// if we have at least one message in history, we have started
@@ -893,14 +910,16 @@ export const selectors = {
 				)
 		);
 	},
-	getPendingThreadMessages: ( state ) => {
+	getAdditionalMessages: ( state ) => {
 		// user/assistant messages without a threadId are considered not to have been synced
-		return state.history.filter(
-			( message ) =>
-				[ 'assistant', 'user' ].includes( message.role ) &&
-				! message.tool_calls?.length &&
-				! message.thread_id
-		);
+		return state.history
+			.filter(
+				( message ) =>
+					[ 'assistant', 'user' ].includes( message.role ) &&
+					! message.tool_calls?.length &&
+					! message.thread_id
+			)
+			.map( chatMessageToThreadMessage );
 	},
 	getRequiredToolOutputs: ( state ) => {
 		const currentThreadRun = state.threadRuns[ 0 ];
@@ -980,7 +999,7 @@ export const actions = {
 					type: 'function',
 					function: {
 						name,
-						arguments: JSON.stringify( args ),
+						arguments: args,
 					},
 				},
 			],

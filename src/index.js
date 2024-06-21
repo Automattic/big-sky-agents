@@ -50,7 +50,6 @@ export { default as useChatIcon } from './hooks/use-chat-icon.js';
  * Core Classes
  */
 export { default as Agent } from './agents/agent.js';
-export { default as StandardAgent } from './agents/standard-agent.js';
 
 /**
  * Prompt Templates

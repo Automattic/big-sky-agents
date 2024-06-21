@@ -1,13 +1,17 @@
-import { ASK_USER_TOOL_NAME } from './tools/ask-user.js';
+import AskUserTool from './tools/ask-user.js';
 import { WAPUU_ASSISTANT_ID } from './default-agents.js';
-import { FStringPromptTemplate } from './prompt-template.js';
+import { DotPromptTemplate } from './prompt-template.js';
+import InformUserTool from './tools/inform-user.js';
+import SetGoalTool from './tools/set-goal.js';
+import createSetAgentTool from './tools/set-agent.js';
 
-const instructions = FStringPromptTemplate.fromString(
+const instructions = DotPromptTemplate.fromString(
 	`You are a helpful assistant.`
 );
 
-const additionalInstructions = FStringPromptTemplate.fromString(
-	`Please attempt to complete the goal: {agent.goal}.`
+const additionalInstructions = DotPromptTemplate.fromString(
+	`Please attempt to complete the goal: {{= it.agent.goal }}.`,
+	[ 'agent' ]
 );
 
 class Agent {
@@ -32,16 +36,17 @@ class Agent {
 		return additionalInstructions;
 	}
 
-	call( toolName, ...args ) {
-		this.chat.call( toolName, ...args );
-	}
+	/**
+	 * Tools
+	 */
 
-	userSay( message, file_urls = [] ) {
-		this.chat.userSay( message, file_urls );
-	}
-
-	getTools( /* values */ ) {
-		return [];
+	getTools( values ) {
+		return [
+			AskUserTool,
+			InformUserTool,
+			SetGoalTool,
+			createSetAgentTool( values.agents ),
+		];
 	}
 
 	findTools( ...toolNames ) {
@@ -50,10 +55,42 @@ class Agent {
 		);
 	}
 
+	/**
+	 * Make it seem as if the user said something. Good for scripting behind-the-scenes workflows triggered by "Now build me a contact form", etc.
+	 */
+
+	userSay( message, file_urls = [] ) {
+		this.chat.userSay( message, file_urls );
+	}
+
+	/**
+	 * "Remote control" methods that make the Agent perform a given action
+	 * e.g. agent.askUser( { question: 'What can I help you with?', choices: [ 'A task', 'A question' ] } )
+	 */
+
+	call( toolName, ...args ) {
+		this.chat.call( toolName, ...args );
+	}
+
+	askUser( { question, choices } ) {
+		this.call( AskUserTool.function.name, { question, choices } );
+	}
+
+	informUser( message ) {
+		this.call( InformUserTool.function.name, { message } );
+	}
+
+	setGoal( goal ) {
+		this.call( SetGoalTool.function.name, { goal } );
+	}
+
+	/**
+	 * Lifecycle methods
+	 */
+
 	onStart() {
-		this.chat.call( ASK_USER_TOOL_NAME, {
+		this.askUser( {
 			question: 'What can I help you with?',
-			choices: [ 'A task', 'A question' ],
 		} );
 	}
 }

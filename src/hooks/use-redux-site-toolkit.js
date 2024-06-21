@@ -17,11 +17,11 @@ import {
 	SetPageTitleTool,
 	SetSiteColorsTool,
 	SetSitePagesTool,
-	SiteDescriptionTool,
-	SiteLocationTool,
-	SiteTitleTool,
-	SiteTopicTool,
-	SiteTypeTool,
+	SetSiteDescriptionTool,
+	SetSiteLocationTool,
+	SetSiteTitleTool,
+	SetSiteTopicTool,
+	SetSiteTypeTool,
 } from '../agents/tools/site-tools.js';
 
 const useReduxSiteToolkit = ( { pageId } ) => {
@@ -85,24 +85,24 @@ const useReduxSiteToolkit = ( { pageId } ) => {
 				}
 				return 'Site colors updated';
 			},
-			[ SiteTitleTool.function.name ]: ( { title } ) => {
+			[ SetSiteTitleTool.function.name ]: ( { title } ) => {
 				setSiteTitle( title );
 				return `Site title set to "${ title }"`;
 			},
-			[ SiteDescriptionTool.function.name ]: ( { description } ) => {
+			[ SetSiteDescriptionTool.function.name ]: ( { description } ) => {
 				console.warn( 'setSiteDescription', { description } );
 				setSiteDescription( description );
 				return `Site description set to "${ description }"`;
 			},
-			[ SiteTopicTool.function.name ]: ( { topic } ) => {
+			[ SetSiteTopicTool.function.name ]: ( { topic } ) => {
 				setSiteTopic( topic );
 				return `Site topic set to "${ topic }"`;
 			},
-			[ SiteTypeTool.function.name ]: ( { siteType } ) => {
+			[ SetSiteTypeTool.function.name ]: ( { siteType } ) => {
 				setSiteType( siteType );
 				return `Site type set to "${ siteType }"`;
 			},
-			[ SiteLocationTool.function.name ]: ( { location } ) => {
+			[ SetSiteLocationTool.function.name ]: ( { location } ) => {
 				setSiteLocation( location );
 				return `Site location set to "${ location }"`;
 			},
@@ -164,11 +164,11 @@ const useReduxSiteToolkit = ( { pageId } ) => {
 	const tools = useMemo( () => {
 		return [
 			// site
-			SiteTitleTool,
-			SiteDescriptionTool,
-			SiteTopicTool,
-			SiteLocationTool,
-			SiteTypeTool,
+			SetSiteTitleTool,
+			SetSiteDescriptionTool,
+			SetSiteTopicTool,
+			SetSiteLocationTool,
+			SetSiteTypeTool,
 
 			// design
 			SetSiteColorsTool,

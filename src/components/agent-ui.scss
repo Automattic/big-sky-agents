@@ -262,7 +262,7 @@
 		}
 
 		&.big-sky__agent-thinking-loading {
-			background: linear-gradient(90deg, #FA5, #fff);
+			background: linear-gradient(90deg, #fa5, #fff);
 		}
 
 		&.big-sky__agent-thinking-disabled {
@@ -322,7 +322,6 @@
 	// }
 
 	.big-sky__chat-history-message {
-		clear: both;
 		background: rgba(#006, 0.85);
 		border-radius: 8px;
 		margin-top: 16px;
@@ -339,21 +338,22 @@
 			// align left, blue background, white text
 			background: rgba(#006, 0.85);
 			color: #fff;
-			float: left;
+			margin-right: auto;
 		}
 
 		&.big-sky__chat-history-message-role-user {
 			background: rgba(#ff0, 0.85);
 			color: #000;
-			align-self: flex-end;
-			float: right;
+			margin-left: auto;
 		}
 
 		&.big-sky__chat-history-message-role-tool {
 			// align center, yellow background, black text
-			background: rgba(#f00, 0.85);
+			background: rgba(#ccc, 0.85);
+			opacity: 0.8;
 			color: #000;
-			align-self: center;
+			margin-left: auto;
+			margin-right: auto;
 		}
 
 		p {
