@@ -68,8 +68,8 @@ class Agent {
 	 * e.g. agent.askUser( { question: 'What can I help you with?', choices: [ 'A task', 'A question' ] } )
 	 */
 
-	call( toolName, ...args ) {
-		this.chat.call( toolName, ...args );
+	call( toolName, args, id ) {
+		this.chat.call( toolName, args, id );
 	}
 
 	askUser( { question, choices } ) {

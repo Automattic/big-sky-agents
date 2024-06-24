@@ -155,12 +155,16 @@ function AskUserQuestion( {
 
 	const submitDisabled = useMemo( () => {
 		return ! answer && ! selectedChoice && files.length === 0;
-	} );
+	}, [ answer, selectedChoice, files ] );
 
 	return (
 		<div className="big-sky__agent-input">
 			<Card size="medium">
-				{ question && <CardHeader>{ question }</CardHeader> }
+				{ question && (
+					<CardHeader className="big-sky__agent-input__header">
+						{ question }
+					</CardHeader>
+				) }
 				<CardBody>
 					<InputControl
 						size="__unstable-large"

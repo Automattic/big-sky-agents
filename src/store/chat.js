@@ -86,7 +86,7 @@ const chatMessageToThreadMessage = ( message ) => {
 				text: filteredContent,
 			},
 		];
-		// an assistant tool call message usually has no content, but this is invalid in thie assistant API
+		// an assistant tool call message usually has no content, but this is invalid in the assistant API
 	} else if ( ! filteredContent.length && message.tool_calls ) {
 		filteredContent = [
 			{
@@ -94,7 +94,12 @@ const chatMessageToThreadMessage = ( message ) => {
 				text:
 					'Invoked tool calls: ' +
 					message.tool_calls
-						.map( ( toolCall ) => toolCall.function.name )
+						.map(
+							( toolCall ) =>
+								`${ toolCall.function.name }(${ JSON.stringify(
+									toolCall.function.arguments
+								) })`
+						)
 						.join( ', ' ),
 			},
 		];
@@ -103,8 +108,9 @@ const chatMessageToThreadMessage = ( message ) => {
 	return {
 		role: message.role,
 		content: filteredContent,
-		attachments: message.attachments,
-		metadata: message.metadata,
+		// These aren't supported in Big Sky Agents yet
+		// attachments: message.attachments,
+		// metadata: message.metadata,
 	};
 };
 
@@ -130,7 +136,12 @@ export const controls = {
 	},
 	async RUN_THREAD_CALL( { service, apiKey, request } ) {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.createThreadRun( request );
+		return await assistantModel.createThreadRun( {
+			...request,
+			additionalMessages: request.additionalMessages?.map(
+				chatMessageToThreadMessage
+			),
+		} );
 	},
 	async GET_THREAD_RUNS_CALL( { service, apiKey, threadId } ) {
 		const assistantModel = AssistantModel.getInstance( service, apiKey );
@@ -192,13 +203,14 @@ function* runChatCompletion( { service, apiKey, ...request } ) {
 
 		// we need to do a silly hack because gpt-4o repeats call IDs
 		// if the message has tool calls, set each ID to uuidv4() to avoid OpenAI repeated UUID bugs
-		yield actions.addMessage( {
-			...assistantMessage,
-			tool_calls: assistantMessage.tool_calls?.map( ( toolCall ) => ( {
-				...toolCall,
-				id: uuidv4(),
-			} ) ),
-		} );
+		yield actions.addMessage( assistantMessage );
+		// {
+		// 	...assistantMessage,
+		// 	tool_calls: assistantMessage.tool_calls?.map( ( toolCall ) => ( {
+		// 		...toolCall,
+		// 		id: uuidv4(),
+		// 	} ) ),
+		// } );
 		yield { type: 'CHAT_END_REQUEST' };
 	} catch ( error ) {
 		console.error( 'Chat error', error );
@@ -362,7 +374,12 @@ function* setToolCallResult( toolCallId, promise ) {
 	yield { type: 'TOOL_BEGIN_REQUEST' };
 	try {
 		const result = yield { type: 'RESOLVE_TOOL_CALL_RESULT', promise };
-		return { type: 'TOOL_END_REQUEST', id: toolCallId, result };
+		return {
+			type: 'TOOL_END_REQUEST',
+			id: uuidv4(),
+			tool_call_id: toolCallId,
+			result,
+		};
 	} catch ( error ) {
 		return {
 			type: 'TOOL_ERROR',
@@ -404,7 +421,6 @@ function filterMessage( message ) {
 			...message,
 			tool_calls: message.tool_calls.map( ( toolCall ) => ( {
 				...toolCall,
-				id: toolCall.id || uuidv4(),
 				function: {
 					...toolCall.function,
 					arguments:
@@ -418,8 +434,7 @@ function filterMessage( message ) {
 
 	return {
 		...message,
-		created_at: message.created_at || Date.now(),
-		id: message.id || uuidv4(),
+		created_at: message.created_at,
 		content: filteredContent,
 	};
 }
@@ -427,7 +442,10 @@ function filterMessage( message ) {
 const addMessage = ( message ) => {
 	return {
 		type: 'ADD_MESSAGE',
-		message,
+		message: {
+			...message,
+			id: message.id || uuidv4(),
+		},
 	};
 };
 
@@ -463,7 +481,6 @@ function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
 function* addUserMessage( content, image_urls = [] ) {
 	const message = {
 		role: 'user',
-		id: uuidv4(),
 		created_at: Math.floor( Date.now() / 1000 ),
 		content: [
 			{
@@ -585,7 +602,8 @@ export const reducer = ( state = initialState, action ) => {
 			return {
 				...addMessageReducer( state, {
 					role: 'tool',
-					tool_call_id: action.id,
+					id: action.id,
+					tool_call_id: action.tool_call_id,
 					content: action.result,
 				} ),
 				isToolRunning: false,
@@ -906,23 +924,31 @@ export const selectors = {
 			[]
 		);
 		const toolOutputs = getToolOutputs( state );
-		return toolCalls.filter(
+
+		const result = toolCalls.filter(
 			( toolCall ) =>
 				! toolOutputs.some(
 					( toolOutput ) => toolOutput.tool_call_id === toolCall.id
 				)
 		);
+
+		console.warn(
+			'compute pending tool calls',
+			toolCalls,
+			toolOutputs,
+			result
+		);
+
+		return result;
 	},
 	getAdditionalMessages: ( state ) => {
 		// user/assistant messages without a threadId are considered not to have been synced
-		return state.history
-			.filter(
-				( message ) =>
-					[ 'assistant', 'user' ].includes( message.role ) &&
-					! message.tool_calls?.length &&
-					! message.thread_id
-			)
-			.map( chatMessageToThreadMessage );
+		return state.history.filter(
+			( message ) =>
+				[ 'assistant', 'user' ].includes( message.role ) &&
+				message.content &&
+				! message.thread_id
+		);
 	},
 	getRequiredToolOutputs: ( state ) => {
 		const currentThreadRun = state.threadRuns[ 0 ];
@@ -995,6 +1021,7 @@ export const actions = {
 	addToolCall: ( name, args, id ) => ( {
 		type: 'ADD_MESSAGE',
 		message: {
+			id: uuidv4(),
 			role: 'assistant',
 			tool_calls: [
 				{

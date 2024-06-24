@@ -44,6 +44,10 @@ const MessageContent = ( { content } ) => {
 	 * "content": "Hi! How can I help you today?"
 	 */
 
+	if ( ! content ) {
+		return null;
+	}
+
 	if ( typeof content === 'string' ) {
 		return <Markdown>{ content }</Markdown>;
 	}
