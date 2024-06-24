@@ -687,12 +687,6 @@ export const reducer = ( state = initialState, action ) => {
 				history: [
 					...state.history.map( ( message ) => {
 						if ( message.id === action.originalMessageId ) {
-							console.warn(
-								'replacing message',
-								message,
-								'with',
-								action.message
-							);
 							return action.message;
 						}
 						return message;
@@ -714,10 +708,6 @@ export const reducer = ( state = initialState, action ) => {
 				( message ) => message.id
 			);
 
-			console.warn( 'removing messages', {
-				additionalMessageIds,
-			} );
-
 			return {
 				...state,
 				// for each message in action.additionalMessages, find them by id and set message.thread_id to action.threadRun.id
@@ -732,7 +722,7 @@ export const reducer = ( state = initialState, action ) => {
 				} ),
 				isCreatingThreadRun: false,
 				threadRunsUpdated: action.ts,
-				// threadMessagesUpdated: null, // force reloading of chat history
+				threadMessagesUpdated: null, // force reloading of chat history
 				threadRuns: [ action.threadRun, ...state.threadRuns ],
 			};
 		case 'RUN_THREAD_ERROR':
@@ -779,6 +769,7 @@ export const reducer = ( state = initialState, action ) => {
 			}
 			return {
 				...state,
+				threadMessagesUpdated: null,
 				isFetchingThreadRun: false,
 			};
 		case 'GET_THREAD_RUN_ERROR':
