@@ -433,6 +433,10 @@ const addMessage = ( message ) => {
 
 function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
 	// add the message to the active thread
+	console.warn( 'Adding message to thread', message );
+	if ( ! message.id ) {
+		throw new Error( 'Message must have an ID' );
+	}
 	yield { type: 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST' };
 	try {
 		const newMessage = yield {
@@ -459,6 +463,7 @@ function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
 function* addUserMessage( content, image_urls = [] ) {
 	const message = {
 		role: 'user',
+		id: uuidv4(),
 		created_at: Math.floor( Date.now() / 1000 ),
 		content: [
 			{
@@ -657,6 +662,12 @@ export const reducer = ( state = initialState, action ) => {
 				history: [
 					...state.history.map( ( message ) => {
 						if ( message.id === action.originalMessageId ) {
+							console.warn(
+								'replacing message',
+								message,
+								'with',
+								action.message
+							);
 							return action.message;
 						}
 						return message;

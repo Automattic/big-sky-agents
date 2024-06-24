@@ -1,8 +1,6 @@
 import { Button, Card, CardBody, CardFooter } from '@wordpress/components';
 
-function Confirm( { toolCall, onConfirm, setToolResult } ) {
-	const message = toolCall.function.arguments.message;
-
+function Confirm( { message, onConfirm } ) {
 	return (
 		<div className="big-sky__agent-input">
 			<Card size="medium">
@@ -15,10 +13,6 @@ function Confirm( { toolCall, onConfirm, setToolResult } ) {
 					<Button
 						variant="secondary"
 						onClick={ () => {
-							setToolResult(
-								toolCall.id,
-								`The user rejected the proposed changes`
-							);
 							onConfirm( false );
 						} }
 					>
@@ -27,10 +21,6 @@ function Confirm( { toolCall, onConfirm, setToolResult } ) {
 					<Button
 						variant="primary"
 						onClick={ () => {
-							setToolResult(
-								toolCall.id,
-								`The user confirmed the proposed changes`
-							);
 							onConfirm( true );
 						} }
 					>
