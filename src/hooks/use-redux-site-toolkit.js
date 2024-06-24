@@ -120,14 +120,14 @@ const useReduxSiteToolkit = ( { pageId } ) => {
 				return 'Adding site page';
 			},
 			[ SetPageSectionsTool.function.name ]: ( { sections } ) => {
-				setPageSections( sections );
+				setPageSections( pageId, sections );
 				return 'Set page sections';
 			},
 			[ AddPageSectionTool.function.name ]: ( {
 				category,
 				description,
 			} ) => {
-				addPageSection( { category, description } );
+				addPageSection( pageId, { category, description } );
 				return 'Adding page section';
 			},
 			[ SetPageCategoryTool.function.name ]: ( { category } ) => {
