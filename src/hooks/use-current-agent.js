@@ -115,8 +115,10 @@ const useCurrentAgent = ( { chat, toolkit } ) => {
 
 	const onConfirm = useCallback(
 		( confirmed ) => {
-			if ( agent ) {
+			if ( agent && agent.onConfirm ) {
 				agent.onConfirm( confirmed );
+			} else {
+				console.warn( 'No onConfirm method found for agent' );
 			}
 		},
 		[ agent ]
