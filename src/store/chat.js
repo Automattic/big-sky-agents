@@ -202,7 +202,6 @@ function* runChatCompletion( { service, apiKey, ...request } ) {
 		yield { type: 'CHAT_END_REQUEST' };
 	} catch ( error ) {
 		console.error( 'Chat error', error );
-		debugger;
 		return { type: 'CHAT_ERROR', error: error.message };
 	}
 }
@@ -317,7 +316,6 @@ function* runCreateThreadRun( { service, apiKey, ...request } ) {
 		};
 	} catch ( error ) {
 		console.error( 'Run thread error', error );
-		debugger;
 		return { type: 'RUN_THREAD_ERROR', error: error.message };
 	}
 }
@@ -347,7 +345,6 @@ function* runSubmitToolOutputs( {
 		};
 	} catch ( error ) {
 		console.error( 'Tool error', error );
-		debugger;
 		return {
 			type: 'SUBMIT_TOOL_OUTPUTS_ERROR',
 			error: error.message,
@@ -359,10 +356,6 @@ function* runSubmitToolOutputs( {
  * Set the result of a tool call, and if it's a promise then resolve it first
  * @param {number} toolCallId
  * @param {*}      promise
- * @param {string} threadId
- * @param {string} threadRunId
- * @param {string} service
- * @param {string} apiKey
  * @return {Object} The resulting action
  */
 function* setToolCallResult( toolCallId, promise ) {
@@ -456,7 +449,6 @@ function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
 		};
 	} catch ( error ) {
 		console.error( 'Create thread error', error );
-		debugger;
 		return {
 			type: 'CREATE_THREAD_MESSAGE_ERROR',
 			error: error.message,

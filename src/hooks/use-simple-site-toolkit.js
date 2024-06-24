@@ -15,9 +15,9 @@ import {
 	// SetPageTitleTool,
 	AddSitePageTool,
 	SetSiteColorsTool,
-	SetSitePagesTool,
 	SetSiteDescriptionTool,
 	SetSiteLocationTool,
+	SetSitePagesTool,
 	SetSiteTitleTool,
 	SetSiteTopicTool,
 	SetSiteTypeTool,
@@ -95,7 +95,9 @@ const useSimpleSiteToolkit = ( /* { pageId } */ ) => {
 				setSiteTopic( topic );
 				return `Site topic set to "${ topic }"`;
 			},
-			[ SetSiteTypeTool.function.name ]: ( { siteType: newSiteType } ) => {
+			[ SetSiteTypeTool.function.name ]: ( {
+				siteType: newSiteType,
+			} ) => {
 				setSiteType( newSiteType );
 				return `Site type set to "${ newSiteType }"`;
 			},
