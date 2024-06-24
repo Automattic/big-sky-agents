@@ -384,7 +384,7 @@ function* setToolCallResult( toolCallId, promise ) {
 		return {
 			type: 'TOOL_ERROR',
 			id: toolCallId,
-			error: error.message,
+			error: error.message || 'There was an error',
 		};
 	}
 }
@@ -606,11 +606,18 @@ export const reducer = ( state = initialState, action ) => {
 					tool_call_id: action.tool_call_id,
 					content: action.result,
 				} ),
+				error: null,
 				isToolRunning: false,
 			};
 		case 'TOOL_ERROR':
 			return {
-				...state,
+				...addMessageReducer( state, {
+					role: 'tool',
+					id: action.id,
+					tool_call_id: action.tool_call_id,
+					content: 'Error',
+				} ),
+				error: action.error,
 				isToolRunning: false,
 			};
 		case 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST':
