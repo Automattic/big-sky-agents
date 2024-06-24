@@ -171,10 +171,14 @@ function AgentUI( {
 							question={ agentConfirm.function.arguments.message }
 						>
 							<Confirm
-								toolCall={ agentConfirm }
 								onConfirm={ ( confirmed ) => {
 									informUser( null );
-									setToolResult( agentConfirm.id, confirmed );
+									setToolResult(
+										agentConfirm.id,
+										confirmed
+											? 'The user confirmed the proposed changes'
+											: 'The user rejected the proposed changes'
+									);
 									onConfirm( confirmed );
 								} }
 							/>

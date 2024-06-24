@@ -18,6 +18,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		runGetThreadRun,
 		runGetThreadRuns,
 		runGetThreadMessages,
+		runAddMessageToThread,
 		runSubmitToolOutputs,
 	} = useDispatch( agentStore );
 
@@ -295,29 +296,34 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 	// ] );
 
 	// if there are pendingThreadMessages, send them using runAddMessageToThread
-	// useEffect( () => {
-	// 	if ( isThreadRunComplete && pendingThreadMessages.length > 0 ) {
-	// 		console.warn( 'Sending pending thread messages', {
-	// 			service,
-	// 			apiKey,
-	// 			threadId,
-	// 			pendingThreadMessages,
-	// 		} );
-	// 		runAddMessageToThread( {
-	// 			service,
-	// 			apiKey,
-	// 			threadId,
-	// 			message: pendingThreadMessages[ 0 ],
-	// 		} );
-	// 	}
-	// }, [
-	// 	apiKey,
-	// 	isThreadRunComplete,
-	// 	pendingThreadMessages,
-	// 	runAddMessageToThread,
-	// 	service,
-	// 	threadId,
-	// ] );
+	useEffect( () => {
+		if (
+			! running &&
+			isThreadRunComplete &&
+			additionalMessages.length > 0
+		) {
+			console.warn( 'Sending pending thread messages', {
+				service,
+				apiKey,
+				threadId,
+				additionalMessages,
+			} );
+			runAddMessageToThread( {
+				service,
+				apiKey,
+				threadId,
+				message: additionalMessages[ 0 ],
+			} );
+		}
+	}, [
+		apiKey,
+		isThreadRunComplete,
+		additionalMessages,
+		runAddMessageToThread,
+		service,
+		threadId,
+		running,
+	] );
 
 	// if we have a thread, and threadRunId is false, and running is false, create a thread run
 	// useEffect( () => {
@@ -424,17 +430,19 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			} );
 		},
 		[
-			apiKey,
-			assistantId,
-			feature,
+			assistantMessage,
 			isAssistantAvailable,
 			isThreadRunComplete,
-			model,
+			isAwaitingUserInput,
 			additionalMessages,
-			runCreateThreadRun,
 			service,
-			temperature,
+			apiKey,
+			assistantId,
 			threadId,
+			model,
+			temperature,
+			feature,
+			runCreateThreadRun,
 		]
 	);
 

@@ -16,9 +16,9 @@ import {
 	SetPageSectionsTool,
 	SetPageTitleTool,
 	SetSiteColorsTool,
-	SetSitePagesTool,
 	SetSiteDescriptionTool,
 	SetSiteLocationTool,
+	SetSitePagesTool,
 	SetSiteTitleTool,
 	SetSiteTopicTool,
 	SetSiteTypeTool,
@@ -85,26 +85,27 @@ const useReduxSiteToolkit = ( { pageId } ) => {
 				}
 				return 'Site colors updated';
 			},
-			[ SetSiteTitleTool.function.name ]: ( { title } ) => {
-				setSiteTitle( title );
-				return `Site title set to "${ title }"`;
+			[ SetSiteTitleTool.function.name ]: ( { value } ) => {
+				console.warn( 'got request', value );
+				setSiteTitle( value );
+				return `Site title set to "${ value }"`;
 			},
-			[ SetSiteDescriptionTool.function.name ]: ( { description } ) => {
-				console.warn( 'setSiteDescription', { description } );
-				setSiteDescription( description );
-				return `Site description set to "${ description }"`;
+			[ SetSiteDescriptionTool.function.name ]: ( { value } ) => {
+				console.warn( 'setSiteDescription', value );
+				setSiteDescription( value );
+				return `Site description set to "${ value }"`;
 			},
-			[ SetSiteTopicTool.function.name ]: ( { topic } ) => {
-				setSiteTopic( topic );
-				return `Site topic set to "${ topic }"`;
+			[ SetSiteTopicTool.function.name ]: ( { value } ) => {
+				setSiteTopic( value );
+				return `Site topic set to "${ value }"`;
 			},
-			[ SetSiteTypeTool.function.name ]: ( { siteType } ) => {
-				setSiteType( siteType );
-				return `Site type set to "${ siteType }"`;
+			[ SetSiteTypeTool.function.name ]: ( { value } ) => {
+				setSiteType( value );
+				return `Site type set to "${ value }"`;
 			},
-			[ SetSiteLocationTool.function.name ]: ( { location } ) => {
-				setSiteLocation( location );
-				return `Site location set to "${ location }"`;
+			[ SetSiteLocationTool.function.name ]: ( { value } ) => {
+				setSiteLocation( value );
+				return `Site location set to "${ value }"`;
 			},
 			[ SetSitePagesTool.function.name ]: ( { pages } ) => {
 				setPages( pages );
