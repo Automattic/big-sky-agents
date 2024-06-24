@@ -2,14 +2,14 @@
 import { useEffect } from 'react';
 
 const useToolExecutor = ( {
-	chat: { running, pendingToolCalls, setToolResult },
+	chat: { error, running, pendingToolCalls, setToolResult },
 	toolkit: { callbacks },
 } ) => {
 	useEffect( () => {
 		// process tool calls for any tools with callbacks
 		// note that tools without callbacks will be processed outside this loop,
 		// and will need responses before the ChatModel can run again
-		if ( ! running && pendingToolCalls.length > 0 ) {
+		if ( ! error && ! running && pendingToolCalls.length > 0 ) {
 			pendingToolCalls.forEach( ( tool_call ) => {
 				if ( tool_call.inProgress ) {
 					return;

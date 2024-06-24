@@ -70,8 +70,8 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 	}, [ service, apiKey, enabled ] );
 
 	const isAssistantAvailable = useMemo( () => {
-		return isServiceAvailable && assistantId;
-	}, [ isServiceAvailable, assistantId ] );
+		return isServiceAvailable && assistantId && ! error;
+	}, [ isServiceAvailable, assistantId, error ] );
 
 	const isThreadDataLoaded = useMemo( () => {
 		return (
@@ -102,13 +102,14 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 
 	const isThreadRunAwaitingToolOutputs = useMemo( () => {
 		return (
+			isThreadDataLoaded &&
 			! running &&
 			threadRun &&
 			threadRun.status === 'requires_action' &&
 			threadRun.required_action.type === 'submit_tool_outputs' &&
 			requiredToolOutputs.length > 0
 		);
-	}, [ requiredToolOutputs.length, running, threadRun ] );
+	}, [ isThreadDataLoaded, requiredToolOutputs.length, running, threadRun ] );
 
 	// update thread runs if they haven't been updated - after this we only update the current thread run
 	useEffect( () => {
@@ -401,6 +402,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 				! isAssistantAvailable ||
 				! isThreadRunComplete ||
 				isAwaitingUserInput ||
+				additionalMessages.length > 0 ||
 				history.length === 0
 			) {
 				return;
@@ -416,7 +418,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 				tools,
 				instructions,
 				additionalInstructions,
-				additionalMessages,
+				// additionalMessages, // we sync messages to the thread first instead
 				feature,
 			} );
 
@@ -540,13 +542,6 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		deleteThread();
 	}, [ clearError, clearMessages, deleteThread ] );
 
-	const setToolResult = useCallback(
-		( toolCallId, result ) => {
-			setToolCallResult( toolCallId, result );
-		},
-		[ setToolCallResult ]
-	);
-
 	return {
 		// running state
 		enabled,
@@ -565,7 +560,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 
 		// tools
 		call: addToolCall,
-		setToolResult,
+		setToolResult: setToolCallResult,
 		pendingToolCalls,
 		toolOutputs,
 		runChat, // run a chat completion with messages, tools, instructions and additionalInstructions
