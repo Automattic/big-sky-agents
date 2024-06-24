@@ -932,13 +932,6 @@ export const selectors = {
 				)
 		);
 
-		console.warn(
-			'compute pending tool calls',
-			toolCalls,
-			toolOutputs,
-			result
-		);
-
 		return result;
 	},
 	getAdditionalMessages: ( state ) => {
