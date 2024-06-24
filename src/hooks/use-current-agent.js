@@ -113,8 +113,18 @@ const useCurrentAgent = ( { chat, toolkit } ) => {
 		[ agent ]
 	);
 
+	const onConfirm = useCallback(
+		( confirmed ) => {
+			if ( agent ) {
+				agent.onConfirm( confirmed );
+			}
+		},
+		[ agent ]
+	);
+
 	return {
 		onStart,
+		onConfirm,
 		informUser,
 		tools,
 		instructions,

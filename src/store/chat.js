@@ -229,6 +229,7 @@ function* runGetThreadRuns( { service, apiKey, threadId } ) {
 		};
 		yield {
 			type: 'GET_THREAD_RUNS_END_REQUEST',
+			ts: Date.now(),
 			threadRuns: threadRunsResponse.data,
 		};
 	} catch ( error ) {
@@ -268,6 +269,7 @@ function* runGetThreadMessages( { service, apiKey, threadId } ) {
 		};
 		yield {
 			type: 'GET_THREAD_MESSAGES_END_REQUEST',
+			ts: Date.now(),
 			threadMessages: threadMessagesResponse.data,
 		};
 	} catch ( error ) {
@@ -323,6 +325,7 @@ function* runCreateThreadRun( { service, apiKey, ...request } ) {
 		};
 		yield {
 			type: 'RUN_THREAD_END_REQUEST',
+			ts: Date.now(),
 			additionalMessages: request.additionalMessages,
 			threadRun: runCreateThreadRunResponse,
 		};
@@ -465,6 +468,7 @@ function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
 		};
 		yield {
 			type: 'CREATE_THREAD_MESSAGE_END_REQUEST',
+			ts: Date.now(),
 			originalMessageId: message.id,
 			message: newMessage,
 		};
@@ -511,7 +515,6 @@ const addMessageReducer = ( state, message ) => {
 
 	// special processing for tools - add the tool call messages
 	if ( message.role === 'tool' && message.tool_call_id ) {
-		console.warn( 'Recording tool message', message );
 		// if there's an existing tool call result for this tool call ID, don't add it
 		const existingToolCallResultMessage = state.history.find(
 			( existingMessage ) =>
@@ -695,7 +698,7 @@ export const reducer = ( state = initialState, action ) => {
 						return message;
 					} ),
 				],
-				syncedThreadMessagesAt: Date.now(),
+				syncedThreadMessagesAt: action.ts,
 				isCreatingThreadMessage: false,
 			};
 		case 'CREATE_THREAD_MESSAGE_ERROR':
@@ -728,7 +731,7 @@ export const reducer = ( state = initialState, action ) => {
 					return message;
 				} ),
 				isCreatingThreadRun: false,
-				threadRunsUpdated: Date.now(),
+				threadRunsUpdated: action.ts,
 				// threadMessagesUpdated: null, // force reloading of chat history
 				threadRuns: [ action.threadRun, ...state.threadRuns ],
 			};
@@ -807,7 +810,7 @@ export const reducer = ( state = initialState, action ) => {
 			return {
 				...state,
 				isFetchingThreadRuns: false,
-				threadRunsUpdated: Date.now(),
+				threadRunsUpdated: action.ts,
 				threadRuns: action.threadRuns,
 			};
 		case 'GET_THREAD_RUNS_ERROR':
@@ -828,7 +831,7 @@ export const reducer = ( state = initialState, action ) => {
 			return {
 				...state,
 				isFetchingThreadMessages: false,
-				threadMessagesUpdated: Date.now(),
+				threadMessagesUpdated: action.ts,
 			};
 		case 'GET_THREAD_MESSAGES_ERROR':
 			return {
