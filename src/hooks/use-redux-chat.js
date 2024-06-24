@@ -188,7 +188,6 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			}
 
 			if ( filteredToolOutputs.length === 0 ) {
-				console.warn( 'no tool outputs to submit' );
 				return;
 			}
 
@@ -382,16 +381,6 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 
 	const createThreadRun = useCallback(
 		( tools, instructions, additionalInstructions ) => {
-			console.warn( 'might create thread run', {
-				assistantMessage,
-				isAssistantAvailable,
-				isThreadRunComplete,
-				isAwaitingUserInput,
-				additionalMessages,
-				pendingToolCalls,
-				history,
-			} );
-
 			if (
 				! isAssistantAvailable ||
 				! isThreadRunComplete ||

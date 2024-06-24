@@ -114,67 +114,44 @@ function AgentUI( {
 				<FlexBlock className="big-sky__agent-ui-content">
 					<div className="big-sky__agent-name">{ agentName }</div>
 
-					{ agentThought && ! agentQuestion && ! agentConfirm && (
+					{ agentThought && (
 						<AgentThought message={ agentThought } />
 					) }
-					{ assistantMessage && ! agentQuestion && ! agentConfirm && (
-						<AgentMessage message={ assistantMessage }>
-							<AskUserQuestion
-								question=""
-								onCancel={ () => {
-									userSay( '(canceled)' );
-									onResetTools();
-									onResetChat();
-								} }
-								onAnswer={ ( answer, files ) => {
-									userSay( answer, files );
-								} }
-							/>
-						</AgentMessage>
+					{ assistantMessage && (
+						<AgentMessage message={ assistantMessage } />
 					) }
 					{ agentQuestion && (
-						<AgentMessage message={ assistantMessage }>
-							<AskUserQuestion
-								{ ...agentQuestion.function.arguments }
-								question={
-									agentQuestion.function.arguments.question
-								}
-								onCancel={ () => {
-									setToolResult(
-										agentQuestion.id,
-										'(canceled)'
-									);
-									onResetTools();
-									onResetChat();
-								} }
-								onAnswer={ ( answer, files ) => {
-									// clear the current thought
-									informUser( null );
-									setToolResult( agentQuestion.id, answer );
-									userSay( answer, files );
-								} }
-							/>
-						</AgentMessage>
+						<AskUserQuestion
+							{ ...agentQuestion.function.arguments }
+							onCancel={ () => {
+								setToolResult( agentQuestion.id, '(canceled)' );
+								onResetTools();
+								onResetChat();
+							} }
+							onAnswer={ ( answer, files ) => {
+								// clear the current thought
+								informUser( null );
+								setToolResult( agentQuestion.id, answer );
+								userSay( answer, files );
+							} }
+						/>
 					) }
 					{ agentConfirm && (
-						<AgentMessage message={ assistantMessage }>
-							<Confirm
-								message={
-									agentConfirm.function.arguments.message
-								}
-								onConfirm={ ( confirmed ) => {
-									informUser( null );
-									setToolResult(
-										agentConfirm.id,
-										confirmed
-											? 'The user confirmed the proposed changes'
-											: 'The user rejected the proposed changes'
-									);
-									onConfirm( confirmed );
-								} }
-							/>
-						</AgentMessage>
+						<Confirm
+							{ ...agentConfirm.function.arguments }
+							onConfirm={ ( confirmed ) => {
+								informUser( null );
+								setToolResult(
+									agentConfirm.id,
+									confirmed
+										? 'The user confirmed the proposed changes'
+										: 'The user rejected the proposed changes'
+								);
+								onConfirm( confirmed );
+							} }
+						/>
 					) }
+					{ /* fallback if nothing else is showing */ }
 					{ ! assistantMessage &&
 						! agentQuestion &&
 						! agentConfirm && (
