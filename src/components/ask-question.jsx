@@ -160,11 +160,6 @@ function AskUserQuestion( {
 	return (
 		<div className="big-sky__agent-input">
 			<Card size="medium">
-				{ question && (
-					<CardHeader className="big-sky__agent-input__header">
-						{ question }
-					</CardHeader>
-				) }
 				<CardBody>
 					<InputControl
 						size="__unstable-large"
