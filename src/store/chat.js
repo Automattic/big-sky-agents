@@ -670,6 +670,12 @@ export const reducer = ( state = initialState, action ) => {
 				history: [
 					...state.history.map( ( message ) => {
 						if ( message.id === action.originalMessageId ) {
+							console.warn(
+								'replacing message',
+								message,
+								'with',
+								action.message
+							);
 							return action.message;
 						}
 						return message;
