@@ -54,7 +54,7 @@ Format all content in Markdown. The current state of the Site Spec is:
 	},
 } );
 
-class PageSpecAgent extends BuilderAgent {
+class SiteSpecAgent extends BuilderAgent {
 	getId() {
 		return WORDPRESS_SITE_SPEC_AGENT_ID;
 	}
@@ -110,4 +110,4 @@ class PageSpecAgent extends BuilderAgent {
 	}
 }
 
-export default PageSpecAgent;
+export default SiteSpecAgent;
