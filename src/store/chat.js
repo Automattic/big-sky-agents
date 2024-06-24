@@ -451,7 +451,6 @@ const addMessage = ( message ) => {
 
 function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
 	// add the message to the active thread
-	console.warn( 'Adding message to thread', message );
 	if ( ! message.id ) {
 		throw new Error( 'Message must have an ID' );
 	}
@@ -499,8 +498,6 @@ function* addUserMessage( content, image_urls = [] ) {
 
 const addMessageReducer = ( state, message ) => {
 	message = filterMessage( message );
-
-	console.warn( 'adding message', message );
 
 	// if the message has the same ID as an existing message, update it
 	const existingMessageIndex = state.history.findIndex(
