@@ -118,7 +118,20 @@ function AgentUI( {
 						<AgentThought message={ agentThought } />
 					) }
 					{ assistantMessage && (
-						<AgentMessage message={ assistantMessage } />
+						<AgentMessage message={ assistantMessage }>
+							{ ! agentQuestion && ! agentConfirm ? (
+								<AskUserQuestion
+									onAnswer={ ( answer, files ) => {
+										userSay( answer, files );
+									} }
+									onCancel={ () => {
+										informUser( 'Canceled!' );
+										onResetTools();
+										onResetChat();
+									} }
+								/>
+							) : null }
+						</AgentMessage>
 					) }
 					{ agentQuestion && (
 						<AskUserQuestion

@@ -420,11 +420,11 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			} );
 		},
 		[
-			assistantMessage,
 			isAssistantAvailable,
 			isThreadRunComplete,
 			isAwaitingUserInput,
 			additionalMessages,
+			history.length,
 			service,
 			apiKey,
 			assistantId,
