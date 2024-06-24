@@ -1,14 +1,17 @@
 import { Button, Card, CardBody, CardFooter } from '@wordpress/components';
+import MessageContent from './message-content.jsx';
 
 function Confirm( { message, onConfirm } ) {
 	return (
 		<div className="big-sky__agent-input">
 			<Card size="medium">
-				{ message && (
-					<CardBody className="big-sky__agent-input__header">
-						{ message || 'Let me know if everything looks good' }
-					</CardBody>
-				) }
+				<CardBody className="big-sky__agent-input__header">
+					<MessageContent
+						content={
+							message || 'Let me know if everything looks good'
+						}
+					/>
+				</CardBody>
 				<CardFooter>
 					<Button
 						variant="secondary"

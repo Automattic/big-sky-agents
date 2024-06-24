@@ -64,12 +64,6 @@ const useCurrentAgent = ( { chat, toolkit } ) => {
 				.getAdditionalInstructions()
 				.format( toolkit.values );
 
-			console.warn( 'generated values', {
-				newTools,
-				newInstructions,
-				newAdditionalInstructions,
-			} );
-
 			const newAssistantId = agent.getAssistantId();
 
 			if ( ! newAssistantId ) {

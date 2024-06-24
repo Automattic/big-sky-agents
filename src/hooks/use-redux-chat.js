@@ -133,12 +133,6 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 
 	// update messages if they haven't been updated
 	useEffect( () => {
-		console.warn( 'update messages', {
-			isAssistantAvailable,
-			running,
-			threadId,
-			threadMessagesUpdated,
-		} );
 		if (
 			isAssistantAvailable &&
 			! running &&
