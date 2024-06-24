@@ -14,19 +14,18 @@ import { ASK_USER_TOOL_NAME } from '../agents/tools/ask-user.js';
 import { CONFIRM_TOOL_NAME } from '../agents/tools/confirm.js';
 import './agent-ui.scss';
 
-const AgentMessage = ( { message, isActive = true, ...props } ) =>
-	isActive && (
-		<div { ...props }>
-			<blockquote className="big-sky__oval-thought big-sky__agent-thought">
-				<MessageContent content={ message } />
-			</blockquote>
-		</div>
-	);
+const AgentThought = ( { message, ...props } ) => (
+	<div { ...props }>
+		<blockquote className="big-sky__oval-thought big-sky__agent-thought">
+			<MessageContent content={ message } />
+		</blockquote>
+	</div>
+);
 
-const AgentQuestion = ( { question, children, ...props } ) => (
+const AgentMessage = ( { message, children, ...props } ) => (
 	<div { ...props }>
 		<blockquote className="big-sky__oval-speech big-sky__agent-question">
-			<MessageContent content={ question } />
+			<MessageContent content={ message } />
 		</blockquote>
 		{ children }
 	</div>
@@ -115,18 +114,11 @@ function AgentUI( {
 				<FlexBlock className="big-sky__agent-ui-content">
 					<div className="big-sky__agent-name">{ agentName }</div>
 
-					{ agentThought && (
-						<AgentMessage
-							message={ agentThought }
-							isActive={
-								! agentQuestion &&
-								! agentConfirm &&
-								! assistantMessage
-							}
-						/>
+					{ agentThought && ! agentQuestion && ! agentConfirm && (
+						<AgentThought message={ agentThought } />
 					) }
-					{ assistantMessage && (
-						<AgentQuestion question={ assistantMessage }>
+					{ assistantMessage && ! agentQuestion && ! agentConfirm && (
+						<AgentMessage message={ assistantMessage }>
 							<AskUserQuestion
 								question=""
 								onCancel={ () => {
@@ -138,17 +130,15 @@ function AgentUI( {
 									userSay( answer, files );
 								} }
 							/>
-						</AgentQuestion>
+						</AgentMessage>
 					) }
 					{ agentQuestion && (
-						<AgentQuestion
-							question={
-								agentQuestion.function.arguments.question
-							}
-						>
+						<AgentMessage message={ assistantMessage }>
 							<AskUserQuestion
 								{ ...agentQuestion.function.arguments }
-								question=""
+								question={
+									agentQuestion.function.arguments.question
+								}
 								onCancel={ () => {
 									setToolResult(
 										agentQuestion.id,
@@ -164,13 +154,14 @@ function AgentUI( {
 									userSay( answer, files );
 								} }
 							/>
-						</AgentQuestion>
+						</AgentMessage>
 					) }
 					{ agentConfirm && (
-						<AgentQuestion
-							question={ agentConfirm.function.arguments.message }
-						>
+						<AgentMessage message={ assistantMessage }>
 							<Confirm
+								message={
+									agentConfirm.function.arguments.message
+								}
 								onConfirm={ ( confirmed ) => {
 									informUser( null );
 									setToolResult(
@@ -182,7 +173,7 @@ function AgentUI( {
 									onConfirm( confirmed );
 								} }
 							/>
-						</AgentQuestion>
+						</AgentMessage>
 					) }
 					{ ! assistantMessage &&
 						! agentQuestion &&

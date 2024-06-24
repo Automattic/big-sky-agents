@@ -5,7 +5,7 @@ function Confirm( { message, onConfirm } ) {
 		<div className="big-sky__agent-input">
 			<Card size="medium">
 				{ message && (
-					<CardBody>
+					<CardBody className="big-sky__agent-input__header">
 						{ message || 'Let me know if everything looks good' }
 					</CardBody>
 				) }

@@ -300,7 +300,8 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		if (
 			! running &&
 			isThreadRunComplete &&
-			additionalMessages.length > 0
+			additionalMessages.length > 0 &&
+			! threadRun // if there's a threadRun, then they will be sent as part of the threadRun
 		) {
 			console.warn( 'Sending pending thread messages', {
 				service,
@@ -317,6 +318,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		}
 	}, [
 		apiKey,
+		threadRun,
 		isThreadRunComplete,
 		additionalMessages,
 		runAddMessageToThread,
@@ -391,12 +393,15 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 				isThreadRunComplete,
 				isAwaitingUserInput,
 				additionalMessages,
+				pendingToolCalls,
+				history,
 			} );
+
 			if (
 				! isAssistantAvailable ||
 				! isThreadRunComplete ||
 				isAwaitingUserInput ||
-				! additionalMessages.length
+				history.length === 0
 			) {
 				return;
 			}
