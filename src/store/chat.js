@@ -38,6 +38,12 @@ export const THREAD_RUN_COMPLETED_STATUSES = [
 ];
 
 const initialState = {
+	// LLM related
+	model: null,
+	service: null,
+	temperature: null,
+	apiKey: null,
+
 	// Assistants-API-related
 	assistantId: null, // The assistant ID
 	threadId: localStorage.getItem( 'threadId' ) || null, // The assistant thread ID
@@ -60,6 +66,11 @@ const initialState = {
 	isSubmittingToolOutputs: false,
 };
 
+/**
+ * Converts an Chat Completions-formatted message to an Assistants-API-formatted message
+ * @param {*} message The message to transform
+ * @return {*} The transformed message
+ */
 const chatMessageToThreadMessage = ( message ) => {
 	let filteredContent = message.content;
 
@@ -113,6 +124,57 @@ const chatMessageToThreadMessage = ( message ) => {
 		// metadata: message.metadata,
 	};
 };
+
+/**
+ * Ensure that a message is massaged into the correct internal format, even if it was created by the Assistant API
+ *
+ * @param {Object} message
+ * @return {Object} The filtered message
+ */
+function filterHistoryMessage( message ) {
+	let filteredContent = message.content;
+	let filteredToolCalls = message.tool_calls;
+
+	if ( typeof filteredContent === 'undefined' || filteredContent === null ) {
+		filteredContent = '';
+	}
+	// the message.content is sometimes an array like this:
+	// [{ type: 'text', text: { annotations: [], value: 'foo' }}]
+	// it needs to be transformed to this:
+	// [{ type: 'text', text: 'foo' }]
+	// TODO: do the same thing when syncing back to the assistant API
+	if ( Array.isArray( filteredContent ) ) {
+		filteredContent = filteredContent.map( ( content ) => {
+			if (
+				content.type === 'text' &&
+				typeof content.text?.value === 'string'
+			) {
+				content.text = content.text.value;
+			}
+			return content;
+		} );
+	}
+
+	if ( message.role === 'assistant' && filteredToolCalls ) {
+		// replace with message.map rather than modifying in-place
+		filteredToolCalls = message.tool_calls.map( ( toolCall ) => ( {
+			...toolCall,
+			function: {
+				...toolCall.function,
+				arguments:
+					typeof toolCall.function?.arguments === 'string'
+						? JSON.parse( toolCall.function.arguments )
+						: toolCall.function.arguments,
+			},
+		} ) );
+	}
+
+	return {
+		...message,
+		tool_calls: filteredToolCalls,
+		content: filteredContent,
+	};
+}
 
 /**
  * These controls allow an async request to fetch the token
@@ -200,17 +262,7 @@ function* runChatCompletion( { service, apiKey, ...request } ) {
 			apiKey,
 			request,
 		};
-
-		// we need to do a silly hack because gpt-4o repeats call IDs
-		// if the message has tool calls, set each ID to uuidv4() to avoid OpenAI repeated UUID bugs
 		yield actions.addMessage( assistantMessage );
-		// {
-		// 	...assistantMessage,
-		// 	tool_calls: assistantMessage.tool_calls?.map( ( toolCall ) => ( {
-		// 		...toolCall,
-		// 		id: uuidv4(),
-		// 	} ) ),
-		// } );
 		yield { type: 'CHAT_END_REQUEST' };
 	} catch ( error ) {
 		console.error( 'Chat error', error );
@@ -218,6 +270,15 @@ function* runChatCompletion( { service, apiKey, ...request } ) {
 	}
 }
 
+/**
+ * Get the thread runs for a given thread.
+ *
+ * @param {*}      options
+ * @param {string} options.service
+ * @param {string} options.apiKey
+ * @param {string} options.threadId
+ * @return {Object} Yields the resulting actions
+ */
 function* runGetThreadRuns( { service, apiKey, threadId } ) {
 	yield { type: 'GET_THREAD_RUNS_BEGIN_REQUEST' };
 	try {
@@ -233,11 +294,21 @@ function* runGetThreadRuns( { service, apiKey, threadId } ) {
 			threadRuns: threadRunsResponse.data,
 		};
 	} catch ( error ) {
-		console.error( 'Thread error', error );
+		console.error( 'Get Thread Runs Error', error );
 		return { type: 'GET_THREAD_RUNS_ERROR', error: error.message };
 	}
 }
 
+/**
+ * Get a thread run for a given thread.
+ *
+ * @param {Object} options
+ * @param {string} options.service
+ * @param {string} options.apiKey
+ * @param {string} options.threadId
+ * @param {string} options.threadRunId
+ * @return  {Object} Yields the resulting actions
+ */
 function* runGetThreadRun( { service, apiKey, threadId, threadRunId } ) {
 	yield { type: 'GET_THREAD_RUN_BEGIN_REQUEST' };
 	try {
@@ -258,6 +329,15 @@ function* runGetThreadRun( { service, apiKey, threadId, threadRunId } ) {
 	}
 }
 
+/**
+ * Get the thread messages for a given thread.
+ *
+ * @param {Object} options
+ * @param {string} options.service
+ * @param {string} options.apiKey
+ * @param {string} options.threadId
+ * @return  {Object} Yields the resulting actions
+ */
 function* runGetThreadMessages( { service, apiKey, threadId } ) {
 	yield { type: 'GET_THREAD_MESSAGES_BEGIN_REQUEST' };
 	try {
@@ -273,11 +353,19 @@ function* runGetThreadMessages( { service, apiKey, threadId } ) {
 			threadMessages: threadMessagesResponse.data,
 		};
 	} catch ( error ) {
-		console.error( 'Thread error', error );
+		console.error( 'Get Thread Messages Error', error );
 		return { type: 'GET_THREAD_MESSAGES_ERROR', error: error.message };
 	}
 }
 
+/**
+ * Create a new thread.
+ *
+ * @param {Object} options         The options for the thread
+ * @param {string} options.service The service URL
+ * @param {string} options.apiKey  The API key
+ * @return {Object} Yields the resulting actions
+ */
 function* runCreateThread( { service, apiKey } ) {
 	yield { type: 'CREATE_THREAD_BEGIN_REQUEST' };
 	try {
@@ -296,6 +384,15 @@ function* runCreateThread( { service, apiKey } ) {
 	}
 }
 
+/**
+ * Delete a thread.
+ *
+ * @param {Object} options          The options for the thread
+ * @param {string} options.service  The service URL
+ * @param {string} options.apiKey   The API key
+ * @param {string} options.threadId The thread ID
+ * @return {Object} Yields the resulting actions
+ */
 function* runDeleteThread( { service, apiKey, threadId } ) {
 	yield { type: 'DELETE_THREAD_BEGIN_REQUEST' };
 	try {
@@ -314,6 +411,27 @@ function* runDeleteThread( { service, apiKey, threadId } ) {
 	}
 }
 
+/**
+ * Create a new thread run.
+ *
+ * @param {Object} options
+ * @param {string} options.service
+ * @param {string} options.apiKey
+ * @param {string} options.threadId
+ * @param {Object} options.assistantId
+ * @param {string} options.model
+ * @param {string} options.instructions
+ * @param {string} options.additionalInstructions
+ * @param {Array}  options.additionalMessages
+ * @param {Array}  options.tools
+ * @param {Array}  options.metadata
+ * @param {number} options.temperature
+ * @param {number} options.maxPromptTokens
+ * @param {number} options.maxCompletionTokens
+ * @param {Object} options.truncationStrategy
+ * @param {Object} options.responseFormat
+ * @return {Object} Yields the resulting actions
+ */
 function* runCreateThreadRun( { service, apiKey, ...request } ) {
 	yield { type: 'RUN_THREAD_BEGIN_REQUEST' };
 	try {
@@ -330,11 +448,22 @@ function* runCreateThreadRun( { service, apiKey, ...request } ) {
 			threadRun: runCreateThreadRunResponse,
 		};
 	} catch ( error ) {
-		console.error( 'Run thread error', error );
+		console.error( 'Run Thread Error', error );
 		return { type: 'RUN_THREAD_ERROR', error: error.message };
 	}
 }
 
+/**
+ * Submit tool outputs for a given thread run.
+ *
+ * @param {Object} options
+ * @param {string} options.service
+ * @param {string} options.apiKey
+ * @param {string} options.threadId
+ * @param {string} options.threadRunId
+ * @param {Array}  options.toolOutputs
+ * @return {Object} Yields the resulting actions
+ */
 function* runSubmitToolOutputs( {
 	service,
 	apiKey,
@@ -354,12 +483,12 @@ function* runSubmitToolOutputs( {
 			threadRunId,
 			toolOutputs,
 		};
-		yield {
+		return {
 			type: 'SUBMIT_TOOL_OUTPUTS_END_REQUEST',
 			threadRun: updatedRun,
 		};
 	} catch ( error ) {
-		console.error( 'Tool error', error );
+		console.error( 'Submit Tool Outputs Error', error );
 		return {
 			type: 'SUBMIT_TOOL_OUTPUTS_ERROR',
 			error: error.message,
@@ -368,7 +497,8 @@ function* runSubmitToolOutputs( {
 }
 
 /**
- * Set the result of a tool call, and if it's a promise then resolve it first
+ * Set the result of a tool call, and if it's a promise then resolve it first.
+ *
  * @param {number} toolCallId
  * @param {*}      promise
  * @return {Object} The resulting action
@@ -391,61 +521,6 @@ function* setToolCallResult( toolCallId, promise ) {
 		};
 	}
 }
-
-function filterMessage( message ) {
-	let filteredContent = message.content;
-	let filteredToolCalls = message.tool_calls;
-
-	if ( typeof filteredContent === 'undefined' || filteredContent === null ) {
-		filteredContent = '';
-	}
-	// the message.content is sometimes an array like this:
-	// [{ type: 'text', text: { annotations: [], value: 'foo' }}]
-	// it needs to be transformed to this:
-	// [{ type: 'text', text: 'foo' }]
-	// TODO: do the same thing when syncing back to the assistant API
-	if ( Array.isArray( filteredContent ) ) {
-		filteredContent = filteredContent.map( ( content ) => {
-			if (
-				content.type === 'text' &&
-				typeof content.text?.value === 'string'
-			) {
-				content.text = content.text.value;
-			}
-			return content;
-		} );
-	}
-
-	if ( message.role === 'assistant' && filteredToolCalls ) {
-		// replace with message.map rather than modifying in-place
-		filteredToolCalls = message.tool_calls.map( ( toolCall ) => ( {
-			...toolCall,
-			function: {
-				...toolCall.function,
-				arguments:
-					typeof toolCall.function?.arguments === 'string'
-						? JSON.parse( toolCall.function.arguments )
-						: toolCall.function.arguments,
-			},
-		} ) );
-	}
-
-	return {
-		...message,
-		tool_calls: filteredToolCalls,
-		content: filteredContent,
-	};
-}
-
-const addMessage = ( message ) => {
-	return {
-		type: 'ADD_MESSAGE',
-		message: {
-			...message,
-			id: message.id || uuidv4(),
-		},
-	};
-};
 
 function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
 	// add the message to the active thread
@@ -476,27 +551,26 @@ function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
 	}
 }
 
-function* addUserMessage( content, image_urls = [] ) {
-	const message = {
-		role: 'user',
-		created_at: Math.floor( Date.now() / 1000 ),
-		content: [
-			{
-				type: 'text',
-				text: content,
-			},
-			...image_urls?.map( ( image_url ) => ( {
-				type: 'image_url',
-				image_url, //: 'data:image/jpeg;base64,$base64'
-			} ) ),
-		],
-	};
+/**
+ * Regular Actions (not controls)
+ */
 
-	yield addMessage( message );
-}
+const addMessage = ( message ) => {
+	return {
+		type: 'ADD_MESSAGE',
+		message: {
+			...message,
+			id: message.id || uuidv4(),
+		},
+	};
+};
+
+/**
+ * REDUCERS
+ */
 
 const addMessageReducer = ( state, message ) => {
-	message = filterMessage( message );
+	message = filterHistoryMessage( message );
 
 	// if the message has the same ID as an existing message, update it
 	const existingMessageIndex = state.history.findIndex(
@@ -504,8 +578,14 @@ const addMessageReducer = ( state, message ) => {
 	);
 
 	if ( existingMessageIndex !== -1 ) {
-		state.history[ existingMessageIndex ] = message;
-		return state;
+		return {
+			...state,
+			history: [
+				...state.history.slice( 0, existingMessageIndex ),
+				message,
+				...state.history.slice( existingMessageIndex + 1 ),
+			],
+		};
 	}
 
 	// special processing for tools - add the tool call messages
@@ -544,7 +624,7 @@ const addMessageReducer = ( state, message ) => {
 				],
 			};
 		}
-		console.warn(
+		console.error(
 			'could not find call message for tool result',
 			message,
 			existingToolCallMessage
@@ -554,20 +634,27 @@ const addMessageReducer = ( state, message ) => {
 		);
 	}
 
-	// not a tool result, just add the message to history
-	const newState = {
+	return {
 		...state,
 		history: [ ...state.history, message ],
 	};
-
-	return newState;
 };
 
-const setThreadId = ( state, action ) => {
-	localStorage.setItem( 'threadId', action.threadId );
+const setThreadIdReducer = ( state, threadId ) => {
+	// if the threadId hasn't changed, just return unaltered state
+	if ( state.threadId === threadId ) {
+		return state;
+	}
+
+	if ( threadId ) {
+		localStorage.setItem( 'threadId', threadId );
+	} else {
+		localStorage.removeItem( 'threadId' );
+	}
+
 	return {
 		...state,
-		threadId: action.threadId,
+		threadId,
 		history: [],
 		threadRuns: [],
 		threadRunsUpdated: null,
@@ -578,6 +665,8 @@ const setThreadId = ( state, action ) => {
 
 export const reducer = ( state = initialState, action ) => {
 	switch ( action.type ) {
+
+		// Chat Completion
 		case 'CHAT_BEGIN_REQUEST':
 			return { ...state, isFetchingChatCompletion: true };
 		case 'CHAT_END_REQUEST':
@@ -588,6 +677,8 @@ export const reducer = ( state = initialState, action ) => {
 				isFetchingChatCompletion: false,
 				error: action.error,
 			};
+
+		// Begin Tool Processing
 		case 'TOOL_BEGIN_REQUEST':
 			return {
 				...state,
@@ -615,64 +706,52 @@ export const reducer = ( state = initialState, action ) => {
 				error: action.error,
 				isToolRunning: false,
 			};
-		case 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST':
-			return { ...state, isSubmittingToolOutputs: true };
-		case 'SUBMIT_TOOL_OUTPUTS_END_REQUEST':
-			return {
-				...state,
-				isSubmittingToolOutputs: false,
-				threadRuns: [
-					action.threadRun,
-					...state.threadRuns.filter(
-						( tr ) => tr.id !== action.threadRun.id
-					),
-				],
-			};
-		case 'SUBMIT_TOOL_OUTPUTS_ERROR':
-			return {
-				...state,
-				isSubmittingToolOutputs: false,
-				error: action.error,
-			};
+
+
+		// Add and Clear Messages
 		case 'ADD_MESSAGE':
 			return addMessageReducer( state, action.message );
 		case 'CLEAR_MESSAGES':
 			return { ...state, history: [] };
-		case 'SET_THREAD_ID':
-			return setThreadId( state, action );
+
+		/**
+		 * Assistant-related reducers
+		 */
+
+		// Set Assistant ID
 		case 'SET_ASSISTANT_ID':
 			return {
 				...state,
 				assistantId: action.assistantId,
 			};
+
+		// Set Thread
+		case 'SET_THREAD_ID':
+			return setThreadIdReducer( state, action.threadId );
+
+		// Create Thread
 		case 'CREATE_THREAD_BEGIN_REQUEST':
 			return { ...state, isCreatingThread: true };
 		case 'CREATE_THREAD_END_REQUEST':
 			return {
-				...setThreadId( state, action ),
-				threadMessagesUpdated: null,
+				...setThreadIdReducer( state, action.threadId ),
 				isCreatingThread: false,
 			};
 		case 'CREATE_THREAD_ERROR':
 			return { ...state, isCreatingThread: false, error: action.error };
+
+		// Delete Thread
 		case 'DELETE_THREAD_BEGIN_REQUEST':
 			return { ...state, isDeletingThread: true };
 		case 'DELETE_THREAD_END_REQUEST':
-			// delete from localstorage
-			localStorage.removeItem( 'threadId' );
 			return {
-				...state,
+				...setThreadIdReducer( state, null ),
 				isDeletingThread: false,
-				threadId: null,
-				threadRunId: null,
-				threadMessagesUpdated: null,
-				threadRunsUpdated: null,
-				threadRuns: [],
-				syncedThreadMessagesAt: null,
-				history: [],
 			};
 		case 'DELETE_THREAD_ERROR':
 			return { ...state, isDeletingThread: false, error: action.error };
+
+		// Create Thread Message
 		case 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST':
 			return { ...state, isCreatingThreadMessage: true };
 		case 'CREATE_THREAD_MESSAGE_END_REQUEST':
@@ -696,6 +775,8 @@ export const reducer = ( state = initialState, action ) => {
 				isCreatingThreadMessage: false,
 				error: action.error,
 			};
+
+		// Create Thread Run
 		case 'RUN_THREAD_BEGIN_REQUEST':
 			return { ...state, isCreatingThreadRun: true };
 		case 'RUN_THREAD_END_REQUEST':
@@ -726,6 +807,29 @@ export const reducer = ( state = initialState, action ) => {
 				isCreatingThreadRun: false,
 				error: action.error,
 			};
+
+		// Submit Tool Outputs
+		case 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST':
+			return { ...state, isSubmittingToolOutputs: true };
+		case 'SUBMIT_TOOL_OUTPUTS_END_REQUEST':
+			return {
+				...state,
+				isSubmittingToolOutputs: false,
+				threadRuns: [
+					action.threadRun,
+					...state.threadRuns.filter(
+						( tr ) => tr.id !== action.threadRun.id
+					),
+				],
+			};
+		case 'SUBMIT_TOOL_OUTPUTS_ERROR':
+			return {
+				...state,
+				isSubmittingToolOutputs: false,
+				error: action.error,
+			};
+
+		// Get Thread Run
 		case 'GET_THREAD_RUN_BEGIN_REQUEST':
 			return { ...state, isFetchingThreadRun: true };
 		case 'GET_THREAD_RUN_END_REQUEST':
@@ -773,6 +877,8 @@ export const reducer = ( state = initialState, action ) => {
 				isFetchingThreadRun: false,
 				error: action.error,
 			};
+
+		// Get All Thread Runs
 		case 'GET_THREAD_RUNS_BEGIN_REQUEST':
 			return { ...state, isFetchingThreadRuns: true };
 		case 'GET_THREAD_RUNS_END_REQUEST':
@@ -805,6 +911,8 @@ export const reducer = ( state = initialState, action ) => {
 				isFetchingThreadRuns: false,
 				error: action.error,
 			};
+
+		// Get Thread Messages
 		case 'GET_THREAD_MESSAGES_BEGIN_REQUEST':
 			return { ...state, isFetchingThreadMessages: true };
 		case 'GET_THREAD_MESSAGES_END_REQUEST':
@@ -1015,7 +1123,20 @@ export const actions = {
 	addMessage,
 	reset,
 	clearMessages,
-	addUserMessage,
+	addUserMessage: ( content, image_urls = [] ) =>
+		addMessage( {
+			role: 'user',
+			content: [
+				{
+					type: 'text',
+					text: content,
+				},
+				...image_urls?.map( ( image_url ) => ( {
+					type: 'image_url',
+					image_url, //: 'data:image/jpeg;base64,$base64'
+				} ) ),
+			],
+		} ),
 	addToolCall: ( name, args, id ) => ( {
 		type: 'ADD_MESSAGE',
 		message: {
