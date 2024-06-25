@@ -43,9 +43,9 @@ class SimpleSiteToolkit extends Toolkit {
 		return 'Site colors updated';
 	};
 
-	setSiteTitle = ( { title } ) => {
-		this.setState( { siteTitle: title } );
-		return `Site title set to "${ title }"`;
+	setSiteTitle = ( { value } ) => {
+		this.setState( { siteTitle: value } );
+		return `Site title set to "${ value }"`;
 	};
 
 	setSiteDescription = ( { description } ) => {

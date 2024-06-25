@@ -6,11 +6,25 @@ import ChatModel, {
 import SimpleAgentToolkit from './src/agents/toolkits/simple-agent.js';
 import SimpleSiteToolkit from './src/agents/toolkits/simple-site.js';
 import CombinedToolkit from './src/agents/toolkits/combined.js';
-import SiteSpecAgent from './src/agents/site-spec-agent.js';
-import WapuuAgent from './src/agents/wapuu-agent.js';
 import promptSync from 'prompt-sync';
-import agents from './src/agents/default-agents.js';
 import AssistantModel from './src/agents/assistant-model.js';
+
+import WapuuAgent from './src/agents/wapuu-agent.js';
+import TutorAgent from './src/agents/tutor-agent.js';
+import DesignAgent from './src/agents/design-agent.js';
+import SiteSpecAgent from './src/agents/site-spec-agent.js';
+import PageSpecAgent from './src/agents/page-spec-agent.js';
+import WooAgent from './src/agents/woo-agent.js';
+import StatsAgent from './src/agents/stats-agent.js';
+import agents, {
+	JETPACK_STATS_AGENT_ID,
+	WAPUU_AGENT_ID,
+	WOO_STORE_AGENT_ID,
+	WORDPRESS_DESIGN_AGENT_ID,
+	WORDPRESS_PAGE_SPEC_AGENT_ID,
+	WORDPRESS_SITE_SPEC_AGENT_ID,
+	WORDPRESS_TUTOR_AGENT_ID,
+} from './src/agents/default-agents.js';
 
 dotenv.config();
 
@@ -27,6 +41,12 @@ class CLIChat {
 			process.env.OPENAI_API
 		);
 		this.messages = [];
+		this.agent = null;
+	}
+
+	setAgent( agent ) {
+		this.agent = agent;
+		// this.agent.onStart();
 	}
 
 	findTools( ...toolNames ) {
@@ -38,11 +58,6 @@ class CLIChat {
 	async runCompletion() {
 		const callbacks = this.agent.toolkit.getCallbacks();
 		const values = this.agent.toolkit.getValues();
-		console.log(
-			'instructions',
-			this.agent.getInstructions().format( values )
-		);
-		console.log( 'this.messages', this.messages );
 		const request = {
 			model: ChatModelType.GPT_4O,
 			messages: this.messages,
@@ -53,6 +68,8 @@ class CLIChat {
 				.format( values ),
 			temperature: 0.2,
 		};
+    console.log( 'Values', values );
+    console.log( '🧠 Request:', request );
 		const result = await this.model.run( request );
 
 		if ( result.tool_calls ) {
@@ -92,9 +109,44 @@ class CLIChat {
 			const callback = callbacks[ tool_call.function.name ];
 
 			if ( typeof callback === 'function' ) {
-				console.warn( '🧠 Tool callback', tool_call.function.name );
+				console.warn( '🧠 Tool callback', tool_call.function.name, resultArgs );
 				await callback( resultArgs );
-				await this.runCompletion();
+				const agentId = this.agent.toolkit.getValues().agent.id;
+				if ( agentId && agentId !== this.agent.getId() ) {
+					console.log( `switching to new agent ${ agentId }` );
+					switch ( agentId ) {
+						// case WAPUU_AGENT_ID:
+						// 	return new WapuuAgent( chat, toolkit );
+						// case WORDPRESS_TUTOR_AGENT_ID:
+						// 	return new TutorAgent( chat, toolkit );
+						// case WORDPRESS_DESIGN_AGENT_ID:
+						// 	return new DesignAgent( chat, toolkit );
+						case WORDPRESS_SITE_SPEC_AGENT_ID:
+							const simpleSiteToolkit = new SimpleSiteToolkit();
+							const combinedToolkit = new CombinedToolkit( {
+								toolkits: [
+									simpleSiteToolkit,
+									this.agent.toolkit,
+								],
+							} );
+							this.setAgent(
+								new SiteSpecAgent( this, combinedToolkit )
+							);
+							break;
+						// case WORDPRESS_PAGE_SPEC_AGENT_ID:
+						// 	return new PageSpecAgent( chat, toolkit );
+						// case WOO_STORE_AGENT_ID:
+						// 	return new WooAgent( chat, toolkit );
+						// case JETPACK_STATS_AGENT_ID:
+						// 	return new StatsAgent( chat, toolkit );
+						default:
+							this.setAgent(
+								new WapuuAgent( this, this.agent.toolkit )
+							);
+					}
+				} else {
+					await this.runCompletion();
+				}
 			}
 		} else {
 			this.assistantMessage = result.content;
@@ -121,16 +173,10 @@ class CLIChat {
 	}
 }
 
-// const tools = [ AskUserTool ];
-const simpleSiteToolkit = new SimpleSiteToolkit();
 const simpleAgentToolkit = new SimpleAgentToolkit( {
 	agents,
 } );
-const combinedToolkit = new CombinedToolkit( {
-	toolkits: [ simpleSiteToolkit, simpleAgentToolkit ],
-} );
 const chat = new CLIChat();
 const agent = new WapuuAgent( chat, simpleAgentToolkit );
-
-chat.agent = agent;
-agent.onStart();
+chat.setAgent( agent );
+chat.call( 'askUser', { question: 'What would you like to do?' } );

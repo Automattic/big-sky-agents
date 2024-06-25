@@ -29,7 +29,7 @@ class WapuuAgent extends Agent {
 
 	onStart() {
 		this.askUser( {
-			question: 'What can I help you with?',
+			question: 'What can I help you with Wapuu?',
 			choices: [
 				// these more-or-less correspond to specific agents
 				'Help me finish my site',
