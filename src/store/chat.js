@@ -1,6 +1,7 @@
 import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../agents/chat-model.js';
 import AssistantModel from '../agents/assistant-model.js';
+import { select } from '@wordpress/data';
 
 export const THREAD_RUN_ACTIVE_STATUSES = [
 	'queued',
@@ -88,7 +89,10 @@ const chatMessageToThreadMessage = ( message ) => {
 				content.type === 'text' &&
 				typeof content.text?.value === 'string'
 			) {
-				content.text = content.text?.value;
+				return {
+					...content,
+					text: content.text.value,
+				};
 			}
 			return content;
 		} );
@@ -134,7 +138,7 @@ const chatMessageToThreadMessage = ( message ) => {
  * @param {Object} message
  * @return {Object} The filtered message
  */
-function filterHistoryMessage( message ) {
+function filterChatMessage( message ) {
 	let filteredContent = message.content;
 	let filteredToolCalls = message.tool_calls;
 
@@ -152,7 +156,10 @@ function filterHistoryMessage( message ) {
 				content.type === 'text' &&
 				typeof content.text?.value === 'string'
 			) {
-				content.text = content.text.value;
+				return {
+					...content,
+					text: content.text.value,
+				};
 			}
 			return content;
 		} );
@@ -387,6 +394,7 @@ function* runGetThreadMessages( { service, apiKey, threadId } ) {
  * @return {Object} Yields the resulting actions
  */
 function* runCreateThread( { service, apiKey } ) {
+	// const { service, apiKey } = select( ( state ) => state );
 	yield { type: 'CREATE_THREAD_BEGIN_REQUEST' };
 	try {
 		const threadResponse = yield {
@@ -434,25 +442,26 @@ function* runDeleteThread( { service, apiKey, threadId } ) {
 /**
  * Create a new thread run.
  *
- * @param {Object} options
- * @param {string} options.service
- * @param {string} options.apiKey
- * @param {string} options.threadId
- * @param {Object} options.assistantId
- * @param {string} options.model
- * @param {string} options.instructions
- * @param {string} options.additionalInstructions
- * @param {Array}  options.additionalMessages
- * @param {Array}  options.tools
- * @param {Array}  options.metadata
- * @param {number} options.temperature
- * @param {number} options.maxPromptTokens
- * @param {number} options.maxCompletionTokens
- * @param {Object} options.truncationStrategy
- * @param {Object} options.responseFormat
+ * @param {Object} request
+ * @param {string} request.service
+ * @param {string} request.apiKey
+ * @param {string} request.threadId
+ * @param {Object} request.assistantId
+ * @param {string} request.model
+ * @param {string} request.instructions
+ * @param {string} request.additionalInstructions
+ * @param {Array}  request.additionalMessages
+ * @param {Array}  request.tools
+ * @param {Array}  request.metadata
+ * @param {number} request.temperature
+ * @param {number} request.maxPromptTokens
+ * @param {number} request.maxCompletionTokens
+ * @param {Object} request.truncationStrategy
+ * @param {Object} request.responseFormat
  * @return {Object} Yields the resulting actions
  */
 function* runCreateThreadRun( { service, apiKey, ...request } ) {
+	// const { service, apiKey } = select( ( state ) => state );
 	yield { type: 'RUN_THREAD_BEGIN_REQUEST' };
 	try {
 		const runCreateThreadRunResponse = yield {
@@ -576,7 +585,7 @@ function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
  */
 
 const addMessageReducer = ( state, message ) => {
-	message = filterHistoryMessage( message );
+	message = filterChatMessage( message );
 
 	// if the message has the same ID as an existing message, update it
 	const existingMessageIndex = state.messages.findIndex(
@@ -609,14 +618,16 @@ const addMessageReducer = ( state, message ) => {
 		}
 
 		// find the tool call message and insert the result after it
-		const existingToolCallMessage = state.messages.find( ( callMessage ) => {
-			return (
-				callMessage.role === 'assistant' &&
-				callMessage.tool_calls?.some(
-					( toolCall ) => toolCall.id === message.tool_call_id
-				)
-			);
-		} );
+		const existingToolCallMessage = state.messages.find(
+			( callMessage ) => {
+				return (
+					callMessage.role === 'assistant' &&
+					callMessage.tool_calls?.some(
+						( toolCall ) => toolCall.id === message.tool_call_id
+					)
+				);
+			}
+		);
 
 		if ( existingToolCallMessage ) {
 			const index = state.messages.indexOf( existingToolCallMessage );
@@ -669,8 +680,24 @@ const setThreadIdReducer = ( state, threadId ) => {
 	};
 };
 
+export const resolvers = {
+	// * RESOLVE_TOOL_CALL_RESULT( { promise } ) {
+	// 	return yield promise;
+	// }
+};
+
 export const reducer = ( state = initialState, action ) => {
 	switch ( action.type ) {
+		// LLM-related
+		case 'SET_SERVICE':
+			return { ...state, service: action.service };
+		case 'SET_API_KEY':
+			return { ...state, apiKey: action.apiKey };
+		case 'SET_MODEL':
+			return { ...state, model: action.model };
+		case 'SET_TEMPERATURE':
+			return { ...state, temperature: action.temperature };
+
 		// Chat Completion
 		case 'CHAT_BEGIN_REQUEST':
 			return { ...state, isFetchingChatCompletion: true };
@@ -765,7 +792,7 @@ export const reducer = ( state = initialState, action ) => {
 				messages: [
 					...state.messages.map( ( message ) => {
 						if ( message.id === action.originalMessageId ) {
-							return action.message;
+							return filterChatMessage( action.message );
 						}
 						return message;
 					} ),
@@ -1110,6 +1137,22 @@ export const actions = {
 	setAssistantId: ( assistantId ) => ( {
 		type: 'SET_ASSISTANT_ID',
 		assistantId,
+	} ),
+	setService: ( service ) => ( {
+		type: 'SET_SERVICE',
+		service,
+	} ),
+	setApiKey: ( apiKey ) => ( {
+		type: 'SET_API_KEY',
+		apiKey,
+	} ),
+	setTemperature: ( temperature ) => ( {
+		type: 'SET_TEMPERATURE',
+		temperature,
+	} ),
+	setModel: ( model ) => ( {
+		type: 'SET_MODEL',
+		model,
 	} ),
 	clearError,
 	setToolCallResult,
