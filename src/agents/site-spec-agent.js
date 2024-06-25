@@ -12,49 +12,29 @@ import { DotPromptTemplate } from './prompt-template.js';
 
 const defaultChoices = [ 'Update the site description', 'Add a page' ];
 
-const SiteSpecPrompt = new DotPromptTemplate( {
-	template: `## {{= it.title }}
-Description: {{= it.description }}
-Type: {{= it.type }}
-Topic: {{= it.topic }}
-Location: {{= it.location }}
-Pages:
-{{~ it.pages :page }}
- * {{= page.title }} {{= page.category }}
-{{~}}`,
-	inputVariables: [
-		'title',
-		'description',
-		'type',
-		'topic',
-		'location',
-		'pages',
-	],
-} );
-
 const instructions = new DotPromptTemplate( {
 	template: `You are an expert at gathering requirements from the user to update a site.
-Your current goal is: {{= it.agent.goal }}.
-You are excited to help the user and are encouraging about their progress. You write content that is lively, fun and engaging.
-Complete the task with minimal input using the available tools.`,
+ Your current goal is: {{= it.agent.goal }}.
+ You are excited to help the user and are encouraging about their progress. You write content that is lively, fun and engaging.
+ Complete the task with minimal input using the available tools.`,
 	inputVariables: [ 'agent' ],
 } );
 
 const additionalInstructions = new DotPromptTemplate( {
 	template: `Please attempt to complete the goal: {{= it.agent.goal }}.
-Only ask the user if you absolutely have to.
-Use the inform user tool to inform the user of your decisions.
-Use the ask user tool to ask the user for information.
-Use the "finish" tool when you think you are done.
-Format all content in Markdown. The current state of the Site Spec is:
-## {{= it.site.title }}
-Description: {{= it.site.description }}
-Type: {{= it.site.type }}
-Topic: {{= it.site.topic }}
-Location: {{= it.site.location }}
-Pages:
+ Only ask the user if you absolutely have to.
+ Use the inform user tool to inform the user of your decisions.
+ Use the ask user tool to ask the user for information.
+ Use the "finish" tool when you think you are done.
+ Format all content in Markdown. The current state of the Site Spec is:
+ siteTitle: {{= it.site.title }},
+ siteDescription: {{= it.site.description }},
+ siteType: {{= it.site.type }},
+ siteTopic: {{= it.site.topic }},
+ siteLocation: {{= it.site.location }},
+ Pages:
 {{~ it.site.pages :page }}
- * {{= page.title }} {{= page.category }}
+  * {{= page.title }} {{= page.category }}
 {{~}}`,
 	inputVariables: [ 'agent', 'site' ],
 } );
