@@ -8,6 +8,7 @@
 	},
 	"author": "Automattic",
 	"license": "GPL-2.0-or-later",
+	"type": "module",
 	"main": "dist/cjs/index.js",
 	"module": "dist/esm/index.js",
 	"files": [
@@ -118,5 +119,8 @@
 	},
 	"publishConfig": {
 		"registry": "https://npm.pkg.github.com"
+	},
+	"dependencies": {
+		"prompt-sync": "^4.2.0"
 	}
 }
