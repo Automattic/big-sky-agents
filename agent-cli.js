@@ -40,6 +40,7 @@ function logVerbose( ...stuffToLog ) {
 class CLIChat {
 	constructor() {
 		this.assistantMessage = '';
+		this.assistantChoices = [];
 		this.prompt = promptSync();
 		this.model = ChatModel.getInstance(
 			ChatModelService.OPENAI,
@@ -55,7 +56,8 @@ class CLIChat {
 
 	setAgent( agent ) {
 		this.agent = agent;
-		// this.agent.onStart();
+		this.assistantMessage = agent.getDefaultQuestion();
+		this.assistantChoices = agent.getDefaultChoices();
 	}
 
 	findTools( ...toolNames ) {
@@ -196,16 +198,34 @@ class CLIChat {
 		}
 	}
 
-	async call( message, params ) {
+	buildMessage() {
+		let message = this.assistantMessage;
+		if ( this.assistantChoices ) {
+			message += '\n\nHere are some choices available to you:\n';
+			message += this.assistantChoices
+				.map( ( choice, index ) => `${ index + 1 }. ${ choice }` )
+				.join( '\n' );
+		}
+		return message;
+	}
+
+	async call( toolName, params ) {
 		while ( true ) {
+			let msg = '';
+			if ( this.assistantMessage ) {
+				msg = this.buildMessage();
+			} else {
+				msg = params.question;
+			}
+
 			this.messages.push( {
 				role: 'assistant',
-				content: this.assistantMessage || params.question,
+				content: msg,
 			} );
 			console.log(
 				'==========================================================================================================='
 			);
-			console.log( `❓ ${ this.assistantMessage || params.question }` );
+			console.log( `❓ ${ msg }` );
 			console.log(
 				'==========================================================================================================='
 			);

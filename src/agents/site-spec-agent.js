@@ -10,6 +10,8 @@ import {
 import { WORDPRESS_SITE_SPEC_AGENT_ID } from './default-agents.js';
 import { DotPromptTemplate } from './prompt-template.js';
 
+const defaultQuestion = 'What would you like to do with your site settings?';
+
 const defaultChoices = [ 'Update the site description', 'Add a page' ];
 
 const instructions = new DotPromptTemplate( {
@@ -64,9 +66,17 @@ class SiteSpecAgent extends BuilderAgent {
 		];
 	}
 
+	getDefaultQuestion() {
+		return defaultQuestion;
+	}
+
+	getDefaultChoices() {
+		return defaultChoices;
+	}
+
 	onStart() {
 		this.askUser( {
-			question: 'What would you like to do with your site settings?',
+			question: defaultQuestion,
 			choices: defaultChoices,
 		} );
 	}
