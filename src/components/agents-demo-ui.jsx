@@ -22,7 +22,7 @@ import useToolExecutor from '../hooks/use-tool-executor.js';
 import useAgentStarter from '../hooks/use-agent-starter.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
-import useReduxChat from '../hooks/use-redux-chat.js';
+import useChat from './chat-provider/use-chat.js';
 import './agents-demo-ui.scss';
 
 /**
@@ -52,7 +52,7 @@ const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
 	// } );
 	// const toolkit = useSimpleToolkit( { pageId: selectedPageId } );
 
-	const chat = useReduxChat( {
+	const chat = useChat( {
 		apiKey,
 		service,
 		model,

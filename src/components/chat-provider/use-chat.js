@@ -1,10 +1,73 @@
+/**
+ * WordPress dependencies
+ */
+import { useContext } from '@wordpress/element';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { store as agentStore } from '../store/index.js';
 import { useCallback, useEffect, useMemo } from 'react';
 
-const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
+/**
+ * Internal dependencies
+ */
+import { Context } from './context';
+
+/**
+ * A custom react hook exposing the chat context for use.
+ *
+ * This exposes the `chat` value provided via the
+ * <a href="#ChatProvider">Chat Provider</a> to a component implementing
+ * this hook.
+ *
+ * It acts similarly to the `useContext` react hook.
+ *
+ * @param {Object} options             The chat options.
+ * @param {string} options.apiKey      The API key for the chat service.
+ * @param {string} options.service     The chat service to use.
+ * @param {string} options.model       The model to use for the chat.
+ * @param {number} options.temperature The temperature for the chat.
+ * @param {string} options.feature     The feature to use for the chat.
+ * @example
+ * ```js
+ * import {
+ *   ChatProvider,
+ *   createChat,
+ *   useChat,
+ * } from '@automattic/big-sky-agents';
+ *
+ * const chat = createChat( {
+ *   apiKey,
+ *   service,
+ *   model,
+ *   temperature,
+ *   feature,
+ * } );
+ *
+ * const SomeChildUsingChat = ( props ) => {
+ *   const chat = useChat();
+ *   // ...logic implementing the chat in other react hooks.
+ * };
+ *
+ *
+ * const ParentProvidingChat = ( props ) => {
+ *   return <ChatProvider value={ chat }>
+ *     <SomeChildUsingChat { ...props } />
+ *   </ChatProvider>
+ * };
+ * ```
+ *
+ * @return {Function}  A custom react hook exposing the chat context value.
+ */
+
+export default function useChat( {
+	apiKey,
+	service,
+	model,
+	temperature,
+	feature,
+} ) {
+	const agentStore = useContext( Context );
+
 	const {
-		clearError,
+		reset,
 		setEnabled,
 		addToolCall,
 		addUserMessage,
@@ -370,7 +433,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 	}, [
 		isAssistantAvailable,
 		threadId,
-		threadRun.id,
+		threadRun?.id,
 		runGetThreadRun,
 		service,
 		apiKey,
@@ -392,18 +455,9 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		}
 	}, [ threadId, runGetThreadMessages, service, apiKey ] );
 
-	const userSay = useCallback(
-		( message, image_urls = [] ) => {
-			addUserMessage( message, image_urls );
-		},
-		[ addUserMessage ]
-	);
-
 	const onReset = useCallback( () => {
-		clearMessages();
-		clearError();
-		deleteThread();
-	}, [ clearError, clearMessages, deleteThread ] );
+		reset( { service, apiKey, threadId } );
+	}, [ apiKey, reset, service, threadId ] );
 
 	return {
 		// running state
@@ -418,7 +472,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		// messages
 		history,
 		clearMessages,
-		userSay,
+		userSay: addUserMessage,
 		assistantMessage,
 
 		// tools
@@ -443,6 +497,4 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 
 		onReset,
 	};
-};
-
-export default useReduxChat;
+}

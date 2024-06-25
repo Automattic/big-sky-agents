@@ -394,6 +394,7 @@ function* setToolCallResult( toolCallId, promise ) {
 
 function filterMessage( message ) {
 	let filteredContent = message.content;
+	let filteredToolCalls = message.tool_calls;
 
 	if ( typeof filteredContent === 'undefined' || filteredContent === null ) {
 		filteredContent = '';
@@ -404,40 +405,34 @@ function filterMessage( message ) {
 	// [{ type: 'text', text: 'foo' }]
 	// TODO: do the same thing when syncing back to the assistant API
 	if ( Array.isArray( filteredContent ) ) {
-		message = {
-			...message,
-			content: filteredContent.map( ( content ) => {
-				if (
-					content.type === 'text' &&
-					typeof content.text?.value === 'string'
-				) {
-					content.text = content.text.value;
-				}
-				return content;
-			} ),
-		};
+		filteredContent = filteredContent.map( ( content ) => {
+			if (
+				content.type === 'text' &&
+				typeof content.text?.value === 'string'
+			) {
+				content.text = content.text.value;
+			}
+			return content;
+		} );
 	}
 
-	if ( message.role === 'assistant' && message.tool_calls ) {
+	if ( message.role === 'assistant' && filteredToolCalls ) {
 		// replace with message.map rather than modifying in-place
-		message = {
-			...message,
-			tool_calls: message.tool_calls.map( ( toolCall ) => ( {
-				...toolCall,
-				function: {
-					...toolCall.function,
-					arguments:
-						typeof toolCall.function?.arguments === 'string'
-							? JSON.parse( toolCall.function.arguments )
-							: toolCall.function.arguments,
-				},
-			} ) ),
-		};
+		filteredToolCalls = message.tool_calls.map( ( toolCall ) => ( {
+			...toolCall,
+			function: {
+				...toolCall.function,
+				arguments:
+					typeof toolCall.function?.arguments === 'string'
+						? JSON.parse( toolCall.function.arguments )
+						: toolCall.function.arguments,
+			},
+		} ) );
 	}
 
 	return {
 		...message,
-		created_at: message.created_at,
+		tool_calls: filteredToolCalls,
 		content: filteredContent,
 	};
 }
@@ -980,6 +975,23 @@ export const selectors = {
 	},
 };
 
+const clearMessages = () => ( {
+	type: 'CLEAR_MESSAGES',
+} );
+
+const clearError = () => ( {
+	type: 'CHAT_ERROR',
+	error: null,
+} );
+
+function* reset( { service, apiKey, threadId } ) {
+	yield clearMessages();
+	yield clearError();
+	if ( service && apiKey && threadId ) {
+		yield runDeleteThread( { service, apiKey, threadId } );
+	}
+}
+
 export const actions = {
 	setThreadId: ( threadId ) => ( {
 		type: 'SET_THREAD_ID',
@@ -989,10 +1001,7 @@ export const actions = {
 		type: 'SET_ASSISTANT_ID',
 		assistantId,
 	} ),
-	clearError: () => ( {
-		type: 'CHAT_ERROR',
-		error: null,
-	} ),
+	clearError,
 	setToolCallResult,
 	runSubmitToolOutputs,
 	runChatCompletion,
@@ -1004,10 +1013,8 @@ export const actions = {
 	runAddMessageToThread,
 	runGetThreadMessages,
 	addMessage,
-	clearMessages: () => ( {
-		type: 'CLEAR_MESSAGES',
-		messages: [],
-	} ),
+	reset,
+	clearMessages,
 	addUserMessage,
 	addToolCall: ( name, args, id ) => ( {
 		type: 'ADD_MESSAGE',
