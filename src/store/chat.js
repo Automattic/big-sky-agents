@@ -239,6 +239,23 @@ export const controls = {
 };
 
 /**
+ * Reset the state of the chat.
+ *
+ * @param {Object} options
+ * @param {string} options.service
+ * @param {string} options.apiKey
+ * @param {string} options.threadId
+ * @return {Object} Yields the resulting actions
+ */
+function* reset( { service, apiKey, threadId } ) {
+	yield clearMessages();
+	yield clearError();
+	if ( service && apiKey && threadId ) {
+		yield runDeleteThread( { service, apiKey, threadId } );
+	}
+}
+
+/**
  * Make a Chat Completion call
  *
  * @param {Object}        request
@@ -550,20 +567,6 @@ function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
 		};
 	}
 }
-
-/**
- * Regular Actions (not controls)
- */
-
-const addMessage = ( message ) => {
-	return {
-		type: 'ADD_MESSAGE',
-		message: {
-			...message,
-			id: message.id || uuidv4(),
-		},
-	};
-};
 
 /**
  * REDUCERS
@@ -938,27 +941,6 @@ export const reducer = ( state = initialState, action ) => {
 	}
 };
 
-const hasActiveRun = ( state ) => {
-	/*
-	 * Thread Run Statuses
-	 * STATUS	DEFINITION
-	 * queued	When Runs are first created or when you complete the required_action, they are moved to a queued status. They should almost immediately move to in_progress.
-	 * in_progress	While in_progress, the Assistant uses the model and tools to perform steps. You can view progress being made by the Run by examining the Run Steps.
-	 * completed	The Run successfully completed! You can now view all Messages the Assistant added to the Thread, and all the steps the Run took. You can also continue the conversation by adding more user Messages to the Thread and creating another Run.
-	 * requires_action	When using the Function calling tool, the Run will move to a required_action state once the model determines the names and arguments of the functions to be called. You must then run those functions and submit the outputs before the run proceeds. If the outputs are not provided before the expires_at timestamp passes (roughly 10 mins past creation), the run will move to an expired status.
-	 * expired	This happens when the function calling outputs were not submitted before expires_at and the run expires. Additionally, if the runs take too long to execute and go beyond the time stated in expires_at, our systems will expire the run.
-	 * cancelling	You can attempt to cancel an in_progress run using the Cancel Run endpoint. Once the attempt to cancel succeeds, status of the Run moves to cancelled. Cancellation is attempted but not guaranteed.
-	 * cancelled	Run was successfully cancelled.
-	 * failed	You can view the reason for the failure by looking at the last_error object in the Run. The timestamp for the failure will be recorded under failed_at.
-	 * incomplete	Run ended due to max_prompt_tokens or max_completion_tokens reached. You can view the specific reason by looking at the incomplete_details object in the Run.
-	 */
-	const currentThreadRun = state.threadRuns[ 0 ];
-	return (
-		currentThreadRun &&
-		THREAD_RUN_RUNNING_STATUSES.includes( currentThreadRun.status )
-	);
-};
-
 const getToolOutputs = ( state ) => {
 	// // get list of [ tool_call_id, output ] from "tool" messages in the history
 	// console.warn(
@@ -995,7 +977,6 @@ export const selectors = {
 		state.isCreatingThreadMessage ||
 		state.isFetchingThreadMessages ||
 		state.isSubmittingToolOutputs,
-	isToolRunning: ( state ) => state.isToolRunning,
 	getError: ( state ) => state.error,
 	getMessages: ( state ) => state.history,
 	getAssistantMessage: ( state ) => {
@@ -1005,7 +986,6 @@ export const selectors = {
 			? lastMessage.content
 			: null;
 	},
-	hasActiveRun,
 	getToolOutputs,
 	getPendingToolCalls: ( state, function_name = null ) => {
 		const messagesWithToolCalls = state.history
@@ -1083,6 +1063,20 @@ export const selectors = {
 	},
 };
 
+/*
+ * ACTIONS
+ */
+
+const addMessage = ( message ) => {
+	return {
+		type: 'ADD_MESSAGE',
+		message: {
+			...message,
+			id: message.id || uuidv4(),
+		},
+	};
+};
+
 const clearMessages = () => ( {
 	type: 'CLEAR_MESSAGES',
 } );
@@ -1091,14 +1085,6 @@ const clearError = () => ( {
 	type: 'CHAT_ERROR',
 	error: null,
 } );
-
-function* reset( { service, apiKey, threadId } ) {
-	yield clearMessages();
-	yield clearError();
-	if ( service && apiKey && threadId ) {
-		yield runDeleteThread( { service, apiKey, threadId } );
-	}
-}
 
 export const actions = {
 	setThreadId: ( threadId ) => ( {

@@ -91,7 +91,6 @@ export default function useChat( {
 		enabled,
 		started,
 		running,
-		toolRunning,
 		history,
 		assistantMessage,
 		pendingToolCalls,
@@ -101,7 +100,6 @@ export default function useChat( {
 		threadId,
 		assistantId,
 		threadRun,
-		hasActiveRun,
 		threadRunsUpdated,
 		threadMessagesUpdated,
 	} = useSelect( ( select ) => {
@@ -110,7 +108,6 @@ export default function useChat( {
 			loading: select( agentStore ).isLoading(),
 			started: select( agentStore ).isStarted(),
 			running: select( agentStore ).isRunning(),
-			toolRunning: select( agentStore ).isToolRunning(),
 			enabled: select( agentStore ).isEnabled(),
 			history: select( agentStore ).getMessages(),
 			assistantMessage: select( agentStore ).getAssistantMessage(),
@@ -121,7 +118,6 @@ export default function useChat( {
 			threadId: select( agentStore ).getThreadId(),
 			assistantId: select( agentStore ).getAssistantId(),
 			threadRun: select( agentStore ).getActiveThreadRun(),
-			hasActiveRun: select( agentStore ).hasActiveRun(),
 			threadRunsUpdated: select( agentStore ).getThreadRunsUpdated(),
 			threadMessagesUpdated:
 				select( agentStore ).getThreadMessagesUpdated(),
@@ -272,7 +268,6 @@ export default function useChat( {
 		service,
 		apiKey,
 		running,
-		hasActiveRun,
 		isThreadRunComplete,
 		isThreadRunAwaitingToolOutputs,
 	] );
@@ -465,7 +460,6 @@ export default function useChat( {
 		setEnabled,
 		loading,
 		running,
-		toolRunning,
 		started,
 		error,
 
