@@ -53,7 +53,7 @@ const initialState = {
 	syncedThreadMessagesAt: null, // The last time synced messages were updated
 
 	// Chat-API-related
-	history: [],
+	messages: [],
 	isToolRunning: false,
 	isFetchingChatCompletion: false,
 	isCreatingThread: false,
@@ -576,17 +576,17 @@ const addMessageReducer = ( state, message ) => {
 	message = filterHistoryMessage( message );
 
 	// if the message has the same ID as an existing message, update it
-	const existingMessageIndex = state.history.findIndex(
+	const existingMessageIndex = state.messages.findIndex(
 		( existingMessage ) => existingMessage.id === message.id
 	);
 
 	if ( existingMessageIndex !== -1 ) {
 		return {
 			...state,
-			history: [
-				...state.history.slice( 0, existingMessageIndex ),
+			messages: [
+				...state.messages.slice( 0, existingMessageIndex ),
 				message,
-				...state.history.slice( existingMessageIndex + 1 ),
+				...state.messages.slice( existingMessageIndex + 1 ),
 			],
 		};
 	}
@@ -594,7 +594,7 @@ const addMessageReducer = ( state, message ) => {
 	// special processing for tools - add the tool call messages
 	if ( message.role === 'tool' && message.tool_call_id ) {
 		// if there's an existing tool call result for this tool call ID, don't add it
-		const existingToolCallResultMessage = state.history.find(
+		const existingToolCallResultMessage = state.messages.find(
 			( existingMessage ) =>
 				existingMessage.role === 'tool' &&
 				existingMessage.tool_call_id === message.tool_call_id
@@ -606,7 +606,7 @@ const addMessageReducer = ( state, message ) => {
 		}
 
 		// find the tool call message and insert the result after it
-		const existingToolCallMessage = state.history.find( ( callMessage ) => {
+		const existingToolCallMessage = state.messages.find( ( callMessage ) => {
 			return (
 				callMessage.role === 'assistant' &&
 				callMessage.tool_calls?.some(
@@ -616,14 +616,14 @@ const addMessageReducer = ( state, message ) => {
 		} );
 
 		if ( existingToolCallMessage ) {
-			const index = state.history.indexOf( existingToolCallMessage );
+			const index = state.messages.indexOf( existingToolCallMessage );
 			// add this message to the messages list, and remove the existing tool call
 			return {
 				...state,
-				history: [
-					...state.history.slice( 0, index + 1 ),
+				messages: [
+					...state.messages.slice( 0, index + 1 ),
 					message,
-					...state.history.slice( index + 1 ),
+					...state.messages.slice( index + 1 ),
 				],
 			};
 		}
@@ -639,7 +639,7 @@ const addMessageReducer = ( state, message ) => {
 
 	return {
 		...state,
-		history: [ ...state.history, message ],
+		messages: [ ...state.messages, message ],
 	};
 };
 
@@ -658,7 +658,7 @@ const setThreadIdReducer = ( state, threadId ) => {
 	return {
 		...state,
 		threadId,
-		history: [],
+		messages: [],
 		threadRuns: [],
 		threadRunsUpdated: null,
 		threadMessagesUpdated: null,
@@ -668,7 +668,6 @@ const setThreadIdReducer = ( state, threadId ) => {
 
 export const reducer = ( state = initialState, action ) => {
 	switch ( action.type ) {
-
 		// Chat Completion
 		case 'CHAT_BEGIN_REQUEST':
 			return { ...state, isFetchingChatCompletion: true };
@@ -710,12 +709,11 @@ export const reducer = ( state = initialState, action ) => {
 				isToolRunning: false,
 			};
 
-
 		// Add and Clear Messages
 		case 'ADD_MESSAGE':
 			return addMessageReducer( state, action.message );
 		case 'CLEAR_MESSAGES':
-			return { ...state, history: [] };
+			return { ...state, messages: [] };
 
 		/**
 		 * Assistant-related reducers
@@ -761,8 +759,8 @@ export const reducer = ( state = initialState, action ) => {
 			// set synced to true on the message with the matching id
 			return {
 				...state,
-				history: [
-					...state.history.map( ( message ) => {
+				messages: [
+					...state.messages.map( ( message ) => {
 						if ( message.id === action.originalMessageId ) {
 							return action.message;
 						}
@@ -790,7 +788,7 @@ export const reducer = ( state = initialState, action ) => {
 			return {
 				...state,
 				// for each message in action.additionalMessages, find them by id and set message.thread_id to action.threadRun.id
-				history: state.history.map( ( message ) => {
+				messages: state.messages.map( ( message ) => {
 					if ( additionalMessageIds.includes( message.id ) ) {
 						return {
 							...message,
@@ -941,14 +939,42 @@ export const reducer = ( state = initialState, action ) => {
 	}
 };
 
+/**
+ * Extract Tool Calls from state.
+ *
+ * @param {*}      state         The state
+ * @param {string} function_name If provided, only return tool calls for this function
+ * @return {Array} 	 An array of tool calls
+ */
+const getToolCalls = ( state, function_name = null ) => {
+	const messagesWithToolCalls = state.messages
+		.filter(
+			( message ) =>
+				message.role === 'assistant' &&
+				message.tool_calls?.some(
+					( toolCall ) =>
+						! function_name ||
+						toolCall.function.name === function_name
+				)
+		)
+		.map( ( message ) => message.tool_calls );
+
+	const toolCalls = messagesWithToolCalls.reduce(
+		( acc, val ) => acc.concat( val ),
+		[]
+	);
+
+	return toolCalls;
+};
+
+/**
+ * Extract Tool Outputs from state.
+ *
+ * @param {*} state The state
+ * @return {Array} An array of tool outputs
+ */
 const getToolOutputs = ( state ) => {
-	// // get list of [ tool_call_id, output ] from "tool" messages in the history
-	// console.warn(
-	// 	'get tool outputs',
-	// 	// state.history,
-	// 	state.history.filter( ( message ) => message.role === 'tool' )
-	// );
-	return state.history
+	return state.messages
 		.filter( ( message ) => message.role === 'tool' )
 		.map( ( message ) => ( {
 			tool_call_id: message.tool_call_id,
@@ -965,7 +991,7 @@ export const selectors = {
 		return isLoading;
 	},
 	// if we have at least one message in history, we have started
-	isStarted: ( state ) => state.history.length > 0,
+	isStarted: ( state ) => state.messages.length > 0,
 	isRunning: ( state ) =>
 		state.isToolRunning ||
 		state.isFetchingChatCompletion ||
@@ -978,32 +1004,18 @@ export const selectors = {
 		state.isFetchingThreadMessages ||
 		state.isSubmittingToolOutputs,
 	getError: ( state ) => state.error,
-	getMessages: ( state ) => state.history,
+	getMessages: ( state ) => state.messages,
 	getAssistantMessage: ( state ) => {
 		// return the last message only if it's an assistant message with content
-		const lastMessage = state.history[ state.history.length - 1 ];
+		const lastMessage = state.messages[ state.messages.length - 1 ];
 		return lastMessage?.role === 'assistant' && lastMessage.content
 			? lastMessage.content
 			: null;
 	},
 	getToolOutputs,
 	getPendingToolCalls: ( state, function_name = null ) => {
-		const messagesWithToolCalls = state.history
-			.filter(
-				( message ) =>
-					message.role === 'assistant' &&
-					message.tool_calls?.some(
-						( toolCall ) =>
-							! function_name ||
-							toolCall.function.name === function_name
-					)
-			)
-			.map( ( message ) => message.tool_calls );
-		// flatten messagesWithToolCalls
-		const toolCalls = messagesWithToolCalls.reduce(
-			( acc, val ) => acc.concat( val ),
-			[]
-		);
+		const toolCalls = getToolCalls( state, function_name );
+
 		const toolOutputs = getToolOutputs( state );
 
 		const result = toolCalls.filter(
@@ -1017,7 +1029,7 @@ export const selectors = {
 	},
 	getAdditionalMessages: ( state ) => {
 		// user/assistant messages without a threadId are considered not to have been synced
-		return state.history.filter(
+		return state.messages.filter(
 			( message ) =>
 				[ 'assistant', 'user' ].includes( message.role ) &&
 				message.content &&
