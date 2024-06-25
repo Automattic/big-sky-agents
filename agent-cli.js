@@ -25,6 +25,7 @@ import agents, {
 	WORDPRESS_SITE_SPEC_AGENT_ID,
 	WORDPRESS_TUTOR_AGENT_ID,
 } from './src/agents/default-agents.js';
+import { ASK_USER_TOOL_NAME } from './src/agents/tools/ask-user.js';
 
 dotenv.config();
 
@@ -55,6 +56,14 @@ class CLIChat {
 		);
 	}
 
+	setToolResult( toolId, result ) {
+		this.messages.push( {
+			role: 'tool',
+			tool_call_id: toolId,
+			content: result,
+		} );
+	}
+
 	async runCompletion() {
 		const callbacks = this.agent.toolkit.getCallbacks();
 		const values = this.agent.toolkit.getValues();
@@ -66,11 +75,12 @@ class CLIChat {
 			additionalInstructions: this.agent
 				.getAdditionalInstructions()
 				.format( values ),
-			temperature: 0.2,
+			temperature: 0,
 		};
-    console.log( 'Values', values );
-    console.log( '🧠 Request:', request );
+		console.log( '🧠 Request:', request );
 		const result = await this.model.run( request );
+		console.log( '🧠 Result:', result, result.tool_calls?.[ 0 ].function );
+		this.messages.push( result );
 
 		if ( result.tool_calls ) {
 			// use the first tool call for now
@@ -103,14 +113,25 @@ class CLIChat {
 					}
 					return `Unknown tool ${ tool_use.recipient_name }`;
 				} );
-				await Promise.all( promises );
+
+				this.setToolResult(
+					tool_call.id,
+					await Promise.all( promises )
+				);
 			}
 
 			const callback = callbacks[ tool_call.function.name ];
 
 			if ( typeof callback === 'function' ) {
-				console.warn( '🧠 Tool callback', tool_call.function.name, resultArgs );
-				await callback( resultArgs );
+				console.warn(
+					'🧠 Tool callback',
+					tool_call.function.name,
+					resultArgs
+				);
+				this.setToolResult(
+					tool_call.id,
+					await callback( resultArgs )
+				);
 				const agentId = this.agent.toolkit.getValues().agent.id;
 				if ( agentId && agentId !== this.agent.getId() ) {
 					console.log( `switching to new agent ${ agentId }` );
@@ -146,6 +167,20 @@ class CLIChat {
 					}
 				} else {
 					await this.runCompletion();
+				}
+			} else {
+				switch ( tool_call.function.name ) {
+					case ASK_USER_TOOL_NAME:
+						this.assistantMessage = resultArgs.question;
+						this.setToolResult( tool_call.id, resultArgs.question );
+						break;
+					default:
+						console.error(
+							'Unknown tool callback',
+							tool_call.function.name,
+							resultArgs
+						);
+						this.setToolResult( tool_call.id, '' );
 				}
 			}
 		} else {
