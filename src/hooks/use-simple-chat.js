@@ -214,6 +214,7 @@ const useSimpleChat = ( { apiKey, service, model, temperature, feature } ) => {
 				} );
 		},
 		[
+			history,
 			assistantMessage,
 			enabled,
 			error,

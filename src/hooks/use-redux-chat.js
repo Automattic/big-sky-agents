@@ -426,19 +426,19 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			} );
 		},
 		[
-			isAssistantAvailable,
-			isThreadRunComplete,
-			isAwaitingUserInput,
 			additionalMessages,
-			history.length,
-			service,
 			apiKey,
 			assistantId,
-			threadId,
-			model,
-			temperature,
 			feature,
+			history,
+			isAssistantAvailable,
+			isAwaitingUserInput,
+			isThreadRunComplete,
+			model,
 			runCreateThreadRun,
+			service,
+			temperature,
+			threadId,
 		]
 	);
 

@@ -6,7 +6,6 @@ import {
 	Card,
 	CardBody,
 	CardFooter,
-	CardHeader,
 	CheckboxControl,
 	DropZone,
 	__experimentalInputControl as InputControl,
