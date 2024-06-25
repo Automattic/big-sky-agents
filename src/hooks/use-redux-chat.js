@@ -111,7 +111,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		);
 	}, [ isThreadDataLoaded, requiredToolOutputs.length, running, threadRun ] );
 
-	// update thread runs if they haven't been updated - after this we only update the current thread run
+	// update thread runs if they haven't been updated
 	useEffect( () => {
 		if (
 			isAssistantAvailable &&
@@ -191,8 +191,6 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 				return;
 			}
 
-			// console.warn( 'Submit tool outputs', filteredToolOutputs );
-
 			runSubmitToolOutputs( {
 				threadId,
 				threadRunId: threadRun.id,
@@ -239,56 +237,6 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		isThreadRunInProgress,
 	] );
 
-	// if there's a threadId, and threadRunsUpdated and threadMessagesUpdated are set and we're not running, create a thread run
-	// useEffect( () => {
-	// 	if (
-	// 		isThreadRunComplete &&
-	// 		! pendingThreadMessages?.length &&
-	// 		hasNewMessagesToProcess &&
-	// 		! isAwaitingUserInput
-	// 	) {
-	// 		console.warn( 'Running threadRun', {
-	// 			service,
-	// 			apiKey,
-	// 			assistantId,
-	// 			threadId,
-	// 			model,
-	// 			temperature,
-	// 			feature,
-	// 			pendingThreadMessages,
-	// 			pendingToolCalls,
-	// 			history,
-	// 		} );
-	// 		runCreateThreadRun( {
-	// 			service,
-	// 			apiKey,
-	// 			assistantId,
-	// 			threadId,
-	// 			model,
-	// 			temperature,
-	// 			feature,
-	// 		} );
-	// 	}
-	// }, [
-	// 	apiKey,
-	// 	assistantId,
-	// 	feature,
-	// 	hasNewMessagesToProcess,
-	// 	history,
-	// 	isAwaitingUserInput,
-	// 	isThreadDataLoaded,
-	// 	isThreadRunComplete,
-	// 	model,
-	// 	pendingThreadMessages,
-	// 	pendingToolCalls,
-	// 	runCreateThreadRun,
-	// 	running,
-	// 	service,
-	// 	temperature,
-	// 	threadId,
-	// 	threadRun,
-	// ] );
-
 	// if there are pendingThreadMessages, send them using runAddMessageToThread
 	useEffect( () => {
 		if (
@@ -296,12 +244,6 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 			isThreadRunComplete &&
 			additionalMessages.length > 0
 		) {
-			console.warn( 'Sending pending thread messages', {
-				service,
-				apiKey,
-				threadId,
-				additionalMessages,
-			} );
 			runAddMessageToThread( {
 				service,
 				apiKey,
@@ -320,13 +262,6 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		running,
 	] );
 
-	// if we have a thread, and threadRunId is false, and running is false, create a thread run
-	// useEffect( () => {
-	// 	if ( threadId && ! threadRun && ! running ) {
-	// 		runCreateThreadRun();
-	// 	}
-	// }, [ threadId, threadRun, running, runCreateThreadRun ] );
-
 	const runChat = useCallback(
 		( tools, instructions, additionalInstructions ) => {
 			if (
@@ -339,15 +274,6 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 				pendingToolCalls.length > 0 || // waiting on tool calls
 				assistantMessage // the assistant has a question for the user
 			) {
-				// console.warn( 'not running agent', {
-				// 	chatModel,
-				// 	error,
-				// 	enabled,
-				// 	running,
-				// 	messages,
-				// 	pendingToolRequests,
-				// 	assistantMessage,
-				// } );
 				return;
 			}
 			runChatCompletion( {
@@ -387,29 +313,8 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 				additionalMessages.length > 0 ||
 				history.length === 0
 			) {
-				console.warn( 'not running thread run', {
-					isAssistantAvailable,
-					isThreadRunComplete,
-					isAwaitingUserInput,
-					additionalMessages,
-					history,
-				} );
 				return;
 			}
-
-			console.warn( 'creating thread run', {
-				service,
-				apiKey,
-				assistantId,
-				threadId,
-				model,
-				temperature,
-				tools,
-				instructions,
-				additionalInstructions,
-				// additionalMessages, // we sync messages to the thread first instead
-				feature,
-			} );
 
 			runCreateThreadRun( {
 				service,
@@ -421,6 +326,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 				tools,
 				instructions,
 				additionalInstructions,
+				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
 				additionalMessages,
 				feature,
 			} );
@@ -453,7 +359,7 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 	}, [ runDeleteThread, service, apiKey, threadId ] );
 
 	const updateThreadRun = useCallback( () => {
-		if ( service && apiKey && threadId && threadRun?.id ) {
+		if ( isAssistantAvailable && threadId && threadRun?.id ) {
 			runGetThreadRun( {
 				service,
 				apiKey,
@@ -461,17 +367,24 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 				threadRunId: threadRun.id,
 			} );
 		}
-	}, [ runGetThreadRun, service, apiKey, threadId, threadRun?.id ] );
+	}, [
+		isAssistantAvailable,
+		threadId,
+		threadRun.id,
+		runGetThreadRun,
+		service,
+		apiKey,
+	] );
 
 	const updateThreadRuns = useCallback( () => {
-		if ( service && apiKey && threadId ) {
+		if ( isAssistantAvailable && threadId ) {
 			runGetThreadRuns( {
 				service,
 				apiKey,
 				threadId,
 			} );
 		}
-	}, [ runGetThreadRuns, service, apiKey, threadId ] );
+	}, [ isAssistantAvailable, threadId, runGetThreadRuns, service, apiKey ] );
 
 	const updateThreadMessages = useCallback( () => {
 		if ( service && apiKey && threadId ) {
@@ -485,45 +398,6 @@ const useReduxChat = ( { apiKey, service, model, temperature, feature } ) => {
 		},
 		[ addUserMessage ]
 	);
-
-	// if we have an unsent user message and we have a current thread that is not active, send the user message
-	// useEffect( () => {
-	// 	if (
-	// 		threadId &&
-	// 		history.length > 0 &&
-	// 		! running &&
-	// 		! additionalMessages.length
-	// 	) {
-	// 		const lastMessage = history[ history.length - 1 ];
-	// 		if ( lastMessage.type === 'user' && ! lastMessage.sent ) {
-	// 			// run a new thread
-	// 			if ( assistantId && threadId ) {
-	// 				runCreateThreadRun( {
-	// 					service,
-	// 					apiKey,
-	// 					assistantId,
-	// 					threadId,
-	// 					model,
-	// 					temperature,
-	// 					feature,
-	// 				} );
-	// 			}
-	// 		}
-	// 	}
-	// }, [
-	// 	threadId,
-	// 	history,
-	// 	running,
-	// 	userSay,
-	// 	assistantId,
-	// 	runCreateThreadRun,
-	// 	service,
-	// 	apiKey,
-	// 	model,
-	// 	temperature,
-	// 	feature,
-	// 	additionalMessages.length,
-	// ] );
 
 	const onReset = useCallback( () => {
 		clearMessages();
