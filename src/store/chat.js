@@ -38,11 +38,19 @@ export const THREAD_RUN_COMPLETED_STATUSES = [
 ];
 
 const initialState = {
+	// Global
+	error: null,
+
 	// LLM related
 	model: null,
 	service: null,
-	temperature: null,
+	temperature: 0.1,
 	apiKey: null,
+
+	// Chat-API-related
+	messages: [],
+	isToolRunning: false,
+	isFetchingChatCompletion: false,
 
 	// Assistants-API-related
 	assistantId: null, // The assistant ID
@@ -51,11 +59,6 @@ const initialState = {
 	threadRunsUpdated: null, // The last time the thread runs were updated
 	threadMessagesUpdated: null, // The last time Assistant messages were updated
 	syncedThreadMessagesAt: null, // The last time synced messages were updated
-
-	// Chat-API-related
-	messages: [],
-	isToolRunning: false,
-	isFetchingChatCompletion: false,
 	isCreatingThread: false,
 	isDeletingThread: false,
 	isCreatingThreadRun: false,
@@ -712,8 +715,8 @@ export const reducer = ( state = initialState, action ) => {
 		// Add and Clear Messages
 		case 'ADD_MESSAGE':
 			return addMessageReducer( state, action.message );
-		case 'CLEAR_MESSAGES':
-			return { ...state, messages: [] };
+		case 'SET_MESSAGES':
+			return { ...state, messages: action.messages };
 
 		/**
 		 * Assistant-related reducers
@@ -1090,7 +1093,8 @@ const addMessage = ( message ) => {
 };
 
 const clearMessages = () => ( {
-	type: 'CLEAR_MESSAGES',
+	type: 'SET_MESSAGES',
+	messages: [],
 } );
 
 const clearError = () => ( {
