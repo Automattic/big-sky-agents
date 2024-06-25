@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import minimist from 'minimist';
 import ChatModel, {
 	ChatModelService,
 	ChatModelType,
@@ -28,6 +29,13 @@ import agents, {
 import { ASK_USER_TOOL_NAME } from './src/agents/tools/ask-user.js';
 
 dotenv.config();
+const args = minimist( process.argv.slice( 2 ) );
+
+function logVerbose( ...stuffToLog ) {
+	if ( args.verbose ) {
+		console.log( ...stuffToLog );
+	}
+}
 
 class CLIChat {
 	constructor() {
@@ -77,9 +85,9 @@ class CLIChat {
 				.format( values ),
 			temperature: 0,
 		};
-		console.log( '🧠 Request:', request );
+		logVerbose( '📡 Request:', request );
 		const result = await this.model.run( request );
-		console.log( '🧠 Result:', result, result.tool_calls?.[ 0 ].function );
+		logVerbose( '🧠 Result:', result, result.tool_calls?.[ 0 ].function );
 		this.messages.push( result );
 
 		if ( result.tool_calls ) {
@@ -105,8 +113,8 @@ class CLIChat {
 					const callback = callbacks[ tool_use.recipient_name ];
 
 					if ( typeof callback === 'function' ) {
-						console.warn(
-							'🧠 Parallel tool callback',
+						logVerbose(
+							'🔧 Parallel tool callback',
 							tool_use.recipient_name
 						);
 						return callback( tool_use.parameters );
@@ -123,8 +131,8 @@ class CLIChat {
 			const callback = callbacks[ tool_call.function.name ];
 
 			if ( typeof callback === 'function' ) {
-				console.warn(
-					'🧠 Tool callback',
+				logVerbose(
+					'🔧 Tool callback',
 					tool_call.function.name,
 					resultArgs
 				);
@@ -134,7 +142,7 @@ class CLIChat {
 				);
 				const agentId = this.agent.toolkit.getValues().agent.id;
 				if ( agentId && agentId !== this.agent.getId() ) {
-					console.log( `switching to new agent ${ agentId }` );
+					logVerbose( `🔄 Switching to new agent ${ agentId }` );
 					switch ( agentId ) {
 						// case WAPUU_AGENT_ID:
 						// 	return new WapuuAgent( chat, toolkit );
@@ -188,13 +196,19 @@ class CLIChat {
 		}
 	}
 
-	async call( message, args ) {
+	async call( message, params ) {
 		while ( true ) {
 			this.messages.push( {
 				role: 'assistant',
-				content: this.assistantMessage || args.question,
+				content: this.assistantMessage || params.question,
 			} );
-			console.log( this.assistantMessage || args.question );
+			console.log(
+				'==========================================================================================================='
+			);
+			console.log( `❓ ${ this.assistantMessage || params.question }` );
+			console.log(
+				'==========================================================================================================='
+			);
 			const userMessage = this.prompt( '> ' );
 
 			if ( userMessage.toLowerCase() === 'exit' ) {
