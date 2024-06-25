@@ -70,7 +70,7 @@ class Plan {
 		this.steps.get( fromAgentId ).push( toAgentId );
 	}
 
-	async processFlow( startAgentId, initialInput ) {
+	async execute( startAgentId, initialInput ) {
 		for ( const [ agentId, agent ] of this.agents ) {
 			const inputCount = [ ...this.steps.values() ].filter( ( steps ) =>
 				steps.includes( agentId )
@@ -198,7 +198,7 @@ plan.addStep( 'structure', 'build' );
 
 // Process the flow
 console.time( 'Website Design Analysis Time' );
-plan.processFlow( 'analyst', 'Start website design analysis' )
+plan.execute( 'analyst', 'Start website design analysis' )
 	.then( ( results ) => {
 		console.log( '\nFinal Results:' );
 		console.log( 'Website build:', results.build );
