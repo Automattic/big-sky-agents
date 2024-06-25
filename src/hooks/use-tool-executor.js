@@ -60,7 +60,7 @@ const useToolExecutor = ( {
 				}
 			} );
 		}
-	}, [ callbacks, pendingToolCalls, running, setToolResult ] );
+	}, [ error, callbacks, pendingToolCalls, running, setToolResult ] );
 };
 
 export default useToolExecutor;
