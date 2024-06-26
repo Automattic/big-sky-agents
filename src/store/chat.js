@@ -459,7 +459,6 @@ const runSubmitToolOutputs =
 			const updatedRun = await getAssistantModel(
 				select
 			).submitToolOutputs( threadId, threadRun?.id, toolOutputs );
-			console.warn( 'Got updated run', updatedRun );
 			dispatch( {
 				type: 'SUBMIT_TOOL_OUTPUTS_END_REQUEST',
 				threadRun: updatedRun,
@@ -994,6 +993,26 @@ export const selectors = {
 		state.isSubmittingToolOutputs,
 	isAssistantAvailable: ( state ) =>
 		state.service && state.apiKey && state.assistantId && ! state.error,
+	isThreadDataLoaded: ( state ) =>
+		state.threadId &&
+		state.threadRunsUpdated &&
+		state.threadMessagesUpdated,
+	isThreadRunInProgress: ( state ) => {
+		return (
+			state.threadId &&
+			[ 'queued', 'in_progress' ].includes(
+				selectors.getActiveThreadRunStatus( state )
+			)
+		);
+	},
+	isThreadRunComplete: ( state ) => {
+		const threadRunStatus = selectors.getActiveThreadRunStatus( state );
+		return (
+			( selectors.isThreadDataLoaded( state ) &&
+				THREAD_RUN_COMPLETED_STATUSES.includes( threadRunStatus ) ) ||
+			! threadRunStatus
+		);
+	},
 	getFeature: ( state ) => state.feature,
 	getApiKey: ( state ) => state.apiKey,
 	getError: ( state ) => state.error,
@@ -1047,6 +1066,10 @@ export const selectors = {
 	getThreadRunsUpdated: ( state ) => state.threadRunsUpdated,
 	getThreadMessagesUpdated: ( state ) => state.threadMessagesUpdated,
 	getActiveThreadRun,
+	getActiveThreadRunStatus: ( state ) => {
+		const activeThreadRun = getActiveThreadRun( state );
+		return activeThreadRun?.status;
+	},
 	getCompletedThreadRuns: ( state ) => {
 		return state.threadRuns.find( ( threadRun ) =>
 			THREAD_RUN_COMPLETED_STATUSES.includes( threadRun.status )

@@ -4,15 +4,15 @@ import { useEffect } from 'react';
 const useAssistantExecutor = ( {
 	agent: { tools, instructions, additionalInstructions },
 	chat: {
-		loading,
-		enabled,
 		running,
-		runAssistant,
+		history,
+		isThreadRunComplete,
+		isAwaitingUserInput,
+		additionalMessages,
 
 		// threads
 		threadId,
 		createThread,
-		threadRunId,
 		createThreadRun,
 	},
 } ) => {
@@ -36,11 +36,11 @@ const useAssistantExecutor = ( {
 
 	useEffect( () => {
 		if (
-			! enabled || // disabled
-			loading || // not loaded
 			running || // thinking
-			! threadId || // no thread
-			! threadRunId?.status === 'completed' || // already running
+			! isThreadRunComplete ||
+			isAwaitingUserInput ||
+			additionalMessages.length > 0 ||
+			history.length === 0 ||
 			! instructions // at a minimum we need a system prompt
 		) {
 			// console.warn( 'not running assistant in executuor', {
@@ -55,16 +55,15 @@ const useAssistantExecutor = ( {
 		}
 		createThreadRun( tools, instructions, additionalInstructions );
 	}, [
-		enabled,
-		runAssistant,
-		running,
-		instructions,
 		additionalInstructions,
-		tools,
+		additionalMessages.length,
 		createThreadRun,
-		threadId,
-		loading,
-		threadRunId,
+		history.length,
+		instructions,
+		isAwaitingUserInput,
+		isThreadRunComplete,
+		running,
+		tools,
 	] );
 };
 

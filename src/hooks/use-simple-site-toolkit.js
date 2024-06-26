@@ -87,7 +87,6 @@ const useSimpleSiteToolkit = ( /* { pageId } */ ) => {
 				return `Site title set to "${ title }"`;
 			},
 			[ SetSiteDescriptionTool.function.name ]: ( { description } ) => {
-				console.warn( 'setSiteDescription', { description } );
 				setSiteDescription( description );
 				return `Site description set to "${ description }"`;
 			},

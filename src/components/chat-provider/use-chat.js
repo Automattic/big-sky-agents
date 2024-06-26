@@ -94,6 +94,8 @@ export default function useChat() {
 		threadRunsUpdated,
 		threadMessagesUpdated,
 		isAssistantAvailable,
+		isThreadRunInProgress,
+		isThreadDataLoaded,
 		feature,
 	} = useSelect( ( select ) => {
 		return {
@@ -116,15 +118,11 @@ export default function useChat() {
 			threadMessagesUpdated:
 				select( agentStore ).getThreadMessagesUpdated(),
 			isAssistantAvailable: select( agentStore ).isAssistantAvailable(),
+			isThreadRunInProgress: select( agentStore ).isThreadRunInProgress(),
+			isThreadDataLoaded: select( agentStore ).isThreadDataLoaded(),
 			feature: select( agentStore ).getFeature(),
 		};
 	} );
-
-	const isThreadDataLoaded = useMemo( () => {
-		return (
-			isAssistantAvailable && threadRunsUpdated && threadMessagesUpdated
-		);
-	}, [ isAssistantAvailable, threadMessagesUpdated, threadRunsUpdated ] );
 
 	const isThreadRunComplete = useMemo( () => {
 		return (
@@ -133,15 +131,6 @@ export default function useChat() {
 			( ! threadRun || threadRun?.status === 'completed' )
 		);
 	}, [ isThreadDataLoaded, running, threadRun ] );
-
-	const isThreadRunInProgress = useMemo( () => {
-		return (
-			isAssistantAvailable &&
-			threadId &&
-			! running &&
-			[ 'queued', 'in_progress' ].includes( threadRun?.status )
-		);
-	}, [ isAssistantAvailable, threadId, running, threadRun ] );
 
 	const isAwaitingUserInput = useMemo( () => {
 		return pendingToolCalls.length > 0 || assistantMessage;
@@ -207,12 +196,6 @@ export default function useChat() {
 	// 	},
 	// ]
 	useEffect( () => {
-		console.warn(
-			'might submit tool outputs',
-			isThreadRunAwaitingToolOutputs,
-			toolOutputs,
-			requiredToolOutputs
-		);
 		if ( isThreadRunAwaitingToolOutputs && toolOutputs.length > 0 ) {
 			// requiredToolOutputs is a list of toolcalls with an ID
 			// toolOutputs is a list of { tool_call_id: $id, output: $json_blob }
@@ -224,19 +207,6 @@ export default function useChat() {
 						requiredToolOutput.id === toolOutput.tool_call_id
 				);
 			} );
-
-			// if there are any missing, throw an error
-			if ( filteredToolOutputs.length !== requiredToolOutputs.length ) {
-				const missingOutputs = requiredToolOutputs.filter(
-					( requiredToolOutput ) =>
-						! toolOutputs.some(
-							( toolOutput ) =>
-								requiredToolOutput.id ===
-								toolOutput.tool_call_id
-						)
-				);
-				console.warn( 'missing outputs', missingOutputs );
-			}
 
 			if ( filteredToolOutputs.length === 0 ) {
 				return;
@@ -250,38 +220,46 @@ export default function useChat() {
 		isThreadRunAwaitingToolOutputs,
 		requiredToolOutputs,
 		runSubmitToolOutputs,
-		threadRun?.id,
 		toolOutputs,
 	] );
 
 	// while threadRun.status is queued or in_progress, poll for thread run status
 	useEffect( () => {
-		if ( isThreadRunInProgress ) {
+		if ( ! running && isThreadRunInProgress ) {
 			const interval = setInterval( () => {
 				runGetThreadRun();
 			}, 1000 );
 			return () => clearInterval( interval );
 		}
-	}, [ runGetThreadRun, isThreadRunInProgress ] );
+	}, [ runGetThreadRun, isThreadRunInProgress, running ] );
 
 	// if there are pendingThreadMessages, send them using runAddMessageToThread
 	useEffect( () => {
-		if ( isThreadRunComplete && additionalMessages.length > 0 ) {
+		if (
+			! running &&
+			isThreadRunComplete &&
+			additionalMessages.length > 0
+		) {
 			runAddMessageToThread( {
 				message: additionalMessages[ 0 ],
 			} );
 		}
-	}, [ additionalMessages, isThreadRunComplete, runAddMessageToThread ] );
+	}, [
+		running,
+		additionalMessages,
+		isThreadRunComplete,
+		runAddMessageToThread,
+	] );
 
 	const runChat = useCallback(
 		( tools, instructions, additionalInstructions ) => {
 			if (
+				! instructions ||
 				! enabled || // disabled
 				running || // already running
 				error || // there's an error
 				! history.length > 0 || // nothing to process
-				pendingToolCalls.length > 0 || // waiting on tool calls
-				assistantMessage // the assistant has a question for the user
+				isAwaitingUserInput
 			) {
 				return;
 			}
@@ -296,8 +274,7 @@ export default function useChat() {
 			running,
 			error,
 			history,
-			pendingToolCalls.length,
-			assistantMessage,
+			isAwaitingUserInput,
 			runChatCompletion,
 		]
 	);
@@ -310,12 +287,6 @@ export default function useChat() {
 				additionalMessages.length > 0 ||
 				history.length === 0
 			) {
-				console.warn( 'not running thread run', {
-					isThreadRunComplete,
-					isAwaitingUserInput,
-					additionalMessages,
-					history,
-				} );
 				return;
 			}
 
@@ -379,13 +350,16 @@ export default function useChat() {
 		createThread: runCreateThread,
 		deleteThread: runDeleteThread,
 		assistantId,
+		threadRun,
 		setAssistantId,
 
 		createThreadRun, // run a thread
 		updateThreadRun: runGetThreadRun, // refresh status of running threads
 		updateThreadRuns: runGetThreadRuns, // refresh status of running threads
-		threadRun,
 		updateThreadMessages: runGetThreadMessages,
+		isThreadRunComplete,
+		isAwaitingUserInput,
+		additionalMessages,
 
 		onReset: reset,
 	};
