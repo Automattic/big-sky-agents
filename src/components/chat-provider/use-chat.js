@@ -57,13 +57,7 @@ import { Context } from './context';
  * @return {Function}  A custom react hook exposing the chat context value.
  */
 
-export default function useChat( {
-	apiKey,
-	service,
-	model,
-	temperature,
-	feature,
-} ) {
+export default function useChat( { apiKey, feature } ) {
 	const agentStore = useContext( Context );
 
 	const {
@@ -83,9 +77,17 @@ export default function useChat( {
 		runGetThreadMessages,
 		runAddMessageToThread,
 		runSubmitToolOutputs,
+		setApiKey,
+		setService,
+		setModel,
+		setTemperature,
 	} = useDispatch( agentStore );
 
 	const {
+		apiKey: contextApiKey,
+		service,
+		model,
+		temperature,
 		error,
 		loading,
 		enabled,
@@ -123,6 +125,17 @@ export default function useChat( {
 				select( agentStore ).getThreadMessagesUpdated(),
 		};
 	} );
+
+	// if apiKey is different from contextApiKey, or service is different from contextService, set them
+	useEffect( () => {
+		if ( apiKey !== contextApiKey ) {
+			console.warn( 'useEffect set api key', {
+				apiKey,
+				contextApiKey,
+			} );
+			setApiKey( apiKey );
+		}
+	}, [ apiKey, contextApiKey, setApiKey ] );
 
 	const isServiceAvailable = useMemo( () => {
 		return service && apiKey && enabled;
@@ -323,8 +336,6 @@ export default function useChat( {
 	const runChat = useCallback(
 		( tools, instructions, additionalInstructions ) => {
 			if (
-				! service || // no ChatModel
-				! apiKey || // no apiKey
 				! enabled || // disabled
 				running || // already running
 				error || // there's an error
@@ -335,20 +346,13 @@ export default function useChat( {
 				return;
 			}
 			runChatCompletion( {
-				model,
-				temperature,
-				messages: history,
 				tools,
 				instructions,
 				additionalInstructions,
-				service,
-				apiKey,
 				feature,
 			} );
 		},
 		[
-			service,
-			apiKey,
 			enabled,
 			running,
 			error,
@@ -356,8 +360,6 @@ export default function useChat( {
 			pendingToolCalls.length,
 			assistantMessage,
 			runChatCompletion,
-			model,
-			temperature,
 			feature,
 		]
 	);
@@ -462,6 +464,14 @@ export default function useChat( {
 		running,
 		started,
 		error,
+
+		// llm
+		model,
+		setModel,
+		service,
+		setService,
+		temperature,
+		setTemperature,
 
 		// messages
 		history,

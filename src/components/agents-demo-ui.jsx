@@ -35,32 +35,20 @@ import './agents-demo-ui.scss';
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  *                                         -->
  */
-const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
+const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
 	const [ previewVisible, setPreviewVisible ] = useState( false );
-	const [ model, setModel ] = useState( ChatModelType.getDefault() );
-	const [ service, setService ] = useState( ChatModelService.getDefault() );
-	const [ temperature, setTemperature ] = useState( 0.2 );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
-	const [ apiKey, setApiKey ] = useState( originalApiKey );
-	const feature = 'big-sky';
-
-	// const chat = useSimpleChat( {
-	// 	chatModel,
-	// 	model,
-	// 	temperature,
-	// } );
-	// const toolkit = useSimpleToolkit( { pageId: selectedPageId } );
 
 	const chat = useChat( {
+		feature: 'big-sky',
 		apiKey,
-		service,
-		model,
-		temperature,
-		feature,
 	} );
 
-	const toolkit = useReduxToolkit( { apiKey, pageId: selectedPageId } );
+	const toolkit = useReduxToolkit( {
+		apiKey,
+		pageId: selectedPageId,
+	} );
 
 	const agent = useCurrentAgent( {
 		pageId: selectedPageId,
@@ -166,19 +154,13 @@ const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
 						chat={ chat }
 					/>
 					<ChatModelControls
-						apiKey={ apiKey }
-						model={ model }
-						service={ service }
-						temperature={ temperature }
-						onApiKeyChanged={ ( newToken ) => {
-							setApiKey( newToken );
+						{ ...chat }
+						setApiKey={ ( newToken ) => {
+							chat.setApiKey( newToken );
 							if ( typeof onApiKeyChanged === 'function' ) {
 								onApiKeyChanged( newToken );
 							}
 						} }
-						onModelChanged={ setModel }
-						onServiceChanged={ setService }
-						onTemperatureChanged={ setTemperature }
 					/>
 				</div>
 			) }

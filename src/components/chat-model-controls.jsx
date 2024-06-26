@@ -18,10 +18,10 @@ const ChatModelControls = ( {
 	service,
 	temperature,
 	apiKey,
-	onServiceChanged,
-	onModelChanged,
-	onTemperatureChanged,
-	onApiKeyChanged,
+	setService,
+	setModel,
+	setTemperature,
+	setApiKey,
 } ) => {
 	return (
 		<>
@@ -44,12 +44,10 @@ const ChatModelControls = ( {
 								model
 							)
 						) {
-							onServiceChanged( newService );
-							onModelChanged(
-								ChatModelType.getDefault( newService )
-							);
+							setService( newService );
+							setModel( ChatModelType.getDefault( newService ) );
 						} else {
-							onServiceChanged( newService );
+							setService( newService );
 						}
 					} }
 				/>
@@ -64,7 +62,7 @@ const ChatModelControls = ( {
 							};
 						}
 					) }
-					onChange={ onModelChanged }
+					onChange={ setModel }
 				/>
 				<RangeControl
 					value={ temperature }
@@ -75,14 +73,14 @@ const ChatModelControls = ( {
 					step={ 0.1 }
 					style={ { minWidth: '150px' } }
 					withInputField={ false }
-					onChange={ onTemperatureChanged }
+					onChange={ setTemperature }
 				/>
 			</HStack>
 			<InputControl
 				label="API Key"
 				placeholder="sk-..."
 				value={ apiKey }
-				onChange={ onApiKeyChanged }
+				onChange={ setApiKey }
 			/>
 		</>
 	);

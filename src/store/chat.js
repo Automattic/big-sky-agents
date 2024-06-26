@@ -1,5 +1,8 @@
 import uuidv4 from '../utils/uuid.js';
-import ChatModel from '../agents/chat-model.js';
+import ChatModel, {
+	ChatModelService,
+	ChatModelType,
+} from '../agents/chat-model.js';
 import AssistantModel from '../agents/assistant-model.js';
 
 export const THREAD_RUN_ACTIVE_STATUSES = [
@@ -42,8 +45,8 @@ const initialState = {
 	error: null,
 
 	// LLM related
-	model: null,
-	service: null,
+	model: ChatModelType.getDefault(),
+	service: ChatModelService.getDefault(),
 	temperature: 0.1,
 	apiKey: null,
 
@@ -280,17 +283,33 @@ function* reset( { service, apiKey, threadId } ) {
 const runChatCompletion =
 	( request ) =>
 	async ( { select, dispatch } ) => {
-		const { service, apiKey } = select( ( state ) => ( {
-			service: state.service,
-			apiKey: state.apiKey,
-		} ) );
+		const { service, apiKey, model, temperature, messages } = select(
+			( state ) => ( {
+				service: state.root.messages.service,
+				apiKey: state.root.messages.apiKey,
+				model: state.root.messages.model,
+				temperature: state.root.messages.temperature,
+				messages: state.root.messages.messages,
+			} )
+		);
+
+		// dispatch an error if service or apiKey are missing
+		if ( ! service || ! apiKey || ! model || ! temperature ) {
+			dispatch( {
+				type: 'CHAT_ERROR',
+				error: 'Service, API key, model and temperature are required',
+			} );
+			return;
+		}
+
 		dispatch( { type: 'CHAT_BEGIN_REQUEST' } );
 		try {
-			const assistantMessage = await dispatch( {
-				type: 'CHAT_CALL',
-				service,
-				apiKey,
-				request,
+			const chatModel = ChatModel.getInstance( service, apiKey );
+			const assistantMessage = await chatModel.run( {
+				...request,
+				messages,
+				model,
+				temperature,
 			} );
 			dispatch( actions.addMessage( assistantMessage ) );
 			dispatch( { type: 'CHAT_END_REQUEST' } );
@@ -390,30 +409,38 @@ function* runGetThreadMessages( { service, apiKey, threadId } ) {
 
 /**
  * Create a new thread.
- *
- * @param {Object} options         The options for the thread
- * @param {string} options.service The service URL
- * @param {string} options.apiKey  The API key
- * @return {Object} Yields the resulting actions
  */
-function* runCreateThread( { service, apiKey } ) {
-	// const { service, apiKey } = select( ( state ) => state );
-	yield { type: 'CREATE_THREAD_BEGIN_REQUEST' };
-	try {
-		const threadResponse = yield {
-			type: 'CREATE_THREAD_CALL',
-			service,
-			apiKey,
-		};
-		return {
-			type: 'CREATE_THREAD_END_REQUEST',
-			threadId: threadResponse.id,
-		};
-	} catch ( error ) {
-		console.error( 'Thread error', error );
-		return { type: 'CREATE_THREAD_ERROR', error: error.message };
-	}
-}
+const runCreateThread =
+	() =>
+	async ( { select, dispatch } ) => {
+		const { service, apiKey } = select( ( state ) => ( {
+			service: state.root.messages.service,
+			apiKey: state.root.messages.apiKey,
+		} ) );
+		console.warn( 'begin create thread', { service, apiKey } );
+		if ( ! service || ! apiKey ) {
+			dispatch( {
+				type: 'CREATE_THREAD_ERROR',
+				error: 'Service and API key are required',
+			} );
+			return;
+		}
+		dispatch( { type: 'CREATE_THREAD_BEGIN_REQUEST' } );
+		try {
+			const threadResponse = dispatch( {
+				type: 'CREATE_THREAD_CALL',
+				service,
+				apiKey,
+			} );
+			dispatch( {
+				type: 'CREATE_THREAD_END_REQUEST',
+				threadId: threadResponse.id,
+			} );
+		} catch ( error ) {
+			console.error( 'Thread error', error );
+			return { type: 'CREATE_THREAD_ERROR', error: error.message };
+		}
+	};
 
 /**
  * Delete a thread.
