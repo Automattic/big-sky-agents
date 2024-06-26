@@ -10,48 +10,42 @@ import {
 import { WORDPRESS_SITE_SPEC_AGENT_ID } from './default-agents.js';
 import { DotPromptTemplate } from './prompt-template.js';
 
-const defaultChoices = [ 'Update the site description', 'Add a page' ];
+const defaultQuestion = 'What would you like to do with your site settings?';
 
-const SiteSpecPrompt = new DotPromptTemplate( {
-	template: `## {{= it.title }}
-Description: {{= it.description }}
-Type: {{= it.type }}
-Topic: {{= it.topic }}
-Location: {{= it.location }}
-Pages:
-{{~ it.pages :page }}
- * {{= page.title }} {{= page.category }}
-{{~}}`,
-	inputVariables: [
-		'title',
-		'description',
-		'type',
-		'topic',
-		'location',
-		'pages',
-	],
-} );
+const defaultChoices = [
+	'Update the site title',
+	'Update the site description',
+	'Update the site topic',
+	'Update the site location',
+	'Update the site type',
+	'Add a page',
+];
 
 const instructions = new DotPromptTemplate( {
 	template: `You are an expert at gathering requirements from the user to update a site.
-Your current goal is: {{= it.agent.goal }}.
-You are excited to help the user and are encouraging about their progress. You write content that is lively, fun and engaging.
-Complete the task with minimal input using the available tools.`,
+ Your current goal is: {{= it.agent.goal }}.
+ You are excited to help the user and are encouraging about their progress. You write content that is lively, fun and engaging.
+ Complete the task with minimal input using the available tools.`,
 	inputVariables: [ 'agent' ],
 } );
 
 const additionalInstructions = new DotPromptTemplate( {
 	template: `Please attempt to complete the goal: {{= it.agent.goal }}.
-Only ask the user if you absolutely have to.
-Use the inform user tool to inform the user of your decisions.
-Use the ask user tool to ask the user for information.
-Use the "finish" tool when you think you are done.
-Format all content in Markdown. The current state of the Site Spec is:
-{{= it.site }}`,
+ Only ask the user if you absolutely have to.
+ Use the inform user tool to inform the user of your decisions.
+ Use the ask user tool to ask the user for information.
+ Use the "finish" tool when you think you are done.
+ Format all content in Markdown. The current state of the Site Spec is:
+ siteTitle: {{= it.site.title }},
+ siteDescription: {{= it.site.description }},
+ siteType: {{= it.site.type }},
+ siteTopic: {{= it.site.topic }},
+ siteLocation: {{= it.site.location }},
+ Pages:
+{{~ it.site.pages :page }}
+  * {{= page.title }} {{= page.category }}
+{{~}}`,
 	inputVariables: [ 'agent', 'site' ],
-	formatters: {
-		site: SiteSpecPrompt,
-	},
 } );
 
 class SiteSpecAgent extends BuilderAgent {
@@ -79,9 +73,17 @@ class SiteSpecAgent extends BuilderAgent {
 		];
 	}
 
+	getDefaultQuestion() {
+		return defaultQuestion;
+	}
+
+	getDefaultChoices() {
+		return defaultChoices;
+	}
+
 	onStart() {
 		this.askUser( {
-			question: 'What would you like to do?',
+			question: defaultQuestion,
 			choices: defaultChoices,
 		} );
 	}
