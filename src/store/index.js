@@ -8,9 +8,7 @@ import {
 
 import {
 	actions as chatActions,
-	controls as chatControls,
 	reducer as chatReducer,
-	resolvers as chatResolvers,
 	selectors as chatSelectors,
 } from './chat.js';
 
@@ -74,12 +72,6 @@ const store = createReduxStore( 'big-sky-agent', {
 		...createNamespacedSelectors( 'design', designSelectors ),
 		...createNamespacedSelectors( 'pages', pageSelectors ),
 		...createNamespacedSelectors( 'pageSections', sectionSelectors ),
-	},
-	controls: {
-		...chatControls,
-	},
-	resolvers: {
-		...chatResolvers,
 	},
 } );
 

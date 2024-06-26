@@ -190,68 +190,6 @@ function filterChatMessage( message ) {
 }
 
 /**
- * These controls allow an async request to fetch the token
- */
-export const controls = {
-	async RESOLVE_TOOL_CALL_RESULT( { promise } ) {
-		return await promise;
-	},
-	async CHAT_CALL( { service, apiKey, request } ) {
-		const chatModel = ChatModel.getInstance( service, apiKey );
-		return await chatModel.run( request );
-	},
-	async CREATE_THREAD_CALL( { service, apiKey } ) {
-		// @see: https://platform.openai.com/docs/api-reference/threads/createThread
-		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.createThread();
-	},
-	async DELETE_THREAD_CALL( { service, apiKey, threadId } ) {
-		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.deleteThread( threadId );
-	},
-	async RUN_THREAD_CALL( { service, apiKey, request } ) {
-		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.createThreadRun( {
-			...request,
-			additionalMessages: request.additionalMessages?.map(
-				chatMessageToThreadMessage
-			),
-		} );
-	},
-	async GET_THREAD_RUNS_CALL( { service, apiKey, threadId } ) {
-		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.getThreadRuns( threadId );
-	},
-	async GET_THREAD_RUN_CALL( { service, apiKey, threadId, threadRunId } ) {
-		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.getThreadRun( threadId, threadRunId );
-	},
-	async GET_THREAD_MESSAGES_CALL( { service, apiKey, threadId } ) {
-		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.getThreadMessages( threadId );
-	},
-	async CREATE_THREAD_MESSAGE_CALL( { service, apiKey, threadId, message } ) {
-		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		// filter message to just role, content, attachments and metadata
-		return await assistantModel.createThreadMessage( threadId, message );
-	},
-	async SUBMIT_TOOL_OUTPUTS_CALL( {
-		service,
-		apiKey,
-		threadId,
-		threadRunId,
-		toolOutputs,
-	} ) {
-		const assistantModel = AssistantModel.getInstance( service, apiKey );
-		return await assistantModel.submitToolOutputs(
-			threadId,
-			threadRunId,
-			toolOutputs
-		);
-	},
-};
-
-/**
  * Reset the state of the chat.
  *
  * @param {Object} options
@@ -478,6 +416,9 @@ const runCreateThreadRun =
 				select
 			).createThreadRun( {
 				...request,
+				additionalMessages: request.additionalMessages?.map(
+					chatMessageToThreadMessage
+				),
 				threadId,
 				assistantId,
 				model,
@@ -538,25 +479,27 @@ const runSubmitToolOutputs =
  * @param {*}      promise
  * @return {Object} The resulting action
  */
-function* setToolCallResult( toolCallId, promise ) {
-	yield { type: 'TOOL_BEGIN_REQUEST' };
-	try {
-		const result = yield { type: 'RESOLVE_TOOL_CALL_RESULT', promise };
-		return {
-			type: 'TOOL_END_REQUEST',
-			id: uuidv4(),
-			ts: Date.now(),
-			tool_call_id: toolCallId,
-			result,
-		};
-	} catch ( error ) {
-		return {
-			type: 'TOOL_ERROR',
-			id: toolCallId,
-			error: error.message || 'There was an error',
-		};
-	}
-}
+const setToolCallResult =
+	( toolCallId, promise ) =>
+	async ( { dispatch } ) => {
+		dispatch( { type: 'TOOL_BEGIN_REQUEST' } );
+		try {
+			const result = await promise;
+			dispatch( {
+				type: 'TOOL_END_REQUEST',
+				id: uuidv4(),
+				ts: Date.now(),
+				tool_call_id: toolCallId,
+				result,
+			} );
+		} catch ( error ) {
+			dispatch( {
+				type: 'TOOL_ERROR',
+				id: toolCallId,
+				error: error.message || 'There was an error',
+			} );
+		}
+	};
 
 const runAddMessageToThread =
 	( { message } ) =>
@@ -687,12 +630,6 @@ const setThreadIdReducer = ( state, threadId ) => {
 		threadMessagesUpdated: null,
 		syncedThreadMessagesAt: null,
 	};
-};
-
-export const resolvers = {
-	// * RESOLVE_TOOL_CALL_RESULT( { promise } ) {
-	// 	return yield promise;
-	// }
 };
 
 export const reducer = ( state = initialState, action ) => {
