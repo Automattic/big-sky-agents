@@ -27,6 +27,7 @@ import agents, {
 	WORDPRESS_TUTOR_AGENT_ID,
 } from './src/agents/default-agents.js';
 import { ASK_USER_TOOL_NAME } from './src/agents/tools/ask-user.js';
+import { CONFIRM_TOOL_NAME } from './src/agents/tools/confirm.js';
 
 dotenv.config();
 const args = minimist( process.argv.slice( 2 ) );
@@ -184,6 +185,10 @@ class CLIChat {
 						this.assistantMessage = resultArgs.question;
 						this.setToolResult( tool_call.id, resultArgs.question );
 						break;
+					case CONFIRM_TOOL_NAME:
+						this.assistantMessage = resultArgs.message;
+						this.setToolResult( tool_call.id, resultArgs.message );
+						break;
 					default:
 						console.error(
 							'Unknown tool callback',
@@ -205,6 +210,7 @@ class CLIChat {
 			message += this.assistantChoices
 				.map( ( choice, index ) => `${ index + 1 }. ${ choice }` )
 				.join( '\n' );
+			this.assistantChoices = null;
 		}
 		return message;
 	}
