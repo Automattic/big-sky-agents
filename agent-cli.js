@@ -91,10 +91,10 @@ class CLIChat {
 		logVerbose( '📡 Request:', request );
 		const result = await this.model.run( request );
 		logVerbose( '🧠 Result:', result, result.tool_calls?.[ 0 ].function );
-		this.messages.push( result );
 
 		if ( result.tool_calls ) {
 			// use the first tool call for now
+			this.messages.push( result );
 			const tool_call = result.tool_calls[ 0 ];
 
 			// parse arguments if they're a string
