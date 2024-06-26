@@ -294,7 +294,7 @@ class ChatModel {
 		const headers = this.getHeaders();
 
 		console.log(
-			`Calling ${ this.constructor.name } with model ${ params.model }, temperature ${ params.temperature }, max_tokens ${ params.max_tokens }`
+			`🤖 Calling ${ this.constructor.name } with model ${ params.model }, temperature ${ params.temperature }, max_tokens ${ params.max_tokens }`
 		);
 
 		const serviceRequest = await fetch( this.getServiceUrl(), {
