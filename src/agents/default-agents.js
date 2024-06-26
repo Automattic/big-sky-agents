@@ -5,7 +5,8 @@ import SiteSpecAgent from './site-spec-agent.js';
 import PageSpecAgent from './page-spec-agent.js';
 import WooAgent from './woo-agent.js';
 import StatsAgent from './stats-agent.js';
-import SimpleSiteToolkit from './toolkits/simple-site.js';
+
+import SiteSpecToolkit from './toolkits/site-spec.js';
 
 export const WAPUU_AGENT_ID = 'Wapuu';
 export const WAPUU_ASSISTANT_ID = 'asst_lk7tPSgLWShOx6N0LJuxQGVe';
@@ -33,7 +34,7 @@ export default [
 		description:
 			'Set site title, description, type, topic, location and pages.',
 		agent: SiteSpecAgent,
-		toolkit: SimpleSiteToolkit,
+		toolkit: SiteSpecToolkit,
 	},
 	{
 		id: WORDPRESS_PAGE_SPEC_AGENT_ID,

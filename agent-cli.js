@@ -4,7 +4,7 @@ import ChatModel, {
 	ChatModelService,
 	ChatModelType,
 } from './src/agents/chat-model.js';
-import SimpleAgentToolkit from './src/agents/toolkits/simple-agent.js';
+import BaseAgentToolkit from './src/agents/toolkits/base-agent.js';
 import CombinedToolkit from './src/agents/toolkits/combined.js';
 import promptSync from 'prompt-sync';
 import AssistantModel from './src/agents/assistant-model.js';
@@ -192,23 +192,18 @@ class CLIChat {
 		return message;
 	}
 
-	async call( toolName, params ) {
+	async call() {
 		while ( true ) {
-			let msg = '';
-			if ( this.assistantMessage ) {
-				msg = this.buildMessage();
-			} else {
-				msg = params.question;
-			}
+			const message = this.buildMessage();
 
 			this.messages.push( {
 				role: 'assistant',
-				content: msg,
+				content: message,
 			} );
 			console.log(
 				'==========================================================================================================='
 			);
-			console.log( `❓ ${ msg }` );
+			console.log( `❓ ${ message }` );
 			console.log(
 				'==========================================================================================================='
 			);
@@ -226,7 +221,7 @@ class CLIChat {
 }
 
 const chat = new CLIChat();
-const simpleAgentToolkit = new SimpleAgentToolkit( {
+const baseAgentToolkit = new BaseAgentToolkit( {
 	agents,
 } );
 const defaultAgent = args.agent
@@ -236,11 +231,11 @@ const defaultAgent = args.agent
 const defaultToolkit =
 	defaultAgent.id !== WAPUU_AGENT_ID
 		? new CombinedToolkit( {
-				toolkits: [ new defaultAgent.toolkit(), simpleAgentToolkit ],
+				toolkits: [ new defaultAgent.toolkit(), baseAgentToolkit ],
 		  } )
-		: simpleAgentToolkit;
+		: baseAgentToolkit;
 
 const agent = new defaultAgent.agent( chat, defaultToolkit );
 
 chat.setAgent( agent );
-chat.call( 'askUser', { question: 'What would you like to do?' } );
+chat.call();
