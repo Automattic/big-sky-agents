@@ -43,6 +43,7 @@ export const THREAD_RUN_COMPLETED_STATUSES = [
 const initialState = {
 	// Global
 	error: null,
+	enabled: true,
 
 	// LLM related
 	model: ChatModelType.getDefault(),
@@ -267,6 +268,17 @@ function* reset( { service, apiKey, threadId } ) {
 	}
 }
 
+const getChatModel = ( select ) => {
+	const { service, apiKey } = select( ( state ) => ( {
+		service: state.root.messages.service,
+		apiKey: state.root.messages.apiKey,
+	} ) );
+	if ( ! service || ! apiKey ) {
+		throw new Error( 'Service and API key are required' );
+	}
+	return ChatModel.getInstance( service, apiKey );
+};
+
 /**
  * Make a Chat Completion call
  *
@@ -283,18 +295,14 @@ function* reset( { service, apiKey, threadId } ) {
 const runChatCompletion =
 	( request ) =>
 	async ( { select, dispatch } ) => {
-		const { service, apiKey, model, temperature, messages } = select(
-			( state ) => ( {
-				service: state.root.messages.service,
-				apiKey: state.root.messages.apiKey,
-				model: state.root.messages.model,
-				temperature: state.root.messages.temperature,
-				messages: state.root.messages.messages,
-			} )
-		);
+		const { model, temperature, messages } = select( ( state ) => ( {
+			model: state.root.messages.model,
+			temperature: state.root.messages.temperature,
+			messages: state.root.messages.messages,
+		} ) );
 
 		// dispatch an error if service or apiKey are missing
-		if ( ! service || ! apiKey || ! model || ! temperature ) {
+		if ( ! model || ! temperature ) {
 			dispatch( {
 				type: 'CHAT_ERROR',
 				error: 'Service, API key, model and temperature are required',
@@ -304,8 +312,7 @@ const runChatCompletion =
 
 		dispatch( { type: 'CHAT_BEGIN_REQUEST' } );
 		try {
-			const chatModel = ChatModel.getInstance( service, apiKey );
-			const assistantMessage = await chatModel.run( {
+			const assistantMessage = await getChatModel( select ).run( {
 				...request,
 				messages,
 				model,
@@ -328,25 +335,24 @@ const runChatCompletion =
  * @param {string} options.threadId
  * @return {Object} Yields the resulting actions
  */
-function* runGetThreadRuns( { service, apiKey, threadId } ) {
-	yield { type: 'GET_THREAD_RUNS_BEGIN_REQUEST' };
-	try {
-		const threadRunsResponse = yield {
-			type: 'GET_THREAD_RUNS_CALL',
-			service,
-			apiKey,
-			threadId,
-		};
-		yield {
-			type: 'GET_THREAD_RUNS_END_REQUEST',
-			ts: Date.now(),
-			threadRuns: threadRunsResponse.data,
-		};
-	} catch ( error ) {
-		console.error( 'Get Thread Runs Error', error );
-		return { type: 'GET_THREAD_RUNS_ERROR', error: error.message };
-	}
-}
+const runGetThreadRuns =
+	() =>
+	async ( { select, dispatch } ) => {
+		const threadId = select( ( state ) => state.root.messages.threadId );
+		dispatch( { type: 'GET_THREAD_RUNS_BEGIN_REQUEST' } );
+		try {
+			const threadRunsResponse =
+				await getAssistantModel( select ).getThreadRuns( threadId );
+			dispatch( {
+				type: 'GET_THREAD_RUNS_END_REQUEST',
+				ts: Date.now(),
+				threadRuns: threadRunsResponse.data,
+			} );
+		} catch ( error ) {
+			console.error( 'Get Thread Runs Error', error );
+			return { type: 'GET_THREAD_RUNS_ERROR', error: error.message };
+		}
+	};
 
 /**
  * Get a thread run for a given thread.
@@ -358,54 +364,60 @@ function* runGetThreadRuns( { service, apiKey, threadId } ) {
  * @param {string} options.threadRunId
  * @return  {Object} Yields the resulting actions
  */
-function* runGetThreadRun( { service, apiKey, threadId, threadRunId } ) {
-	yield { type: 'GET_THREAD_RUN_BEGIN_REQUEST' };
-	try {
-		const threadRun = yield {
-			type: 'GET_THREAD_RUN_CALL',
-			service,
-			apiKey,
-			threadId,
-			threadRunId,
-		};
-		yield {
-			type: 'GET_THREAD_RUN_END_REQUEST',
-			threadRun,
-		};
-	} catch ( error ) {
-		console.error( 'Thread error', error );
-		return { type: 'GET_THREAD_RUN_ERROR', error: error.message };
-	}
-}
+const runGetThreadRun =
+	() =>
+	async ( { select, dispatch } ) => {
+		const { threadId, threadRun } = select( ( state ) => ( {
+			threadId: state.root.messages.threadId,
+			threadRun: getActiveThreadRun( state.root.messages ),
+		} ) );
+		dispatch( { type: 'GET_THREAD_RUN_BEGIN_REQUEST' } );
+		try {
+			const updatedThreadRun = await getAssistantModel(
+				select
+			).getThreadRun( threadId, threadRun?.id );
+			dispatch( {
+				type: 'GET_THREAD_RUN_END_REQUEST',
+				threadRun: updatedThreadRun,
+			} );
+		} catch ( error ) {
+			console.error( 'Thread error', error );
+			return { type: 'GET_THREAD_RUN_ERROR', error: error.message };
+		}
+	};
 
 /**
  * Get the thread messages for a given thread.
- *
- * @param {Object} options
- * @param {string} options.service
- * @param {string} options.apiKey
- * @param {string} options.threadId
- * @return  {Object} Yields the resulting actions
  */
-function* runGetThreadMessages( { service, apiKey, threadId } ) {
-	yield { type: 'GET_THREAD_MESSAGES_BEGIN_REQUEST' };
-	try {
-		const threadMessagesResponse = yield {
-			type: 'GET_THREAD_MESSAGES_CALL',
-			service,
-			apiKey,
-			threadId,
-		};
-		yield {
-			type: 'GET_THREAD_MESSAGES_END_REQUEST',
-			ts: Date.now(),
-			threadMessages: threadMessagesResponse.data,
-		};
-	} catch ( error ) {
-		console.error( 'Get Thread Messages Error', error );
-		return { type: 'GET_THREAD_MESSAGES_ERROR', error: error.message };
+const runGetThreadMessages =
+	() =>
+	async ( { select, dispatch } ) => {
+		const threadId = select( ( state ) => state.root.messages.threadId );
+		dispatch( { type: 'GET_THREAD_MESSAGES_BEGIN_REQUEST' } );
+		try {
+			const threadMessagesResponse =
+				await getAssistantModel( select ).getThreadMessages( threadId );
+			dispatch( {
+				type: 'GET_THREAD_MESSAGES_END_REQUEST',
+				ts: Date.now(),
+				threadMessages: threadMessagesResponse.data,
+			} );
+		} catch ( error ) {
+			console.error( 'Get Thread Messages Error', error );
+			return { type: 'GET_THREAD_MESSAGES_ERROR', error: error.message };
+		}
+	};
+
+const getAssistantModel = ( select ) => {
+	const { service, apiKey } = select( ( state ) => ( {
+		service: state.root.messages.service,
+		apiKey: state.root.messages.apiKey,
+	} ) );
+	if ( ! service || ! apiKey ) {
+		throw new Error( 'Service and API key are required' );
 	}
-}
+	return AssistantModel.getInstance( service, apiKey );
+};
 
 /**
  * Create a new thread.
@@ -413,25 +425,10 @@ function* runGetThreadMessages( { service, apiKey, threadId } ) {
 const runCreateThread =
 	() =>
 	async ( { select, dispatch } ) => {
-		const { service, apiKey } = select( ( state ) => ( {
-			service: state.root.messages.service,
-			apiKey: state.root.messages.apiKey,
-		} ) );
-		console.warn( 'begin create thread', { service, apiKey } );
-		if ( ! service || ! apiKey ) {
-			dispatch( {
-				type: 'CREATE_THREAD_ERROR',
-				error: 'Service and API key are required',
-			} );
-			return;
-		}
 		dispatch( { type: 'CREATE_THREAD_BEGIN_REQUEST' } );
 		try {
-			const threadResponse = dispatch( {
-				type: 'CREATE_THREAD_CALL',
-				service,
-				apiKey,
-			} );
+			const threadResponse =
+				await getAssistantModel( select ).createThread();
 			dispatch( {
 				type: 'CREATE_THREAD_END_REQUEST',
 				threadId: threadResponse.id,
@@ -446,37 +443,26 @@ const runCreateThread =
  * Delete a thread.
  *
  * @param {Object} options          The options for the thread
- * @param {string} options.service  The service URL
- * @param {string} options.apiKey   The API key
  * @param {string} options.threadId The thread ID
- * @return {Object} Yields the resulting actions
  */
-function* runDeleteThread( { service, apiKey, threadId } ) {
-	yield { type: 'DELETE_THREAD_BEGIN_REQUEST' };
-	try {
-		yield {
-			type: 'DELETE_THREAD_CALL',
-			service,
-			apiKey,
-			threadId,
-		};
-		yield {
-			type: 'DELETE_THREAD_END_REQUEST',
-		};
-	} catch ( error ) {
-		console.error( 'Thread error', error );
-		return { type: 'DELETE_THREAD_ERROR', error: error.message };
-	}
-}
+const runDeleteThread =
+	() =>
+	async ( { select, dispatch } ) => {
+		const threadId = select( ( state ) => state.root.messages.threadId );
+		dispatch( { type: 'DELETE_THREAD_BEGIN_REQUEST' } );
+		try {
+			await getAssistantModel( select ).deleteThread( threadId );
+			dispatch( { type: 'DELETE_THREAD_END_REQUEST' } );
+		} catch ( error ) {
+			console.error( 'Thread error', error );
+			return { type: 'DELETE_THREAD_ERROR', error: error.message };
+		}
+	};
 
 /**
  * Create a new thread run.
  *
  * @param {Object} request
- * @param {string} request.service
- * @param {string} request.apiKey
- * @param {string} request.threadId
- * @param {Object} request.assistantId
  * @param {string} request.model
  * @param {string} request.instructions
  * @param {string} request.additionalInstructions
@@ -490,27 +476,42 @@ function* runDeleteThread( { service, apiKey, threadId } ) {
  * @param {Object} request.responseFormat
  * @return {Object} Yields the resulting actions
  */
-function* runCreateThreadRun( { service, apiKey, ...request } ) {
-	// const { service, apiKey } = select( ( state ) => state );
-	yield { type: 'RUN_THREAD_BEGIN_REQUEST' };
-	try {
-		const runCreateThreadRunResponse = yield {
-			type: 'RUN_THREAD_CALL',
-			service,
-			apiKey,
-			request,
-		};
-		yield {
-			type: 'RUN_THREAD_END_REQUEST',
-			ts: Date.now(),
-			additionalMessages: request.additionalMessages,
-			threadRun: runCreateThreadRunResponse,
-		};
-	} catch ( error ) {
-		console.error( 'Run Thread Error', error );
-		return { type: 'RUN_THREAD_ERROR', error: error.message };
-	}
-}
+const runCreateThreadRun =
+	( request ) =>
+	async ( { select, dispatch } ) => {
+		const { threadId, assistantId, model, temperature } = select(
+			( state ) => ( {
+				threadId: state.root.messages.threadId,
+				assistantId: state.root.messages.assistantId,
+				model: state.root.messages.model,
+				temperature: state.root.messages.temperature,
+			} )
+		);
+		dispatch( { type: 'RUN_THREAD_BEGIN_REQUEST' } );
+		try {
+			const runCreateThreadRunResponse = await getAssistantModel(
+				select
+			).createThreadRun( {
+				...request,
+				threadId,
+				assistantId,
+				model,
+				temperature,
+			} );
+			dispatch( {
+				type: 'RUN_THREAD_END_REQUEST',
+				ts: Date.now(),
+				additionalMessages: request.additionalMessages,
+				threadRun: runCreateThreadRunResponse,
+			} );
+		} catch ( error ) {
+			console.error( 'Run Thread Error', error );
+			return dispatch( {
+				type: 'RUN_THREAD_ERROR',
+				error: error.message,
+			} );
+		}
+	};
 
 /**
  * Submit tool outputs for a given thread run.
@@ -523,37 +524,29 @@ function* runCreateThreadRun( { service, apiKey, ...request } ) {
  * @param {Array}  options.toolOutputs
  * @return {Object} Yields the resulting actions
  */
-function* runSubmitToolOutputs( {
-	service,
-	apiKey,
-	threadId,
-	threadRunId,
-	toolOutputs,
-} ) {
-	try {
-		yield {
-			type: 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST',
-		};
-		const updatedRun = yield {
-			type: 'SUBMIT_TOOL_OUTPUTS_CALL',
-			service,
-			apiKey,
-			threadId,
-			threadRunId,
-			toolOutputs,
-		};
-		return {
-			type: 'SUBMIT_TOOL_OUTPUTS_END_REQUEST',
-			threadRun: updatedRun,
-		};
-	} catch ( error ) {
-		console.error( 'Submit Tool Outputs Error', error );
-		return {
-			type: 'SUBMIT_TOOL_OUTPUTS_ERROR',
-			error: error.message,
-		};
-	}
-}
+const runSubmitToolOutputs =
+	( { threadRunId, toolOutputs } ) =>
+	async ( { select, dispatch } ) => {
+		const threadId = select( ( state ) => state.root.messages.threadId );
+		try {
+			dispatch( { type: 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST' } );
+			const updatedRun = getAssistantModel( select ).submitToolOutputs(
+				threadId,
+				threadRunId,
+				toolOutputs
+			);
+			dispatch( {
+				type: 'SUBMIT_TOOL_OUTPUTS_END_REQUEST',
+				threadRun: updatedRun,
+			} );
+		} catch ( error ) {
+			console.error( 'Submit Tool Outputs Error', error );
+			return {
+				type: 'SUBMIT_TOOL_OUTPUTS_ERROR',
+				error: error.message,
+			};
+		}
+	};
 
 /**
  * Set the result of a tool call, and if it's a promise then resolve it first.
@@ -569,6 +562,7 @@ function* setToolCallResult( toolCallId, promise ) {
 		return {
 			type: 'TOOL_END_REQUEST',
 			id: uuidv4(),
+			ts: Date.now(),
 			tool_call_id: toolCallId,
 			result,
 		};
@@ -581,34 +575,34 @@ function* setToolCallResult( toolCallId, promise ) {
 	}
 }
 
-function* runAddMessageToThread( { message, threadId, service, apiKey } ) {
-	// add the message to the active thread
-	if ( ! message.id ) {
-		throw new Error( 'Message must have an ID' );
-	}
-	yield { type: 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST' };
-	try {
-		const newMessage = yield {
-			type: 'CREATE_THREAD_MESSAGE_CALL',
-			service,
-			apiKey,
-			threadId,
-			message: chatMessageToThreadMessage( message ),
-		};
-		yield {
-			type: 'CREATE_THREAD_MESSAGE_END_REQUEST',
-			ts: Date.now(),
-			originalMessageId: message.id,
-			message: newMessage,
-		};
-	} catch ( error ) {
-		console.error( 'Create thread error', error );
-		return {
-			type: 'CREATE_THREAD_MESSAGE_ERROR',
-			error: error.message,
-		};
-	}
-}
+const runAddMessageToThread =
+	( { message } ) =>
+	async ( { select, dispatch } ) => {
+		// add the message to the active thread
+		if ( ! message.id ) {
+			throw new Error( 'Message must have an ID' );
+		}
+		const threadId = select( ( state ) => state.root.messages.threadId );
+		dispatch( { type: 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST' } );
+		try {
+			const newMessage = getAssistantModel( select ).createThreadMessage(
+				threadId,
+				chatMessageToThreadMessage( message )
+			);
+			dispatch( {
+				type: 'CREATE_THREAD_MESSAGE_END_REQUEST',
+				ts: Date.now(),
+				originalMessageId: message.id,
+				message: newMessage,
+			} );
+		} catch ( error ) {
+			console.error( 'Create thread error', error );
+			return {
+				type: 'CREATE_THREAD_MESSAGE_ERROR',
+				error: error.message,
+			};
+		}
+	};
 
 /**
  * REDUCERS
@@ -719,6 +713,8 @@ export const resolvers = {
 export const reducer = ( state = initialState, action ) => {
 	switch ( action.type ) {
 		// LLM-related
+		case 'SET_ENABLED':
+			return { ...state, enabled: action.enabled };
 		case 'SET_SERVICE':
 			return { ...state, service: action.service };
 		case 'SET_API_KEY':
@@ -751,6 +747,7 @@ export const reducer = ( state = initialState, action ) => {
 				...addMessageReducer( state, {
 					role: 'tool',
 					id: action.id,
+					created_at: action.ts,
 					tool_call_id: action.tool_call_id,
 					content: action.result,
 				} ),
@@ -1033,16 +1030,23 @@ const getToolCalls = ( state, function_name = null ) => {
  * @param {*} state The state
  * @return {Array} An array of tool outputs
  */
-const getToolOutputs = ( state ) => {
-	return state.messages
+const getToolOutputs = ( state ) =>
+	state.messages
 		.filter( ( message ) => message.role === 'tool' )
 		.map( ( message ) => ( {
 			tool_call_id: message.tool_call_id,
 			output: message.content,
 		} ) );
-};
+
+const getActiveThreadRun = ( state ) =>
+	state.threadRuns.find( ( threadRun ) =>
+		THREAD_RUN_ACTIVE_STATUSES.includes( threadRun.status )
+	);
 
 export const selectors = {
+	isEnabled: ( state ) => {
+		return state.enabled;
+	},
 	isLoading: ( state ) => {
 		// TODO: check most recent message against when the thread messages were updated
 		const isLoading =
@@ -1063,6 +1067,8 @@ export const selectors = {
 		state.isCreatingThreadMessage ||
 		state.isFetchingThreadMessages ||
 		state.isSubmittingToolOutputs,
+	isAssistantAvailable: ( state ) =>
+		state.service && state.apiKey && state.assistantId && ! state.error,
 	getError: ( state ) => state.error,
 	getMessages: ( state ) => state.messages,
 	getAssistantMessage: ( state ) => {
@@ -1113,11 +1119,7 @@ export const selectors = {
 	getThreadRuns: ( state ) => state.threadRun,
 	getThreadRunsUpdated: ( state ) => state.threadRunsUpdated,
 	getThreadMessagesUpdated: ( state ) => state.threadMessagesUpdated,
-	getActiveThreadRun: ( state ) => {
-		return state.threadRuns.find( ( threadRun ) =>
-			THREAD_RUN_ACTIVE_STATUSES.includes( threadRun.status )
-		);
-	},
+	getActiveThreadRun,
 	getCompletedThreadRuns: ( state ) => {
 		return state.threadRuns.find( ( threadRun ) =>
 			THREAD_RUN_COMPLETED_STATUSES.includes( threadRun.status )
@@ -1125,7 +1127,7 @@ export const selectors = {
 	},
 	hasNewMessagesToProcess: ( state ) => {
 		// compare threadRun.created_at to syncedThreadMessagesAt / 1000
-		const activeThreadRun = selectors.getActiveThreadRun( state );
+		const activeThreadRun = getActiveThreadRun( state );
 		if ( ! activeThreadRun ) {
 			return false;
 		}
@@ -1145,6 +1147,7 @@ const addMessage = ( message ) => {
 		message: {
 			...message,
 			id: message.id || uuidv4(),
+			created_at: message.created_at || Date.now(),
 		},
 	};
 };
@@ -1160,6 +1163,12 @@ const clearError = () => ( {
 } );
 
 export const actions = {
+	setEnabled: ( enabled ) => {
+		return {
+			type: 'SET_ENABLED',
+			enabled,
+		};
+	},
 	setThreadId: ( threadId ) => ( {
 		type: 'SET_THREAD_ID',
 		threadId,
@@ -1216,6 +1225,7 @@ export const actions = {
 		type: 'ADD_MESSAGE',
 		message: {
 			id: uuidv4(),
+			created_at: Date.now(),
 			role: 'assistant',
 			tool_calls: [
 				{

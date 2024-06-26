@@ -19,12 +19,9 @@ import { Context } from './context';
  *
  * It acts similarly to the `useContext` react hook.
  *
- * @param {Object} options             The chat options.
- * @param {string} options.apiKey      The API key for the chat service.
- * @param {string} options.service     The chat service to use.
- * @param {string} options.model       The model to use for the chat.
- * @param {number} options.temperature The temperature for the chat.
- * @param {string} options.feature     The feature to use for the chat.
+ * @param {Object} options         The chat options.
+ * @param {string} options.apiKey  The API key for the chat service.
+ * @param {string} options.feature The feature to use for the chat.
  * @example
  * ```js
  * import {
@@ -35,9 +32,6 @@ import { Context } from './context';
  *
  * const chat = createChat( {
  *   apiKey,
- *   service,
- *   model,
- *   temperature,
  *   feature,
  * } );
  *
@@ -104,6 +98,7 @@ export default function useChat( { apiKey, feature } ) {
 		threadRun,
 		threadRunsUpdated,
 		threadMessagesUpdated,
+		isAssistantAvailable,
 	} = useSelect( ( select ) => {
 		return {
 			error: select( agentStore ).getError(),
@@ -123,27 +118,16 @@ export default function useChat( { apiKey, feature } ) {
 			threadRunsUpdated: select( agentStore ).getThreadRunsUpdated(),
 			threadMessagesUpdated:
 				select( agentStore ).getThreadMessagesUpdated(),
+			isAssistantAvailable: select( agentStore ).isAssistantAvailable(),
 		};
 	} );
 
 	// if apiKey is different from contextApiKey, or service is different from contextService, set them
 	useEffect( () => {
 		if ( apiKey !== contextApiKey ) {
-			console.warn( 'useEffect set api key', {
-				apiKey,
-				contextApiKey,
-			} );
 			setApiKey( apiKey );
 		}
 	}, [ apiKey, contextApiKey, setApiKey ] );
-
-	const isServiceAvailable = useMemo( () => {
-		return service && apiKey && enabled;
-	}, [ service, apiKey, enabled ] );
-
-	const isAssistantAvailable = useMemo( () => {
-		return isServiceAvailable && assistantId && ! error;
-	}, [ isServiceAvailable, assistantId, error ] );
 
 	const isThreadDataLoaded = useMemo( () => {
 		return (
@@ -191,14 +175,12 @@ export default function useChat( { apiKey, feature } ) {
 			threadId &&
 			threadRunsUpdated === null
 		) {
-			runGetThreadRuns( { service, apiKey, threadId } );
+			runGetThreadRuns();
 		}
 	}, [
-		apiKey,
 		isAssistantAvailable,
 		runGetThreadRuns,
 		running,
-		service,
 		threadId,
 		threadRunsUpdated,
 	] );
@@ -212,7 +194,7 @@ export default function useChat( { apiKey, feature } ) {
 			( ! threadMessagesUpdated ||
 				threadMessagesUpdated / 1000 < threadRun?.created_at )
 		) {
-			runGetThreadMessages( { service, apiKey, threadId } );
+			runGetThreadMessages();
 		}
 	}, [
 		apiKey,
@@ -234,6 +216,12 @@ export default function useChat( { apiKey, feature } ) {
 	// 	},
 	// ]
 	useEffect( () => {
+		console.warn(
+			'might submit tool outputs',
+			isThreadRunAwaitingToolOutputs,
+			toolOutputs,
+			requiredToolOutputs
+		);
 		if ( isThreadRunAwaitingToolOutputs && toolOutputs.length > 0 ) {
 			// requiredToolOutputs is a list of toolcalls with an ID
 			// toolOutputs is a list of { tool_call_id: $id, output: $json_blob }
@@ -264,74 +252,36 @@ export default function useChat( { apiKey, feature } ) {
 			}
 
 			runSubmitToolOutputs( {
-				threadId,
 				threadRunId: threadRun.id,
 				toolOutputs: filteredToolOutputs,
-				service,
-				apiKey,
 			} );
 		}
 	}, [
+		isThreadRunAwaitingToolOutputs,
 		requiredToolOutputs,
 		runSubmitToolOutputs,
-		history,
+		threadRun?.id,
 		toolOutputs,
-		threadId,
-		threadRun,
-		service,
-		apiKey,
-		running,
-		isThreadRunComplete,
-		isThreadRunAwaitingToolOutputs,
 	] );
 
 	// while threadRun.status is queued or in_progress, poll for thread run status
 	useEffect( () => {
 		if ( isThreadRunInProgress ) {
 			const interval = setInterval( () => {
-				runGetThreadRun( {
-					service,
-					apiKey,
-					threadId,
-					threadRunId: threadRun.id,
-				} );
+				runGetThreadRun();
 			}, 1000 );
 			return () => clearInterval( interval );
 		}
-	}, [
-		threadRun,
-		service,
-		apiKey,
-		threadId,
-		runGetThreadRun,
-		isServiceAvailable,
-		isThreadRunInProgress,
-	] );
+	}, [ runGetThreadRun, isThreadRunInProgress ] );
 
 	// if there are pendingThreadMessages, send them using runAddMessageToThread
 	useEffect( () => {
-		if (
-			! running &&
-			isThreadRunComplete &&
-			additionalMessages.length > 0
-		) {
+		if ( isThreadRunComplete && additionalMessages.length > 0 ) {
 			runAddMessageToThread( {
-				service,
-				apiKey,
-				threadId,
 				message: additionalMessages[ 0 ],
 			} );
 		}
-	}, [
-		apiKey,
-		threadRun,
-		isThreadRunComplete,
-		additionalMessages,
-		runAddMessageToThread,
-		service,
-		threadId,
-		running,
-	] );
+	}, [ additionalMessages, isThreadRunComplete, runAddMessageToThread ] );
 
 	const runChat = useCallback(
 		( tools, instructions, additionalInstructions ) => {
@@ -367,22 +317,21 @@ export default function useChat( { apiKey, feature } ) {
 	const createThreadRun = useCallback(
 		( tools, instructions, additionalInstructions ) => {
 			if (
-				! isAssistantAvailable ||
 				! isThreadRunComplete ||
 				isAwaitingUserInput ||
 				additionalMessages.length > 0 ||
 				history.length === 0
 			) {
+				console.warn( 'not running thread run', {
+					isThreadRunComplete,
+					isAwaitingUserInput,
+					additionalMessages,
+					history,
+				} );
 				return;
 			}
 
 			runCreateThreadRun( {
-				service,
-				apiKey,
-				assistantId,
-				threadId,
-				model,
-				temperature,
 				tools,
 				instructions,
 				additionalInstructions,
@@ -393,64 +342,13 @@ export default function useChat( { apiKey, feature } ) {
 		},
 		[
 			additionalMessages,
-			apiKey,
-			assistantId,
 			feature,
 			history,
-			isAssistantAvailable,
 			isAwaitingUserInput,
 			isThreadRunComplete,
-			model,
 			runCreateThreadRun,
-			service,
-			temperature,
-			threadId,
 		]
 	);
-
-	const createThread = useCallback( () => {
-		runCreateThread( { service, apiKey } );
-	}, [ runCreateThread, service, apiKey ] );
-
-	const deleteThread = useCallback( () => {
-		if ( service && apiKey && threadId ) {
-			runDeleteThread( { service, apiKey, threadId } );
-		}
-	}, [ runDeleteThread, service, apiKey, threadId ] );
-
-	const updateThreadRun = useCallback( () => {
-		if ( isAssistantAvailable && threadId && threadRun?.id ) {
-			runGetThreadRun( {
-				service,
-				apiKey,
-				threadId,
-				threadRunId: threadRun.id,
-			} );
-		}
-	}, [
-		isAssistantAvailable,
-		threadId,
-		threadRun?.id,
-		runGetThreadRun,
-		service,
-		apiKey,
-	] );
-
-	const updateThreadRuns = useCallback( () => {
-		if ( isAssistantAvailable && threadId ) {
-			runGetThreadRuns( {
-				service,
-				apiKey,
-				threadId,
-			} );
-		}
-	}, [ isAssistantAvailable, threadId, runGetThreadRuns, service, apiKey ] );
-
-	const updateThreadMessages = useCallback( () => {
-		if ( service && apiKey && threadId ) {
-			runGetThreadMessages( { service, apiKey, threadId } );
-		}
-	}, [ threadId, runGetThreadMessages, service, apiKey ] );
 
 	const onReset = useCallback( () => {
 		reset( { service, apiKey, threadId } );
@@ -488,16 +386,16 @@ export default function useChat( { apiKey, feature } ) {
 
 		// assistants
 		threadId,
-		createThread,
-		deleteThread,
+		createThread: runCreateThread,
+		deleteThread: runDeleteThread,
 		assistantId,
 		setAssistantId,
 
 		createThreadRun, // run a thread
-		updateThreadRun,
-		updateThreadRuns, // refresh status of running threads
+		updateThreadRun: runGetThreadRun, // refresh status of running threads
+		updateThreadRuns: runGetThreadRuns, // refresh status of running threads
 		threadRun,
-		updateThreadMessages,
+		updateThreadMessages: runGetThreadMessages,
 
 		onReset,
 	};
