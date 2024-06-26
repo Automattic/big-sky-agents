@@ -48,25 +48,24 @@ class SimpleSiteToolkit extends Toolkit {
 		return `Site title set to "${ value }"`;
 	};
 
-	setSiteDescription = ( { description } ) => {
-		console.warn( 'setSiteDescription', { description } );
-		this.setState( { siteDescription: description } );
-		return `Site description set to "${ description }"`;
+	setSiteDescription = ( { value } ) => {
+		this.setState( { siteDescription: value } );
+		return `Site description set to "${ value }"`;
 	};
 
-	setSiteTopic = ( { topic } ) => {
-		this.setState( { siteTopic: topic } );
-		return `Site topic set to "${ topic }"`;
+	setSiteTopic = ( { value } ) => {
+		this.setState( { siteTopic: value } );
+		return `Site topic set to "${ value }"`;
 	};
 
-	setSiteType = ( { siteType } ) => {
-		this.setState( { siteType } );
-		return `Site type set to "${ siteType }"`;
+	setSiteType = ( { value } ) => {
+		this.setState( { value } );
+		return `Site type set to "${ value }"`;
 	};
 
-	setSiteLocation = ( { location } ) => {
-		this.setState( { siteLocation: location } );
-		return `Site location set to "${ location }"`;
+	setSiteLocation = ( { value } ) => {
+		this.setState( { siteLocation: value } );
+		return `Site location set to "${ value }"`;
 	};
 
 	setSitePages = ( { pages: newPages } ) => {
