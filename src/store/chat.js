@@ -1,7 +1,6 @@
 import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../agents/chat-model.js';
 import AssistantModel from '../agents/assistant-model.js';
-import { select } from '@wordpress/data';
 
 export const THREAD_RUN_ACTIVE_STATUSES = [
 	'queued',
@@ -269,8 +268,6 @@ function* reset( { service, apiKey, threadId } ) {
  * Make a Chat Completion call
  *
  * @param {Object}        request
- * @param {string}        request.service
- * @param {string}        request.apiKey
  * @param {string}        request.model
  * @param {number}        request.temperature
  * @param {number}        request.maxTokens
@@ -280,22 +277,28 @@ function* reset( { service, apiKey, threadId } ) {
  * @param {Object}        request.additionalInstructions
  * @param {string}        request.feature
  */
-function* runChatCompletion( { service, apiKey, ...request } ) {
-	yield { type: 'CHAT_BEGIN_REQUEST' };
-	try {
-		const assistantMessage = yield {
-			type: 'CHAT_CALL',
-			service,
-			apiKey,
-			request,
-		};
-		yield actions.addMessage( assistantMessage );
-		yield { type: 'CHAT_END_REQUEST' };
-	} catch ( error ) {
-		console.error( 'Chat error', error );
-		return { type: 'CHAT_ERROR', error: error.message };
-	}
-}
+const runChatCompletion =
+	( request ) =>
+	async ( { select, dispatch } ) => {
+		const { service, apiKey } = select( ( state ) => ( {
+			service: state.service,
+			apiKey: state.apiKey,
+		} ) );
+		dispatch( { type: 'CHAT_BEGIN_REQUEST' } );
+		try {
+			const assistantMessage = await dispatch( {
+				type: 'CHAT_CALL',
+				service,
+				apiKey,
+				request,
+			} );
+			dispatch( actions.addMessage( assistantMessage ) );
+			dispatch( { type: 'CHAT_END_REQUEST' } );
+		} catch ( error ) {
+			console.error( 'Chat error', error );
+			dispatch( { type: 'CHAT_ERROR', error: error.message } );
+		}
+	};
 
 /**
  * Get the thread runs for a given thread.
