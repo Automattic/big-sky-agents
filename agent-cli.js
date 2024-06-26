@@ -5,27 +5,11 @@ import ChatModel, {
 	ChatModelType,
 } from './src/agents/chat-model.js';
 import SimpleAgentToolkit from './src/agents/toolkits/simple-agent.js';
-import SimpleSiteToolkit from './src/agents/toolkits/simple-site.js';
 import CombinedToolkit from './src/agents/toolkits/combined.js';
 import promptSync from 'prompt-sync';
 import AssistantModel from './src/agents/assistant-model.js';
 
-import WapuuAgent from './src/agents/wapuu-agent.js';
-// import TutorAgent from './src/agents/tutor-agent.js';
-// import DesignAgent from './src/agents/design-agent.js';
-import SiteSpecAgent from './src/agents/site-spec-agent.js';
-// import PageSpecAgent from './src/agents/page-spec-agent.js';
-// import WooAgent from './src/agents/woo-agent.js';
-// import StatsAgent from './src/agents/stats-agent.js';
-import agents, {
-	// JETPACK_STATS_AGENT_ID,
-	// WAPUU_AGENT_ID,
-	// WOO_STORE_AGENT_ID,
-	// WORDPRESS_DESIGN_AGENT_ID,
-	// WORDPRESS_PAGE_SPEC_AGENT_ID,
-	WORDPRESS_SITE_SPEC_AGENT_ID,
-	// WORDPRESS_TUTOR_AGENT_ID,
-} from './src/agents/default-agents.js';
+import agents, { WAPUU_AGENT_ID } from './src/agents/default-agents.js';
 import { ASK_USER_TOOL_NAME } from './src/agents/tools/ask-user.js';
 import { CONFIRM_TOOL_NAME } from './src/agents/tools/confirm.js';
 
@@ -146,35 +130,28 @@ class CLIChat {
 				const agentId = this.agent.toolkit.getValues().agent.id;
 				if ( agentId && agentId !== this.agent.getId() ) {
 					logVerbose( `🔄 Switching to new agent ${ agentId }` );
-					switch ( agentId ) {
-						// case WAPUU_AGENT_ID:
-						// 	return new WapuuAgent( chat, toolkit );
-						// case WORDPRESS_TUTOR_AGENT_ID:
-						// 	return new TutorAgent( chat, toolkit );
-						// case WORDPRESS_DESIGN_AGENT_ID:
-						// 	return new DesignAgent( chat, toolkit );
-						case WORDPRESS_SITE_SPEC_AGENT_ID:
-							const simpleSiteToolkit = new SimpleSiteToolkit();
-							const combinedToolkit = new CombinedToolkit( {
+					const newAgent = agents.find( ( ag ) => ag.id === agentId );
+					if ( newAgent ) {
+						let toolkit;
+						if ( newAgent.toolkit ) {
+							toolkit = new CombinedToolkit( {
 								toolkits: [
-									simpleSiteToolkit,
+									new newAgent.toolkit(),
 									this.agent.toolkit,
 								],
 							} );
-							this.setAgent(
-								new SiteSpecAgent( this, combinedToolkit )
-							);
-							break;
-						// case WORDPRESS_PAGE_SPEC_AGENT_ID:
-						// 	return new PageSpecAgent( chat, toolkit );
-						// case WOO_STORE_AGENT_ID:
-						// 	return new WooAgent( chat, toolkit );
-						// case JETPACK_STATS_AGENT_ID:
-						// 	return new StatsAgent( chat, toolkit );
-						default:
-							this.setAgent(
-								new WapuuAgent( this, this.agent.toolkit )
-							);
+						} else {
+							toolkit = this.agent.toolkit;
+						}
+
+						this.setAgent( new newAgent.agent( this, toolkit ) );
+					} else {
+						const defaultAgent = agents.find(
+							( ag ) => ag.id === WAPUU_AGENT_ID
+						);
+						this.setAgent(
+							new defaultAgent.agent( this, this.agent.toolkit )
+						);
 					}
 				} else {
 					await this.runCompletion();
@@ -248,10 +225,22 @@ class CLIChat {
 	}
 }
 
+const chat = new CLIChat();
 const simpleAgentToolkit = new SimpleAgentToolkit( {
 	agents,
 } );
-const chat = new CLIChat();
-const agent = new WapuuAgent( chat, simpleAgentToolkit );
+const defaultAgent = args.agent
+	? agents.find( ( ag ) => ag.id === args.agent )
+	: agents.find( ( ag ) => ag.id === WAPUU_AGENT_ID );
+
+const defaultToolkit =
+	defaultAgent.id !== WAPUU_AGENT_ID
+		? new CombinedToolkit( {
+				toolkits: [ new defaultAgent.toolkit(), simpleAgentToolkit ],
+		  } )
+		: simpleAgentToolkit;
+
+const agent = new defaultAgent.agent( chat, defaultToolkit );
+
 chat.setAgent( agent );
 chat.call( 'askUser', { question: 'What would you like to do?' } );
