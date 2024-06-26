@@ -12,7 +12,14 @@ import { DotPromptTemplate } from './prompt-template.js';
 
 const defaultQuestion = 'What would you like to do with your site settings?';
 
-const defaultChoices = [ 'Update the site description', 'Add a page' ];
+const defaultChoices = [
+	'Update the site title',
+	'Update the site description',
+	'Update the site topic',
+	'Update the site location',
+	'Update the site type',
+	'Add a page',
+];
 
 const instructions = new DotPromptTemplate( {
 	template: `You are an expert at gathering requirements from the user to update a site.
