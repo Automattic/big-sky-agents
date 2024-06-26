@@ -177,11 +177,9 @@ export default function useChat() {
 			runGetThreadMessages();
 		}
 	}, [
-		apiKey,
 		isAssistantAvailable,
 		runGetThreadMessages,
 		running,
-		service,
 		threadId,
 		threadMessagesUpdated,
 		threadRun?.created_at,
