@@ -61,15 +61,12 @@ class CLIChat {
 
 	async runCompletion() {
 		const callbacks = this.agent.toolkit.getCallbacks();
-		const values = this.agent.toolkit.getValues();
 		const request = {
 			model: ChatModelType.GPT_4O,
 			messages: this.messages,
-			tools: this.agent.getTools( values ),
-			instructions: this.agent.getInstructions().format( values ),
-			additionalInstructions: this.agent
-				.getAdditionalInstructions()
-				.format( values ),
+			tools: this.agent.getTools(),
+			instructions: this.agent.getInstructions(),
+			additionalInstructions: this.agent.getAdditionalInstructions(),
 			temperature: 0,
 		};
 		logVerbose( '📡 Request:', request );

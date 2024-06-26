@@ -1,5 +1,5 @@
 import Agent from './agent.js';
-import { ANALYZE_URL_TOOL_NAME } from './tools/analyze-url.js';
+import AnalyzeUrlTool from './tools/analyze-url.js';
 import { WAPUU_AGENT_ID, WAPUU_ASSISTANT_ID } from './default-agents.js';
 import { DotPromptTemplate } from './prompt-template.js';
 
@@ -31,14 +31,11 @@ class WapuuAgent extends Agent {
 	}
 
 	getInstructions() {
-		return instructions;
+		return instructions.format( this.toolkit.values );
 	}
 
-	getTools( values ) {
-		return [
-			...super.getTools( values ),
-			...this.findTools( ANALYZE_URL_TOOL_NAME ),
-		];
+	getTools() {
+		return [ ...super.getTools(), AnalyzeUrlTool ];
 	}
 
 	getDefaultQuestion() {

@@ -30,6 +30,8 @@ const useCurrentAgent = ( { chat, toolkit } ) => {
 	const [ additionalInstructions, setAdditionalInstructions ] =
 		useState( '' );
 
+	const { assistantId, setAssistantId } = chat;
+
 	const agent = useMemo( () => {
 		switch ( toolkit.values.agent.id ) {
 			case WAPUU_AGENT_ID:
@@ -56,13 +58,9 @@ const useCurrentAgent = ( { chat, toolkit } ) => {
 			/**
 			 * Compute new state
 			 */
-			const newTools = agent.getTools( toolkit.values );
-			const newInstructions = agent
-				.getInstructions()
-				.format( toolkit.values );
-			const newAdditionalInstructions = agent
-				.getAdditionalInstructions()
-				.format( toolkit.values );
+			const newTools = agent.getTools();
+			const newInstructions = agent.getInstructions();
+			const newAdditionalInstructions = agent.getAdditionalInstructions();
 
 			const newAssistantId = agent.getAssistantId();
 
@@ -70,8 +68,8 @@ const useCurrentAgent = ( { chat, toolkit } ) => {
 				throw new Error( 'Assistant ID is required' );
 			}
 
-			if ( newAssistantId && newAssistantId !== chat.assistantId ) {
-				chat.setAssistantId( newAssistantId );
+			if ( newAssistantId && newAssistantId !== assistantId ) {
+				setAssistantId( newAssistantId );
 			}
 
 			if ( newInstructions && newInstructions !== instructions ) {
@@ -90,12 +88,12 @@ const useCurrentAgent = ( { chat, toolkit } ) => {
 			}
 		}
 	}, [
-		agent,
 		additionalInstructions,
+		agent,
+		assistantId,
+		setAssistantId,
 		instructions,
 		tools,
-		toolkit.values,
-		chat,
 	] );
 
 	const onStart = useCallback( () => {

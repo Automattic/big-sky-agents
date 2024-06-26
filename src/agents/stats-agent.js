@@ -12,7 +12,7 @@ class StatsAgent extends Agent {
 	}
 
 	getInstructions() {
-		return instructions;
+		return instructions.format( this.toolkit.values );
 	}
 
 	onStart() {

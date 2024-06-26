@@ -9,11 +9,11 @@ const instructions = DotPromptTemplate.fromString(
 
 class BuilderAgent extends Agent {
 	getInstructions() {
-		return instructions;
+		return instructions.format( this.toolkit.values );
 	}
 
-	getTools( values ) {
-		return [ ...super.getTools( values ), AnalyzeUrlTool, ConfirmTool ];
+	getTools() {
+		return [ ...super.getTools(), AnalyzeUrlTool, ConfirmTool ];
 	}
 
 	onStart() {

@@ -54,16 +54,16 @@ class SiteSpecAgent extends BuilderAgent {
 	}
 
 	getInstructions() {
-		return instructions;
+		return instructions.format( this.toolkit.values );
 	}
 
 	getAdditionalInstructions() {
-		return additionalInstructions;
+		return additionalInstructions.format( this.toolkit.values );
 	}
 
-	getTools( values ) {
+	getTools() {
 		return [
-			...super.getTools( values ),
+			...super.getTools(),
 			SetSiteTitleTool,
 			SetSiteDescriptionTool,
 			SetSiteTopicTool,

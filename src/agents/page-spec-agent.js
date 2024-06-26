@@ -52,16 +52,16 @@ class PageSpecAgent extends BuilderAgent {
 	}
 
 	getInstructions() {
-		return SystemPrompt;
+		return SystemPrompt.format( this.toolkit.values );
 	}
 
 	getAdditionalInstructions() {
-		return NextStepPrompt;
+		return NextStepPrompt.format( this.toolkit.values );
 	}
 
-	getTools( values ) {
+	getTools() {
 		return [
-			...super.getTools( values ),
+			...super.getTools(),
 			// TODO: only enable these tools under certain conditions, e.g. only confirm when page is valid
 			AddPageSectionTool,
 			AddSitePageTool,

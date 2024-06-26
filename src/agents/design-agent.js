@@ -16,11 +16,11 @@ const defaultChoices = [
 
 class DesignAgent extends BuilderAgent {
 	getInstructions() {
-		return instructions;
+		return instructions.format( this.toolkit.values );
 	}
 
-	getTools( values ) {
-		return [ ...super.getTools( values ), SetSiteColorsTool ];
+	getTools() {
+		return [ ...super.getTools(), SetSiteColorsTool ];
 	}
 
 	onStart() {

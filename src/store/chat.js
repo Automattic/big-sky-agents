@@ -516,22 +516,23 @@ const runCreateThreadRun =
 
 /**
  * Submit tool outputs for a given thread run.
+ *
+ * @param {Object} options
+ * @param {Array}  options.toolOutputs
+ * @return {Object} Yields the resulting actions
  */
 const runSubmitToolOutputs =
-	() =>
+	( { toolOutputs } ) =>
 	async ( { select, dispatch } ) => {
-		const { threadId, threadRun, toolOutputs } = select( ( state ) => ( {
+		const { threadId, threadRun } = select( ( state ) => ( {
 			threadId: state.root.messages.threadId,
 			threadRun: getActiveThreadRun( state.root.messages ),
-			toolOutputs: getToolOutputs( state.root.messages ),
 		} ) );
 		try {
 			dispatch( { type: 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST' } );
-			const updatedRun = getAssistantModel( select ).submitToolOutputs(
-				threadId,
-				threadRun?.id,
-				toolOutputs
-			);
+			const updatedRun = await getAssistantModel(
+				select
+			).submitToolOutputs( threadId, threadRun?.id, toolOutputs );
 			console.warn( 'Got updated run', updatedRun );
 			dispatch( {
 				type: 'SUBMIT_TOOL_OUTPUTS_END_REQUEST',
