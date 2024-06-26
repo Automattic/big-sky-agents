@@ -11,20 +11,20 @@ import promptSync from 'prompt-sync';
 import AssistantModel from './src/agents/assistant-model.js';
 
 import WapuuAgent from './src/agents/wapuu-agent.js';
-import TutorAgent from './src/agents/tutor-agent.js';
-import DesignAgent from './src/agents/design-agent.js';
+// import TutorAgent from './src/agents/tutor-agent.js';
+// import DesignAgent from './src/agents/design-agent.js';
 import SiteSpecAgent from './src/agents/site-spec-agent.js';
-import PageSpecAgent from './src/agents/page-spec-agent.js';
-import WooAgent from './src/agents/woo-agent.js';
-import StatsAgent from './src/agents/stats-agent.js';
+// import PageSpecAgent from './src/agents/page-spec-agent.js';
+// import WooAgent from './src/agents/woo-agent.js';
+// import StatsAgent from './src/agents/stats-agent.js';
 import agents, {
-	JETPACK_STATS_AGENT_ID,
-	WAPUU_AGENT_ID,
-	WOO_STORE_AGENT_ID,
-	WORDPRESS_DESIGN_AGENT_ID,
-	WORDPRESS_PAGE_SPEC_AGENT_ID,
+	// JETPACK_STATS_AGENT_ID,
+	// WAPUU_AGENT_ID,
+	// WOO_STORE_AGENT_ID,
+	// WORDPRESS_DESIGN_AGENT_ID,
+	// WORDPRESS_PAGE_SPEC_AGENT_ID,
 	WORDPRESS_SITE_SPEC_AGENT_ID,
-	WORDPRESS_TUTOR_AGENT_ID,
+	// WORDPRESS_TUTOR_AGENT_ID,
 } from './src/agents/default-agents.js';
 import { ASK_USER_TOOL_NAME } from './src/agents/tools/ask-user.js';
 import { CONFIRM_TOOL_NAME } from './src/agents/tools/confirm.js';
