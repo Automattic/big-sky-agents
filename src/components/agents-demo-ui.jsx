@@ -39,10 +39,21 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	const [ previewVisible, setPreviewVisible ] = useState( false );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
-	const chat = useChat( {
-		feature: 'big-sky',
-		apiKey,
-	} );
+	const chat = useChat();
+
+	// if chat.apiKey !== apiKey, set it
+	useEffect( () => {
+		if ( chat.apiKey !== apiKey ) {
+			chat.setApiKey( apiKey );
+		}
+	}, [ apiKey, chat ] );
+
+	// set the feature to big-sky
+	useEffect( () => {
+		if ( chat.feature !== 'big-sky' ) {
+			chat.setFeature( 'big-sky' );
+		}
+	}, [ chat ] );
 
 	const toolkit = useReduxToolkit( {
 		apiKey,
@@ -50,7 +61,6 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	} );
 
 	const agent = useCurrentAgent( {
-		pageId: selectedPageId,
 		toolkit,
 		chat,
 	} );

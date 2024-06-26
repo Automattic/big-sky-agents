@@ -44,6 +44,7 @@ const initialState = {
 	// Global
 	error: null,
 	enabled: true,
+	feature: 'unknown',
 
 	// LLM related
 	model: ChatModelType.getDefault(),
@@ -191,20 +192,17 @@ function filterChatMessage( message ) {
 
 /**
  * Reset the state of the chat.
- *
- * @param {Object} options
- * @param {string} options.service
- * @param {string} options.apiKey
- * @param {string} options.threadId
- * @return {Object} Yields the resulting actions
  */
-function* reset( { service, apiKey, threadId } ) {
-	yield clearMessages();
-	yield clearError();
-	if ( service && apiKey && threadId ) {
-		yield runDeleteThread( { service, apiKey, threadId } );
-	}
-}
+const reset =
+	() =>
+	async ( { dispatch, select } ) => {
+		const threadId = select( ( state ) => state.root.messages.threadId );
+		dispatch( clearMessages() );
+		dispatch( clearError() );
+		if ( threadId ) {
+			dispatch( runDeleteThread() );
+		}
+	};
 
 const getChatModel = ( select ) => {
 	const { service, apiKey } = select( ( state ) => ( {
@@ -228,16 +226,18 @@ const getChatModel = ( select ) => {
  * @param {Array<Object>} request.tools
  * @param {Object}        request.instructions
  * @param {Object}        request.additionalInstructions
- * @param {string}        request.feature
  */
 const runChatCompletion =
 	( request ) =>
 	async ( { select, dispatch } ) => {
-		const { model, temperature, messages } = select( ( state ) => ( {
-			model: state.root.messages.model,
-			temperature: state.root.messages.temperature,
-			messages: state.root.messages.messages,
-		} ) );
+		const { model, temperature, messages, feature } = select(
+			( state ) => ( {
+				model: state.root.messages.model,
+				temperature: state.root.messages.temperature,
+				messages: state.root.messages.messages,
+				feature: state.root.messages.feature,
+			} )
+		);
 
 		// dispatch an error if service or apiKey are missing
 		if ( ! model || ! temperature ) {
@@ -255,6 +255,7 @@ const runChatCompletion =
 				messages,
 				model,
 				temperature,
+				feature,
 			} );
 			dispatch( actions.addMessage( assistantMessage ) );
 			dispatch( { type: 'CHAT_END_REQUEST' } );
@@ -641,6 +642,8 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, service: action.service };
 		case 'SET_API_KEY':
 			return { ...state, apiKey: action.apiKey };
+		case 'SET_FEATURE':
+			return { ...state, feature: action.feature };
 		case 'SET_MODEL':
 			return { ...state, model: action.model };
 		case 'SET_TEMPERATURE':
@@ -991,6 +994,8 @@ export const selectors = {
 		state.isSubmittingToolOutputs,
 	isAssistantAvailable: ( state ) =>
 		state.service && state.apiKey && state.assistantId && ! state.error,
+	getFeature: ( state ) => state.feature,
+	getApiKey: ( state ) => state.apiKey,
 	getError: ( state ) => state.error,
 	getMessages: ( state ) => state.messages,
 	getAssistantMessage: ( state ) => {
@@ -1106,6 +1111,10 @@ export const actions = {
 	setApiKey: ( apiKey ) => ( {
 		type: 'SET_API_KEY',
 		apiKey,
+	} ),
+	setFeature: ( feature ) => ( {
+		type: 'SET_FEATURE',
+		feature,
 	} ),
 	setTemperature: ( temperature ) => ( {
 		type: 'SET_TEMPERATURE',

@@ -19,9 +19,6 @@ import { Context } from './context';
  *
  * It acts similarly to the `useContext` react hook.
  *
- * @param {Object} options         The chat options.
- * @param {string} options.apiKey  The API key for the chat service.
- * @param {string} options.feature The feature to use for the chat.
  * @example
  * ```js
  * import {
@@ -30,10 +27,7 @@ import { Context } from './context';
  *   useChat,
  * } from '@automattic/big-sky-agents';
  *
- * const chat = createChat( {
- *   apiKey,
- *   feature,
- * } );
+ * const chat = createChat();
  *
  * const SomeChildUsingChat = ( props ) => {
  *   const chat = useChat();
@@ -51,7 +45,7 @@ import { Context } from './context';
  * @return {Function}  A custom react hook exposing the chat context value.
  */
 
-export default function useChat( { apiKey, feature } ) {
+export default function useChat() {
 	const agentStore = useContext( Context );
 
 	const {
@@ -71,14 +65,15 @@ export default function useChat( { apiKey, feature } ) {
 		runGetThreadMessages,
 		runAddMessageToThread,
 		runSubmitToolOutputs,
-		setApiKey,
 		setService,
 		setModel,
 		setTemperature,
+		setApiKey,
+		setFeature,
 	} = useDispatch( agentStore );
 
 	const {
-		apiKey: contextApiKey,
+		apiKey,
 		service,
 		model,
 		temperature,
@@ -99,8 +94,10 @@ export default function useChat( { apiKey, feature } ) {
 		threadRunsUpdated,
 		threadMessagesUpdated,
 		isAssistantAvailable,
+		feature,
 	} = useSelect( ( select ) => {
 		return {
+			apiKey: select( agentStore ).getApiKey(),
 			error: select( agentStore ).getError(),
 			loading: select( agentStore ).isLoading(),
 			started: select( agentStore ).isStarted(),
@@ -119,15 +116,9 @@ export default function useChat( { apiKey, feature } ) {
 			threadMessagesUpdated:
 				select( agentStore ).getThreadMessagesUpdated(),
 			isAssistantAvailable: select( agentStore ).isAssistantAvailable(),
+			feature: select( agentStore ).getFeature(),
 		};
 	} );
-
-	// if apiKey is different from contextApiKey, or service is different from contextService, set them
-	useEffect( () => {
-		if ( apiKey !== contextApiKey ) {
-			setApiKey( apiKey );
-		}
-	}, [ apiKey, contextApiKey, setApiKey ] );
 
 	const isThreadDataLoaded = useMemo( () => {
 		return (
@@ -298,7 +289,6 @@ export default function useChat( { apiKey, feature } ) {
 				tools,
 				instructions,
 				additionalInstructions,
-				feature,
 			} );
 		},
 		[
@@ -309,7 +299,6 @@ export default function useChat( { apiKey, feature } ) {
 			pendingToolCalls.length,
 			assistantMessage,
 			runChatCompletion,
-			feature,
 		]
 	);
 
@@ -336,22 +325,16 @@ export default function useChat( { apiKey, feature } ) {
 				additionalInstructions,
 				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
 				additionalMessages,
-				feature,
 			} );
 		},
 		[
 			additionalMessages,
-			feature,
 			history,
 			isAwaitingUserInput,
 			isThreadRunComplete,
 			runCreateThreadRun,
 		]
 	);
-
-	const onReset = useCallback( () => {
-		reset( { service, apiKey, threadId } );
-	}, [ apiKey, reset, service, threadId ] );
 
 	return {
 		// running state
@@ -361,6 +344,14 @@ export default function useChat( { apiKey, feature } ) {
 		running,
 		started,
 		error,
+
+		// auth
+		apiKey,
+		setApiKey,
+
+		// logging
+		feature,
+		setFeature,
 
 		// llm
 		model,
@@ -396,6 +387,6 @@ export default function useChat( { apiKey, feature } ) {
 		threadRun,
 		updateThreadMessages: runGetThreadMessages,
 
-		onReset,
+		onReset: reset,
 	};
 }
