@@ -1,13 +1,14 @@
 import Toolkit from './toolkit.js';
+import InMemoryStateManager from '../state-managers/in-memory.js';
 
 class CombinedToolkit extends Toolkit {
 	constructor( props ) {
 		let state = {};
 		props.toolkits.forEach( ( toolkit ) => {
-			state = { ...state, ...toolkit.getState() };
+			state = { ...state, ...toolkit.stateManager.getState() };
 		} );
 
-		super( props, state );
+		super( props, new InMemoryStateManager( state ) );
 	}
 
 	onReset = () => {

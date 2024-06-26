@@ -4,6 +4,7 @@ import ChatModel, {
 	ChatModelService,
 	ChatModelType,
 } from './src/agents/chat-model.js';
+import InMemoryStateManager from './src/agents/state-managers/in-memory.js';
 import BaseAgentToolkit from './src/agents/toolkits/base-agent.js';
 import CombinedToolkit from './src/agents/toolkits/combined.js';
 import promptSync from 'prompt-sync';
@@ -133,7 +134,10 @@ class CLIChat {
 						if ( newAgent.toolkit ) {
 							toolkit = new CombinedToolkit( {
 								toolkits: [
-									new newAgent.toolkit(),
+									new newAgent.toolkit(
+										{ agents },
+										this.agent.toolkit.stateManager
+									),
 									this.agent.toolkit,
 								],
 							} );
@@ -217,10 +221,29 @@ class CLIChat {
 	}
 }
 
+const INITIAL_STATE = {
+	agentId: null,
+	agentGoal: "Understand the user's goal",
+	agentThought: null,
+	textColor: undefined,
+	backgroundColor: undefined,
+	accentColor: undefined,
+	siteTitle: undefined,
+	siteDescription: undefined,
+	siteTopic: undefined,
+	siteType: undefined,
+	siteLocation: undefined,
+	pages: [],
+};
+const stateManager = new InMemoryStateManager( INITIAL_STATE );
+
 const chat = new CLIChat();
-const baseAgentToolkit = new BaseAgentToolkit( {
-	agents,
-} );
+const baseAgentToolkit = new BaseAgentToolkit(
+	{
+		agents,
+	},
+	stateManager
+);
 const defaultAgent = args.agent
 	? agents.find( ( ag ) => ag.id === args.agent )
 	: agents.find( ( ag ) => ag.id === WAPUU_AGENT_ID );
@@ -228,7 +251,10 @@ const defaultAgent = args.agent
 const defaultToolkit =
 	defaultAgent.id !== WAPUU_AGENT_ID
 		? new CombinedToolkit( {
-				toolkits: [ new defaultAgent.toolkit(), baseAgentToolkit ],
+				toolkits: [
+					new defaultAgent.toolkit( { agents }, stateManager ),
+					baseAgentToolkit,
+				],
 		  } )
 		: baseAgentToolkit;
 

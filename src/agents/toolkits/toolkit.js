@@ -1,16 +1,8 @@
 class Toolkit {
-	constructor( props, initialState ) {
+	constructor( props, stateManager ) {
 		this.props = props;
-		this.state = initialState;
+		this.stateManager = stateManager;
 	}
-
-	getState = () => {
-		return this.state;
-	};
-
-	setState = ( newState ) => {
-		this.state = { ...this.state, ...newState };
-	};
 
 	onReset = () => {
 		throw new Error( 'Not implemented' );

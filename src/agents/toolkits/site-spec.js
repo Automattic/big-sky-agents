@@ -11,82 +11,70 @@ import {
 } from '../tools/site-tools.js';
 import uuidv4 from '../../utils/uuid.js';
 
-const INITIAL_STATE = {
-	textColor: undefined,
-	backgroundColor: undefined,
-	accentColor: undefined,
-	siteTitle: undefined,
-	siteDescription: undefined,
-	siteTopic: undefined,
-	siteType: undefined,
-	siteLocation: undefined,
-	pages: [],
-};
-
 class SimpleSiteToolkit extends Toolkit {
-	constructor( props ) {
-		super( props, INITIAL_STATE );
+	constructor( props, stateManager ) {
+		super( props, stateManager );
 
 		this.tools = this.getTools();
 	}
 
 	setSiteColors = ( { textColor, backgroundColor, accentColor } ) => {
 		if ( textColor ) {
-			this.setState( { textColor } );
+			this.stateManager.setState( { textColor } );
 		}
 		if ( backgroundColor ) {
-			this.setState( { backgroundColor } );
+			this.stateManager.setState( { backgroundColor } );
 		}
 		if ( accentColor ) {
-			this.setState( { accentColor } );
+			this.stateManager.setState( { accentColor } );
 		}
 		return 'Site colors updated';
 	};
 
 	setSiteTitle = ( { value } ) => {
-		this.setState( { siteTitle: value } );
+		this.stateManager.setState( { siteTitle: value } );
 		return `Site title set to "${ value }"`;
 	};
 
 	setSiteDescription = ( { value } ) => {
-		this.setState( { siteDescription: value } );
+		this.stateManager.setState( { siteDescription: value } );
 		return `Site description set to "${ value }"`;
 	};
 
 	setSiteTopic = ( { value } ) => {
-		this.setState( { siteTopic: value } );
+		this.stateManager.setState( { siteTopic: value } );
 		return `Site topic set to "${ value }"`;
 	};
 
 	setSiteType = ( { value } ) => {
-		this.setState( { value } );
+		this.stateManager.setState( { value } );
 		return `Site type set to "${ value }"`;
 	};
 
 	setSiteLocation = ( { value } ) => {
-		this.setState( { siteLocation: value } );
+		this.stateManager.setState( { siteLocation: value } );
 		return `Site location set to "${ value }"`;
 	};
 
 	setSitePages = ( { pages: newPages } ) => {
-		this.setState( { pages: newPages } );
+		this.stateManager.setState( { pages: newPages } );
 		return 'Site pages set';
 	};
 
 	addSitePage = ( { category, title, description } ) => {
-		const { pages } = this.state;
+		const { pages } = this.stateManager.getState();
 		const newPage = {
 			id: uuidv4(),
 			category,
 			title,
 			description,
 		};
-		this.setState( { pages: [ ...pages, newPage ] } );
+		this.stateManager.setState( { pages: [ ...pages, newPage ] } );
 		return 'Adding site page';
 	};
 
 	onReset = () => {
-		this.setState( INITIAL_STATE );
+		this.stateManager.resetState();
 	};
 
 	getTools = () => [
@@ -101,20 +89,21 @@ class SimpleSiteToolkit extends Toolkit {
 	];
 
 	getValues = () => {
+		const state = this.stateManager.getState();
 		return {
 			site: {
-				title: this.state.siteTitle,
-				description: this.state.siteDescription,
-				topic: this.state.siteTopic,
-				type: this.state.siteType,
-				location: this.state.siteLocation,
+				title: state.siteTitle,
+				description: state.siteDescription,
+				topic: state.siteTopic,
+				type: state.siteType,
+				location: state.siteLocation,
 			},
 			design: {
-				textColor: this.state.textColor,
-				backgroundColor: this.state.backgroundColor,
-				accentColor: this.state.accentColor,
+				textColor: state.textColor,
+				backgroundColor: state.backgroundColor,
+				accentColor: state.accentColor,
 			},
-			pages: this.state.pages,
+			pages: state.pages,
 		};
 	};
 
