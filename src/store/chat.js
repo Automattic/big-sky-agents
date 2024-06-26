@@ -378,6 +378,7 @@ const runGetThreadRun =
 			).getThreadRun( threadId, threadRun?.id );
 			dispatch( {
 				type: 'GET_THREAD_RUN_END_REQUEST',
+				ts: Date.now(),
 				threadRun: updatedThreadRun,
 			} );
 		} catch ( error ) {
@@ -515,26 +516,23 @@ const runCreateThreadRun =
 
 /**
  * Submit tool outputs for a given thread run.
- *
- * @param {Object} options
- * @param {string} options.service
- * @param {string} options.apiKey
- * @param {string} options.threadId
- * @param {string} options.threadRunId
- * @param {Array}  options.toolOutputs
- * @return {Object} Yields the resulting actions
  */
 const runSubmitToolOutputs =
-	( { threadRunId, toolOutputs } ) =>
+	() =>
 	async ( { select, dispatch } ) => {
-		const threadId = select( ( state ) => state.root.messages.threadId );
+		const { threadId, threadRun, toolOutputs } = select( ( state ) => ( {
+			threadId: state.root.messages.threadId,
+			threadRun: getActiveThreadRun( state.root.messages ),
+			toolOutputs: getToolOutputs( state.root.messages ),
+		} ) );
 		try {
 			dispatch( { type: 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST' } );
 			const updatedRun = getAssistantModel( select ).submitToolOutputs(
 				threadId,
-				threadRunId,
+				threadRun?.id,
 				toolOutputs
 			);
+			console.warn( 'Got updated run', updatedRun );
 			dispatch( {
 				type: 'SUBMIT_TOOL_OUTPUTS_END_REQUEST',
 				threadRun: updatedRun,
@@ -585,7 +583,9 @@ const runAddMessageToThread =
 		const threadId = select( ( state ) => state.root.messages.threadId );
 		dispatch( { type: 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST' } );
 		try {
-			const newMessage = getAssistantModel( select ).createThreadMessage(
+			const newMessage = await getAssistantModel(
+				select
+			).createThreadMessage(
 				threadId,
 				chatMessageToThreadMessage( message )
 			);
@@ -905,11 +905,11 @@ export const reducer = ( state = initialState, action ) => {
 					threadRun.required_action.submit_tool_outputs.tool_calls;
 
 				// add an assistant message with the tool calls
-				const assistantMessage = {
+				state = addMessageReducer( state, {
 					role: 'assistant',
+					created_at: action.ts,
 					tool_calls,
-				};
-				state = addMessageReducer( state, assistantMessage );
+				} );
 			}
 			const existingThreadRunIndex = state.threadRuns.findIndex(
 				( tr ) => tr.id === action.threadRun.id

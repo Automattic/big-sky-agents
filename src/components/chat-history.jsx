@@ -4,6 +4,7 @@
 // import { INFORM_TOOL_NAME } from '../agents/tools/inform-user.js';
 // import { ASK_USER_TOOL_NAME } from '../agents/tools/ask-user.js';
 // import { CONFIRM_TOOL_NAME } from '../agents/tools/confirm.js';
+import { useState } from 'react';
 import MessageContent from './message-content.jsx';
 
 function ChatHistory( { history, toolOutputs } ) {
@@ -37,11 +38,7 @@ function ChatHistory( { history, toolOutputs } ) {
 					return (
 						<div
 							key={ `chat-message-${ rowId }` }
-							className={ `big-sky__chat-history-message big-sky__chat-history-message-${
-								hasResponse ? 'complete' : 'pending'
-							} big-sky__chat-history-message-role-${
-								message.role
-							}` }
+							className={ `big-sky__chat-history-message big-sky__chat-history-message big-sky__chat-history-message-role-${ message.role }` }
 						>
 							{ [ 'user', 'assistant' ].includes(
 								message.role
@@ -72,7 +69,7 @@ function ChatHistory( { history, toolOutputs } ) {
 															.arguments
 													) }
 													)
-													{ toolCallResult && (
+													{ toolCallResult ? (
 														<>
 															<br />
 															<em>
@@ -81,6 +78,14 @@ function ChatHistory( { history, toolOutputs } ) {
 															{ JSON.stringify(
 																toolCallResult
 															) }
+														</>
+													) : (
+														<>
+															<br />
+															<em>
+																Waiting for
+																response...
+															</em>
 														</>
 													) }
 												</div>
@@ -97,6 +102,7 @@ function ChatHistory( { history, toolOutputs } ) {
 									{ JSON.stringify( message.content ) }
 								</>
 							) }
+							<pre>{ JSON.stringify( message, null, 4 ) }</pre>
 							<div className="big-sky__chat-history-message-date">
 								{ new Date(
 									message.created_at * 1000

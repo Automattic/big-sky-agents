@@ -252,7 +252,6 @@ export default function useChat( { apiKey, feature } ) {
 			}
 
 			runSubmitToolOutputs( {
-				threadRunId: threadRun.id,
 				toolOutputs: filteredToolOutputs,
 			} );
 		}

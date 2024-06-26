@@ -326,6 +326,7 @@
 	// }
 
 	.big-sky__chat-history-message {
+		color: #fff;
 		background: rgba(#006, 0.85);
 		border-radius: 8px;
 		margin-top: 16px;
@@ -340,8 +341,6 @@
 
 		&.big-sky__chat-history-message-role-assistant {
 			// align left, blue background, white text
-			background: rgba(#006, 0.85);
-			color: #fff;
 			margin-right: auto;
 		}
 
