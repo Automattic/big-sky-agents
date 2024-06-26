@@ -24,6 +24,11 @@ class Toolkit {
 		throw new Error( 'Not implemented' );
 	};
 
+	// special override so that toolkit.values returns the result of toolkit.getValues()
+	get values() {
+		return this.getValues();
+	}
+
 	getCallbacks = () => {
 		throw new Error( 'Not implemented' );
 	};

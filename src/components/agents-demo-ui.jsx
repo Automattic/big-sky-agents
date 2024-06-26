@@ -13,7 +13,6 @@ import AgentUI from './agent-ui.jsx';
 import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
 import ChatHistory from './chat-history.jsx';
-import { ChatModelService, ChatModelType } from '../agents/chat-model.js';
 import PageList from './page-list.jsx';
 import useReduxToolkit from '../hooks/use-redux-toolkit.js';
 import useCurrentAgent from '../hooks/use-current-agent.js';

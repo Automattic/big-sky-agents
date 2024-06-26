@@ -328,12 +328,6 @@ const runChatCompletion =
 
 /**
  * Get the thread runs for a given thread.
- *
- * @param {*}      options
- * @param {string} options.service
- * @param {string} options.apiKey
- * @param {string} options.threadId
- * @return {Object} Yields the resulting actions
  */
 const runGetThreadRuns =
 	() =>
@@ -356,13 +350,6 @@ const runGetThreadRuns =
 
 /**
  * Get a thread run for a given thread.
- *
- * @param {Object} options
- * @param {string} options.service
- * @param {string} options.apiKey
- * @param {string} options.threadId
- * @param {string} options.threadRunId
- * @return  {Object} Yields the resulting actions
  */
 const runGetThreadRun =
 	() =>
@@ -442,9 +429,6 @@ const runCreateThread =
 
 /**
  * Delete a thread.
- *
- * @param {Object} options          The options for the thread
- * @param {string} options.threadId The thread ID
  */
 const runDeleteThread =
 	() =>

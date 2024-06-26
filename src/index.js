@@ -29,7 +29,7 @@ export { default as useSimpleAgentToolkit } from './hooks/use-simple-agent-toolk
 /**
  * Redux chat, toolkit, and agent toolkit
  */
-export { default as useReduxChat } from './hooks/use-redux-chat.js';
+export { default as useChat } from './components/chat-provider/use-chat.js';
 export { default as useReduxToolkit } from './hooks/use-redux-toolkit.js';
 export { default as useReduxAgentToolkit } from './hooks/use-redux-agent-toolkit.js';
 

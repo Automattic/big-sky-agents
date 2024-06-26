@@ -44,7 +44,7 @@ export declare function useSimpleToolkit(): AgentToolkit;
 export declare function useSimpleAgentToolkit( options: {
 	agents: AgentConfig[];
 } ): AgentToolkit;
-export declare function useReduxChat( options: ChatOptions ): Chat;
+export declare function useChat( options: ChatOptions ): Chat;
 export declare function useReduxToolkit(): AgentToolkit;
 export declare function useReduxAgentToolkit( options: {
 	agents: AgentConfig[];

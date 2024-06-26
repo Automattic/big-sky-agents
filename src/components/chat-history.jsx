@@ -1,10 +1,6 @@
 /**
  * Internal dependencies
  */
-// import { INFORM_TOOL_NAME } from '../agents/tools/inform-user.js';
-// import { ASK_USER_TOOL_NAME } from '../agents/tools/ask-user.js';
-// import { CONFIRM_TOOL_NAME } from '../agents/tools/confirm.js';
-import { useState } from 'react';
 import MessageContent from './message-content.jsx';
 
 function ChatHistory( { history, toolOutputs } ) {
@@ -12,29 +8,6 @@ function ChatHistory( { history, toolOutputs } ) {
 		<div className="big-sky__chat-history">
 			{ history
 				?.map( ( message, rowId ) => {
-					// const args = args;
-					// let argJSON = JSON.stringify( args );
-					// if ( argJSON.length > 50 ) {
-					// 	argJSON = argJSON.substring( 0, 50 ) + '...';
-					// }
-					// let content = `${ toolCall.function.name }( ${ argJSON } )`;
-
-					// const hasResponse =
-					// 	typeof toolCall.response !== 'undefined' &&
-					// 	toolCall.response !== null;
-
-					// switch ( toolCall.name ) {
-					// 	case INFORM_TOOL_NAME:
-					// 		content = `Agent said: ${ args.message }`;
-					// 		break;
-					// 	case ASK_USER_TOOL_NAME:
-					// 		content = `Agent asked: ${ args.question }`;
-					// 		break;
-					// 	case CONFIRM_TOOL_NAME:
-					// 		content = `Agent asked user to confirm before proceeding`;
-					// 		break;
-					// }
-					const hasResponse = true;
 					return (
 						<div
 							key={ `chat-message-${ rowId }` }
