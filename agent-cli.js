@@ -209,7 +209,7 @@ class CLIChat {
 			);
 			const userMessage = this.prompt( '> ' );
 
-			if ( userMessage.toLowerCase() === 'exit' ) {
+			if ( ! userMessage || userMessage.toLowerCase() === 'exit' ) {
 				console.log( 'Goodbye!' );
 				process.exit( 0 );
 			}
