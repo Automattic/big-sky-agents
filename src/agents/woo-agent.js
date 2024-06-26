@@ -13,11 +13,11 @@ class WooAgent extends Agent {
 	}
 
 	getInstructions() {
-		return instructions;
+		return instructions.format( this.toolkit.values );
 	}
 
-	getTools( values ) {
-		return [ ...super.getTools( values ), AnalyzeUrlTool ];
+	getTools() {
+		return [ ...super.getTools(), AnalyzeUrlTool ];
 	}
 
 	onStart() {

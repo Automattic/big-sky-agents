@@ -29,30 +29,24 @@ class Agent {
 	}
 
 	getInstructions() {
-		return instructions;
+		return instructions.format( this.toolkit.values );
 	}
 
 	getAdditionalInstructions() {
-		return additionalInstructions;
+		return additionalInstructions.format( this.toolkit.values );
 	}
 
 	/**
 	 * Tools
 	 */
 
-	getTools( values ) {
+	getTools() {
 		return [
 			AskUserTool,
 			InformUserTool,
 			SetGoalTool,
-			createSetAgentTool( values.agents ),
+			createSetAgentTool( this.toolkit.values?.agents ),
 		];
-	}
-
-	findTools( ...toolNames ) {
-		return this.toolkit.tools.filter( ( tool ) =>
-			toolNames.includes( tool.function.name )
-		);
 	}
 
 	/**

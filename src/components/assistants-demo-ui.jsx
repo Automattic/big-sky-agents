@@ -25,7 +25,7 @@ import useToolExecutor from '../hooks/use-tool-executor.js';
 import useAgentStarter from '../hooks/use-agent-starter.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
-import useReduxChat from '../hooks/use-redux-chat.js';
+import useChat from './chat-provider/use-chat.js';
 import './agents-demo-ui.scss';
 
 /**
@@ -39,32 +39,27 @@ import './agents-demo-ui.scss';
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  *                                         -->
  */
-const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
+const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
 	const [ previewVisible, setPreviewVisible ] = useState( false );
-	const [ model, setModel ] = useState( AssistantModelType.getDefault() );
-	const [ service, setService ] = useState(
-		AssistantModelService.getDefault()
-	);
-	const [ temperature, setTemperature ] = useState( 0.2 );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
-	const [ apiKey, setApiKey ] = useState( originalApiKey );
-	const feature = 'big-sky';
 
-	// const chat = useSimpleChat( {
-	// 	chatModel,
-	// 	model,
-	// 	temperature,
-	// } );
-	// const toolkit = useSimpleToolkit( { pageId: selectedPageId } );
+	const chat = useChat();
 
-	const chat = useReduxChat( {
-		apiKey,
-		service,
-		model,
-		temperature,
-		feature,
-	} );
+	// if chat.apiKey !== apiKey, set it
+	useEffect( () => {
+		if ( chat.apiKey !== apiKey ) {
+			chat.setApiKey( apiKey );
+		}
+	}, [ apiKey, chat ] );
+
+	// set the feature to big-sky
+	useEffect( () => {
+		if ( chat.feature !== 'big-sky' ) {
+			chat.setFeature( 'big-sky' );
+		}
+	}, [ chat ] );
+
 	const toolkit = useReduxToolkit( {
 		apiKey,
 		pageId: selectedPageId,
@@ -174,19 +169,13 @@ const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
 						chat={ chat }
 					/>
 					<ChatModelControls
-						apiKey={ apiKey }
-						model={ model }
-						service={ service }
-						temperature={ temperature }
-						onApiKeyChanged={ ( newApiKey ) => {
-							setApiKey( newApiKey );
+						{ ...chat }
+						setApiKey={ ( newApiKey ) => {
+							chat.setApiKey( newApiKey );
 							if ( typeof onApiKeyChanged === 'function' ) {
 								onApiKeyChanged( newApiKey );
 							}
 						} }
-						onModelChanged={ setModel }
-						onServiceChanged={ setService }
-						onTemperatureChanged={ setTemperature }
 					/>
 				</div>
 			) }

@@ -2,7 +2,7 @@ export type {
 	default as ChatModel,
 	ChatModelType,
 	ChatModelService,
-  GroqChatModel,
+	GroqChatModel,
 	OpenAIChatModel,
 	OllamaChatModel,
 	LocalAIChatModel,
@@ -44,7 +44,7 @@ export declare function useSimpleToolkit(): AgentToolkit;
 export declare function useSimpleAgentToolkit( options: {
 	agents: AgentConfig[];
 } ): AgentToolkit;
-export declare function useReduxChat( options: ChatOptions ): Chat;
+export declare function useChat( options: ChatOptions ): Chat;
 export declare function useReduxToolkit(): AgentToolkit;
 export declare function useReduxAgentToolkit( options: {
 	agents: AgentConfig[];
@@ -177,7 +177,11 @@ export declare class FStringPromptTemplate extends StringPromptTemplate {
 
 export declare class DotPromptTemplate extends StringPromptTemplate {
 	constructor( options: { template: string; inputVariables: string[] } );
-	static fromString( tmpl: string, templateVariables?: Array, options?: any ): FStringPromptTemplate;
+	static fromString(
+		tmpl: string,
+		templateVariables?: Array,
+		options?: any
+	): FStringPromptTemplate;
 }
 
 /**
@@ -189,10 +193,10 @@ declare class Agent {
 	getId(): string;
 	call( toolName: string, args: any ): string;
 	userSay( message: string, file_urls?: string[] ): void;
-	getTools( values: any ): any[];
-	findTools( ...toolNames: string[] ): any[];
-	getInstructions(): Formatter;
-	getAdditionalInstructions(): Formatter;
+	getTools(): Tool[];
+	findTools( ...toolNames: string[] ): Tool[];
+	getInstructions(): string;
+	getAdditionalInstructions(): string;
 	onStart(): void;
 }
 
@@ -212,14 +216,14 @@ interface ToolkitCallbacks {
 
 interface Toolkit {
 	onReset: () => void;
-	tools: any[]; // TODO: Tool
+	tools: Tool[]; // TODO: Tool
 	values: any;
 	callbacks: ToolkitCallbacks;
 }
 
 interface AgentToolkit extends Toolkit {
 	values: {
-		agents: any[];
+		agents: any[]; // TODO: define this agent config
 		agent: Agent;
 	};
 	callbacks: ToolkitCallbacks;

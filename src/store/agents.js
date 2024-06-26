@@ -8,7 +8,6 @@ const initialState = {
 	agentId: DEFAULT_AGENT_ID,
 	agentGoal: DEFAULT_GOAL,
 	agentThought: null,
-	enabled: true,
 	agents,
 };
 
@@ -35,12 +34,6 @@ export const actions = {
 			thought,
 		};
 	},
-	setEnabled: ( enabled ) => {
-		return {
-			type: 'SET_AGENT_ENABLED',
-			enabled,
-		};
-	},
 };
 
 export const reducer = ( state = initialState, action ) => {
@@ -51,8 +44,6 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, agentGoal: action.goal };
 		case 'SET_AGENT_THOUGHT':
 			return { ...state, agentThought: action.thought };
-		case 'SET_AGENT_ENABLED':
-			return { ...state, enabled: action.enabled };
 		default:
 			return state;
 	}
@@ -76,8 +67,5 @@ export const selectors = {
 	},
 	getAgentThought: ( state ) => {
 		return state.agentThought;
-	},
-	isEnabled: ( state ) => {
-		return state.enabled;
 	},
 };

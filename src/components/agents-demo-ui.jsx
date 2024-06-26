@@ -13,7 +13,6 @@ import AgentUI from './agent-ui.jsx';
 import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
 import ChatHistory from './chat-history.jsx';
-import { ChatModelService, ChatModelType } from '../agents/chat-model.js';
 import PageList from './page-list.jsx';
 import useReduxToolkit from '../hooks/use-redux-toolkit.js';
 import useCurrentAgent from '../hooks/use-current-agent.js';
@@ -22,7 +21,7 @@ import useToolExecutor from '../hooks/use-tool-executor.js';
 import useAgentStarter from '../hooks/use-agent-starter.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
-import useReduxChat from '../hooks/use-redux-chat.js';
+import useChat from './chat-provider/use-chat.js';
 import './agents-demo-ui.scss';
 
 /**
@@ -35,35 +34,33 @@ import './agents-demo-ui.scss';
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  *                                         -->
  */
-const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
+const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
 	const [ previewVisible, setPreviewVisible ] = useState( false );
-	const [ model, setModel ] = useState( ChatModelType.getDefault() );
-	const [ service, setService ] = useState( ChatModelService.getDefault() );
-	const [ temperature, setTemperature ] = useState( 0.2 );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
-	const [ apiKey, setApiKey ] = useState( originalApiKey );
-	const feature = 'big-sky';
 
-	// const chat = useSimpleChat( {
-	// 	chatModel,
-	// 	model,
-	// 	temperature,
-	// } );
-	// const toolkit = useSimpleToolkit( { pageId: selectedPageId } );
+	const chat = useChat();
 
-	const chat = useReduxChat( {
+	// if chat.apiKey !== apiKey, set it
+	useEffect( () => {
+		if ( chat.apiKey !== apiKey ) {
+			chat.setApiKey( apiKey );
+		}
+	}, [ apiKey, chat ] );
+
+	// set the feature to big-sky
+	useEffect( () => {
+		if ( chat.feature !== 'big-sky' ) {
+			chat.setFeature( 'big-sky' );
+		}
+	}, [ chat ] );
+
+	const toolkit = useReduxToolkit( {
 		apiKey,
-		service,
-		model,
-		temperature,
-		feature,
+		pageId: selectedPageId,
 	} );
 
-	const toolkit = useReduxToolkit( { apiKey, pageId: selectedPageId } );
-
 	const agent = useCurrentAgent( {
-		pageId: selectedPageId,
 		toolkit,
 		chat,
 	} );
@@ -166,19 +163,13 @@ const AgentsDemoUI = ( { apiKey: originalApiKey, onApiKeyChanged } ) => {
 						chat={ chat }
 					/>
 					<ChatModelControls
-						apiKey={ apiKey }
-						model={ model }
-						service={ service }
-						temperature={ temperature }
-						onApiKeyChanged={ ( newToken ) => {
-							setApiKey( newToken );
+						{ ...chat }
+						setApiKey={ ( newToken ) => {
+							chat.setApiKey( newToken );
 							if ( typeof onApiKeyChanged === 'function' ) {
 								onApiKeyChanged( newToken );
 							}
 						} }
-						onModelChanged={ setModel }
-						onServiceChanged={ setService }
-						onTemperatureChanged={ setTemperature }
 					/>
 				</div>
 			) }
