@@ -19,12 +19,14 @@ import {
 	WORDPRESS_SITE_SPEC_AGENT_ID,
 	WORDPRESS_TUTOR_AGENT_ID,
 } from '../agents/default-agents.js';
+import useChat from '../components/chat-provider/use-chat.js';
 
 /**
  * This is an example of switching dynamically between agents based on the Current Agent. TODO: some kind of registration mechanism.
  */
 
-const useCurrentAgent = ( { chat, toolkit } ) => {
+const useCurrentAgent = ( { toolkit } ) => {
+	const chat = useChat();
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =

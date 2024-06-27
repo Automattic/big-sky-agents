@@ -13,10 +13,6 @@ import AgentUI from './agent-ui.jsx';
 import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
 import ChatHistory from './chat-history.jsx';
-import {
-	AssistantModelService,
-	AssistantModelType,
-} from '../agents/assistant-model.js';
 import PageList from './page-list.jsx';
 import useReduxToolkit from '../hooks/use-redux-toolkit.js';
 import useCurrentAgent from '../hooks/use-current-agent.js';
@@ -68,24 +64,19 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	const agent = useCurrentAgent( {
 		pageId: selectedPageId,
 		toolkit,
-		chat,
 	} );
 
 	// run the agent
 	useAssistantExecutor( {
-		chat,
 		agent,
-		toolkit,
 	} );
 
 	useToolExecutor( {
-		chat,
 		toolkit,
 	} );
 
 	useAgentStarter( {
 		agent,
-		chat,
 	} );
 
 	const { pages } = useSelect( ( select ) => {
