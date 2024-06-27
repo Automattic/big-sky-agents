@@ -5,7 +5,7 @@ class Toolkit {
 	}
 
 	get state() {
-		return this.stateManager.state;
+		return this.stateManager.getState();
 	}
 
 	setState = ( newState ) => {
