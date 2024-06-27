@@ -11,5 +11,5 @@ import createToolRegistry from './tool-registry';
 const defaultRegistry = createToolRegistry();
 export const Context = createContext( defaultRegistry );
 const { Consumer, Provider } = Context;
-export const ChatConsumer = Consumer;
+export const ToolsConsumer = Consumer;
 export default Provider;

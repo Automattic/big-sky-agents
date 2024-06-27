@@ -11,5 +11,5 @@ import createAgentRegistry from './agent-registry';
 const defaultRegistry = createAgentRegistry();
 export const Context = createContext( defaultRegistry );
 const { Consumer, Provider } = Context;
-export const ChatConsumer = Consumer;
+export const AgentsConsumer = Consumer;
 export default Provider;
