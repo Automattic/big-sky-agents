@@ -10,6 +10,7 @@
 	"license": "GPL-2.0-or-later",
 	"type": "module",
 	"main": "dist/cjs/index.js",
+	"type": "module",
 	"module": "dist/esm/index.js",
 	"files": [
 		"dist"
