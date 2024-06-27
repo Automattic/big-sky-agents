@@ -15,7 +15,6 @@ import AgentControls from './agent-controls.jsx';
 import ChatHistory from './chat-history.jsx';
 import PageList from './page-list.jsx';
 import useReduxToolkit from '../hooks/use-redux-toolkit.js';
-import useCurrentAgent from '../hooks/use-current-agent.js';
 import useAssistantExecutor from '../hooks/use-assistant-executor.js';
 import useToolExecutor from '../hooks/use-tool-executor.js';
 import useAgentStarter from '../hooks/use-agent-starter.js';
@@ -23,87 +22,6 @@ import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChat from './chat-provider/use-chat.js';
 import './agents-demo-ui.scss';
-
-class ToolRegistry {
-	static registerTool( toolId, tool ) {
-		if ( ! this.tools ) {
-			this.tools = {};
-		}
-		this.tools[ toolId ] = tool;
-	}
-}
-
-class ToolkitRegistry {
-	static registerToolkit( toolkitId, toolkit ) {
-		if ( ! this.toolkits ) {
-			this.toolkits = {};
-		}
-		this.toolkits[ toolkitId ] = toolkit;
-	}
-}
-
-class AgentRegistry {
-	// static registerAgent method
-	static registerAgent( agentId, agent ) {
-		if ( ! this.agents ) {
-			this.agents = {};
-		}
-		this.agents[ agent.id ] = agent;
-	}
-}
-
-const agentRegistry = new AgentRegistry();
-const toolRegistry = new ToolRegistry();
-const toolkitRegistry = new ToolkitRegistry();
-
-toolRegistry.registerTool(
-	SetSiteTitleTool.function.name,
-	async ( { siteTitle } ) => {
-		// do something with the value
-	}
-);
-
-// or, register with the tool instance, which looks like a normal OpenAI tool
-toolRegistry.registerTool( SetSiteTitleTool, async ( { siteTitle } ) => {
-	// do something with the value
-} );
-
-// or, register using just an object
-toolRegistry.registerTool( {
-	name: 'Set Site Title',
-	description: 'Set the site title',
-	callback: async ( { siteTitle } ) => {
-		// do something with the value
-	},
-} );
-
-// can be a class or an object, allowing sharing of agent definitions with non-UI JS apps.
-toolkitRegistry.registerToolkit( 'big-sky', ReduxToolkit );
-toolkitRegistry.registerToolkit( 'settings', {
-	values: () => ( {
-		siteTitle: 'My Site',
-	} ),
-	// can be a static array or a function that returns an array
-	tools: [ SetSiteTitleTool ],
-	callbacks: {
-		[ SetSiteTitleTool.function.name ]: async ( { siteTitle } ) => {
-			// do something
-		},
-	},
-} );
-
-// can be a class or an object
-agentRegistry.registerAgent( 'wapuu', WapuuAgent );
-agentRegistry.registerAgent( 'wapuu', {
-	name: 'My Agent',
-	toolkits: [ 'big-sky' ],
-	tools: ( values ) => {
-		return [ InformTool ];
-	},
-	instructions: ( values ) => {
-		return `Hello, I am ${ values.agent.name }`;
-	},
-} );
 
 /**
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.

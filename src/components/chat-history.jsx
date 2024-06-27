@@ -25,12 +25,6 @@ function ChatHistory( { history, toolOutputs } ) {
 									( toolOutput ) =>
 										toolOutput.tool_call_id === tool_call.id
 								);
-								console.warn(
-									'tool_call',
-									tool_call,
-									toolOutputs,
-									toolCallResult
-								);
 								return (
 									<div
 										key={ `tool-call-${ i }` }

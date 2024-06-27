@@ -27,7 +27,6 @@ import useChat from '../components/chat-provider/use-chat.js';
 
 const useCurrentAgent = ( { toolkit } ) => {
 	const chat = useChat();
-	const agentRegistry = useAgentRegistry();
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =
@@ -36,7 +35,7 @@ const useCurrentAgent = ( { toolkit } ) => {
 	const { assistantId, setAssistantId } = chat;
 
 	const agent = useMemo( () => {
-		const newAgent = agentRegistry.getAgent( toolkit.values.agent.id );
+		// const newAgent = agentRegistry.getAgent( toolkit.values.agent.id );
 		switch ( toolkit.values.agent.id ) {
 			case WAPUU_AGENT_ID:
 				return new WapuuAgent( chat, toolkit );
