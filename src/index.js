@@ -23,6 +23,7 @@ export { default as useChatModel } from './hooks/use-chat-model.js';
  * Agents
  */
 export { default as agents } from './agents/default-agents.js';
+export { default as SiteSpecAgent } from './agents/site-spec-agent.js';
 
 /**
  * Simple chat, toolkit, and agent toolkit
