@@ -11,21 +11,9 @@ import {
 } from '../tools/site-tools.js';
 import uuidv4 from '../../utils/uuid.js';
 
-const INITIAL_STATE = {
-	textColor: undefined,
-	backgroundColor: undefined,
-	accentColor: undefined,
-	siteTitle: undefined,
-	siteDescription: undefined,
-	siteTopic: undefined,
-	siteType: undefined,
-	siteLocation: undefined,
-	pages: [],
-};
-
 class SimpleSiteToolkit extends Toolkit {
-	constructor( props ) {
-		super( props, INITIAL_STATE );
+	constructor( props, stateManager ) {
+		super( props, stateManager );
 
 		this.tools = this.getTools();
 	}
@@ -86,7 +74,7 @@ class SimpleSiteToolkit extends Toolkit {
 	};
 
 	onReset = () => {
-		this.setState( INITIAL_STATE );
+		this.resetState();
 	};
 
 	getTools = () => [
@@ -101,20 +89,21 @@ class SimpleSiteToolkit extends Toolkit {
 	];
 
 	getValues = () => {
+		const state = this.state;
 		return {
 			site: {
-				title: this.state.siteTitle,
-				description: this.state.siteDescription,
-				topic: this.state.siteTopic,
-				type: this.state.siteType,
-				location: this.state.siteLocation,
+				title: state.siteTitle,
+				description: state.siteDescription,
+				topic: state.siteTopic,
+				type: state.siteType,
+				location: state.siteLocation,
 			},
 			design: {
-				textColor: this.state.textColor,
-				backgroundColor: this.state.backgroundColor,
-				accentColor: this.state.accentColor,
+				textColor: state.textColor,
+				backgroundColor: state.backgroundColor,
+				accentColor: state.accentColor,
 			},
-			pages: this.state.pages,
+			pages: state.pages,
 		};
 	};
 

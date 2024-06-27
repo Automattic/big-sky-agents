@@ -34,6 +34,18 @@ export const actions = {
 			thought,
 		};
 	},
+	setAgentState: ( state ) => {
+		return {
+			type: 'SET_AGENT_STATE',
+			state,
+		};
+	},
+	resetAgentState: () => {
+		return {
+			type: 'RESET_AGENT_STATE',
+			state: initialState,
+		};
+	},
 };
 
 export const reducer = ( state = initialState, action ) => {
@@ -44,6 +56,10 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, agentGoal: action.goal };
 		case 'SET_AGENT_THOUGHT':
 			return { ...state, agentThought: action.thought };
+		case 'SET_AGENT_STATE':
+			return { ...state, ...action.state };
+		case 'RESET_AGENT_STATE':
+			return { ...action.state };
 		default:
 			return state;
 	}
@@ -67,5 +83,8 @@ export const selectors = {
 	},
 	getAgentThought: ( state ) => {
 		return state.agentThought;
+	},
+	getAgentState: ( state ) => {
+		return state;
 	},
 };

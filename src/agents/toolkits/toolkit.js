@@ -1,15 +1,15 @@
 class Toolkit {
-	constructor( props, initialState ) {
+	constructor( props, stateManager ) {
 		this.props = props;
-		this.state = initialState;
+		this.stateManager = stateManager;
 	}
 
-	getState = () => {
-		return this.state;
-	};
+	get state() {
+		return this.stateManager.getState();
+	}
 
 	setState = ( newState ) => {
-		this.state = { ...this.state, ...newState };
+		this.stateManager.setState( newState );
 	};
 
 	onReset = () => {
