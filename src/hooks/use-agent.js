@@ -1,15 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-// import { useEffect,  } from 'react';
 /**
  * Internal dependencies
  */
-import WapuuAgent from '../agents/wapuu-agent.js';
-import TutorAgent from '../agents/tutor-agent.js';
-import DesignAgent from '../agents/design-agent.js';
-import SiteSpecAgent from '../agents/site-spec-agent.js';
-import PageSpecAgent from '../agents/page-spec-agent.js';
-import WooAgent from '../agents/woo-agent.js';
-import StatsAgent from '../agents/stats-agent.js';
 import {
 	JETPACK_STATS_AGENT_ID,
 	WAPUU_AGENT_ID,
@@ -25,9 +17,8 @@ import useChat from '../components/chat-provider/use-chat.js';
  * This is an example of switching dynamically between agents based on the Current Agent. TODO: some kind of registration mechanism.
  */
 
-const useCurrentAgent = ( { toolkit } ) => {
+const useAgent = ( { agentId, toolkit } ) => {
 	const chat = useChat();
-	const agentRegistry = useAgentRegistry();
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =
@@ -36,7 +27,6 @@ const useCurrentAgent = ( { toolkit } ) => {
 	const { assistantId, setAssistantId } = chat;
 
 	const agent = useMemo( () => {
-		const newAgent = agentRegistry.getAgent( toolkit.values.agent.id );
 		switch ( toolkit.values.agent.id ) {
 			case WAPUU_AGENT_ID:
 				return new WapuuAgent( chat, toolkit );
@@ -55,7 +45,7 @@ const useCurrentAgent = ( { toolkit } ) => {
 			default:
 				return new WapuuAgent( chat, toolkit );
 		}
-	}, [ chat, toolkit ] );
+	}, [ agentId, chat, toolkit ] );
 
 	useEffect( () => {
 		if ( agent ) {
@@ -136,4 +126,4 @@ const useCurrentAgent = ( { toolkit } ) => {
 	};
 };
 
-export default useCurrentAgent;
+export default useAgent;

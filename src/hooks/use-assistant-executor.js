@@ -37,24 +37,14 @@ const useAssistantExecutor = ( {
 
 	useEffect( () => {
 		if (
-			running || // thinking
-			! isThreadRunComplete ||
-			isAwaitingUserInput ||
-			additionalMessages.length > 0 ||
-			history.length === 0 ||
-			! instructions // at a minimum we need a system prompt
+			! running &&
+			! isAwaitingUserInput &&
+			isThreadRunComplete &&
+			additionalMessages.length === 0 &&
+			history.length > 0
 		) {
-			// console.warn( 'not running assistant in executuor', {
-			// 	loading,
-			// 	enabled,
-			// 	running,
-			// 	threadId,
-			// 	threadRunId,
-			// 	instructions,
-			// } );
-			return;
+			createThreadRun( tools, instructions, additionalInstructions );
 		}
-		createThreadRun( tools, instructions, additionalInstructions );
 	}, [
 		additionalInstructions,
 		additionalMessages.length,
