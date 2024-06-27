@@ -109,6 +109,7 @@ function AskUserQuestion( {
 	choices,
 	placeholder,
 	multiChoice,
+	hideChoices,
 } ) {
 	const [ answer, setAnswer ] = useState( '' );
 	const [ selectedChoice, setSelectedChoice ] = useState( '' );
@@ -187,7 +188,7 @@ function AskUserQuestion( {
 							) ) }
 						</ItemGroup>
 					) }
-					{ choices && choices.length > 0 && (
+					{ ! hideChoices && choices && choices.length > 0 && (
 						<UserChoices
 							choices={ choices }
 							multiChoice={ multiChoice }

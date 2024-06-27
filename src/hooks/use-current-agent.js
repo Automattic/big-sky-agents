@@ -36,6 +36,7 @@ const useCurrentAgent = ( { chat, toolkit, newAgent } ) => {
 		if ( newAgent ) {
 			return new newAgent( chat, toolkit );
 		}
+		console.log( 'toolkit.values.agent.id', toolkit.values.agent.id );
 		switch ( toolkit.values.agent.id ) {
 			case WAPUU_AGENT_ID:
 				return new WapuuAgent( chat, toolkit );

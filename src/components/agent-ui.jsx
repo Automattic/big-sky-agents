@@ -79,6 +79,7 @@ function AgentUI( {
 		onReset: onResetTools,
 		values: { agentName, agentThought },
 	},
+	hideChoices = false,
 } ) {
 	const { agentQuestion, agentConfirm } = useMemo( () => {
 		return {
@@ -129,6 +130,7 @@ function AgentUI( {
 										onResetTools();
 										onResetChat();
 									} }
+									hideChoices={ hideChoices }
 								/>
 							) : null }
 						</AgentMessage>
@@ -147,6 +149,7 @@ function AgentUI( {
 								setToolResult( agentQuestion.id, answer );
 								userSay( answer, files );
 							} }
+							hideChoices={ hideChoices }
 						/>
 					) }
 					{ agentConfirm && (

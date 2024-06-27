@@ -20,6 +20,11 @@ export {
 export { default as useChatModel } from './hooks/use-chat-model.js';
 
 /**
+ * Agents
+ */
+export { default as SiteSpecAgent } from './agents/site-spec-agent.js';
+
+/**
  * Simple chat, toolkit, and agent toolkit
  */
 export { default as useSimpleChat } from './hooks/use-simple-chat.js';
@@ -43,6 +48,7 @@ export { default as AgentUI } from './components/agent-ui.jsx';
 export { default as AgentControls } from './components/agent-controls.jsx';
 export { default as ChatModelControls } from './components/chat-model-controls.jsx';
 export { default as AgentsDemoPage } from './components/agents-demo-page.jsx';
+export { default as SiteSpecPreview } from './components/site-spec-preview.jsx';
 
 /**
  * Hooks
