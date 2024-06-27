@@ -24,7 +24,7 @@ import {
  * This is an example of switching dynamically between agents based on the Current Agent. TODO: some kind of registration mechanism.
  */
 
-const useCurrentAgent = ( { chat, toolkit } ) => {
+const useCurrentAgent = ( { chat, toolkit, newAgent } ) => {
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =
@@ -33,6 +33,9 @@ const useCurrentAgent = ( { chat, toolkit } ) => {
 	const { assistantId, setAssistantId } = chat;
 
 	const agent = useMemo( () => {
+		if ( newAgent ) {
+			return new newAgent( chat, toolkit );
+		}
 		switch ( toolkit.values.agent.id ) {
 			case WAPUU_AGENT_ID:
 				return new WapuuAgent( chat, toolkit );
@@ -51,7 +54,7 @@ const useCurrentAgent = ( { chat, toolkit } ) => {
 			default:
 				return new WapuuAgent( chat, toolkit );
 		}
-	}, [ chat, toolkit ] );
+	}, [ chat, toolkit, newAgent ] );
 
 	useEffect( () => {
 		if ( agent ) {
