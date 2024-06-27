@@ -19,12 +19,14 @@ import {
 	WORDPRESS_SITE_SPEC_AGENT_ID,
 	WORDPRESS_TUTOR_AGENT_ID,
 } from '../agents/default-agents.js';
+import useChat from '../components/chat-provider/use-chat.js';
 
 /**
  * This is an example of switching dynamically between agents based on the Current Agent. TODO: some kind of registration mechanism.
  */
 
-const useCurrentAgent = ( { chat, toolkit, newAgent } ) => {
+const useCurrentAgent = ( { toolkit } ) => {
+	const chat = useChat();
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =
@@ -33,9 +35,6 @@ const useCurrentAgent = ( { chat, toolkit, newAgent } ) => {
 	const { assistantId, setAssistantId } = chat;
 
 	const agent = useMemo( () => {
-		if ( newAgent ) {
-			return new newAgent( chat, toolkit );
-		}
 		console.log( 'toolkit.values.agent.id', toolkit.values.agent.id );
 		switch ( toolkit.values.agent.id ) {
 			case WAPUU_AGENT_ID:
@@ -55,7 +54,7 @@ const useCurrentAgent = ( { chat, toolkit, newAgent } ) => {
 			default:
 				return new WapuuAgent( chat, toolkit );
 		}
-	}, [ chat, toolkit, newAgent ] );
+	}, [ chat, toolkit ] );
 
 	useEffect( () => {
 		if ( agent ) {

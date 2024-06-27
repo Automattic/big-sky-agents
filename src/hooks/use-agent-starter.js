@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
+import useChat from '../components/chat-provider/use-chat';
 
-const useAgentStarter = ( {
-	agent: { onStart },
-	chat: { started, loading, running },
-} ) => {
+const useAgentStarter = ( { agent: { onStart } } ) => {
+	const { started, loading, running } = useChat();
 	/**
 	 * Call agent.onStart() when we render.
 	 */

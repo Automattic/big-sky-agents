@@ -62,24 +62,20 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 
 	const agent = useCurrentAgent( {
 		toolkit,
-		chat,
 	} );
 
 	// run the agent
 	useChatExecutor( {
-		chat,
 		agent,
 		toolkit,
 	} );
 
 	useToolExecutor( {
-		chat,
 		toolkit,
 	} );
 
 	useAgentStarter( {
 		agent,
-		chat,
 	} );
 
 	const { pages } = useSelect( ( select ) => {

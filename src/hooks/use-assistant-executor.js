@@ -1,9 +1,11 @@
 /* eslint-disable camelcase, no-console */
 import { useEffect } from 'react';
+import useChat from '../components/chat-provider/use-chat';
 
 const useAssistantExecutor = ( {
 	agent: { tools, instructions, additionalInstructions },
-	chat: {
+} ) => {
+	const {
 		running,
 		history,
 		isThreadRunComplete,
@@ -14,8 +16,7 @@ const useAssistantExecutor = ( {
 		threadId,
 		createThread,
 		createThreadRun,
-	},
-} ) => {
+	} = useChat();
 	// if there's no threadId, create one
 	useEffect( () => {
 		if ( ! running && ! threadId ) {

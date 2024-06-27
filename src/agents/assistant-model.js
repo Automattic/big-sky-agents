@@ -334,7 +334,7 @@ export class OpenAIAssistantModel extends AssistantModel {
 	}
 
 	getServiceUrl() {
-		return 'https://api.openai.com/v1/';
+		return 'https://api.openai.com/v1';
 	}
 }
 

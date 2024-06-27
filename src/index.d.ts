@@ -17,9 +17,11 @@ import { ChatModelType, ChatModelService } from './agents/chat-model';
  */
 
 export declare function useChatExecutor( options: {
-	agent: Agent;
-	chat: Chat;
-	toolkit: AgentToolkit;
+	agent: AgentState;
+} ): void;
+
+export declare function useAssistantExecutor( options: {
+	agent: AgentState;
 } ): void;
 
 export declare function useChatModel( options: {
@@ -200,6 +202,14 @@ declare class Agent {
 	onStart(): void;
 }
 
+interface AgentState {
+	tools: Tool[];
+	instructions: string;
+	additionalInstructions: string;
+	onStart: () => void;
+	onConfirm?: ( args: any ) => string;
+}
+
 export declare class StandardAgent extends Agent {
 	askUser( options: { question: string; choices: string[] } ): void;
 	informUser( message: string ): void;
@@ -224,7 +234,13 @@ interface Toolkit {
 interface AgentToolkit extends Toolkit {
 	values: {
 		agents: any[]; // TODO: define this agent config
-		agent: Agent;
+		agent: {
+			assistantId: string,
+			id: string,
+			name: string,
+			goal: string,
+			thought: string,
+		};
 	};
 	callbacks: ToolkitCallbacks;
 }
@@ -235,7 +251,7 @@ interface AgentToolkit extends Toolkit {
 
 type AgentUIProps = {
 	chat: Chat;
-	agent: Agent;
+	agent: AgentState;
 	toolkit: AgentToolkit;
 };
 

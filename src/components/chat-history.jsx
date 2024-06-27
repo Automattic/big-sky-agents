@@ -20,53 +20,35 @@ function ChatHistory( { history, toolOutputs } ) {
 									content={ message.content || '' }
 								/>
 							) }
-							{ message.tool_calls && (
-								<>
-									Tool Calls
-									{ message.tool_calls.map(
-										( tool_call, i ) => {
-											const toolCallResult =
-												toolOutputs.find(
-													( toolOutput ) =>
-														toolOutput.id ===
-														tool_call.id
-												);
-											return (
-												<div
-													key={ `tool-call-${ i }` }
-													className="big-sky__chat-history-tool-call"
-												>
-													{ tool_call.function.name }(
-													{ JSON.stringify(
-														tool_call.function
-															.arguments
-													) }
-													)
-													{ toolCallResult ? (
-														<>
-															<br />
-															<em>
-																Response:
-															</em>{ ' ' }
-															{ JSON.stringify(
-																toolCallResult
-															) }
-														</>
-													) : (
-														<>
-															<br />
-															<em>
-																Waiting for
-																response...
-															</em>
-														</>
-													) }
-												</div>
-											);
-										}
-									) }{ ' ' }
-								</>
-							) }
+							{ message.tool_calls?.map( ( tool_call, i ) => {
+								const toolCallResult = toolOutputs.find(
+									( toolOutput ) =>
+										toolOutput.tool_call_id === tool_call.id
+								);
+								console.warn(
+									'tool_call',
+									tool_call,
+									toolOutputs,
+									toolCallResult
+								);
+								return (
+									<div
+										key={ `tool-call-${ i }` }
+										className="big-sky__chat-history-tool-call"
+									>
+										<em>Request:</em>{ ' ' }
+										{ tool_call.function.name }(
+										{ JSON.stringify(
+											tool_call.function.arguments
+										) }
+										)<br />
+										<em>Response:</em>{ ' ' }
+										{ toolCallResult
+											? toolCallResult.output
+											: 'Waiting' }
+									</div>
+								);
+							} ) }
 							{ message.role === 'tool' && (
 								<>
 									ID: { message.tool_call_id }
