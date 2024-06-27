@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import AnalyzeUrlTool, {
 	ANALYZE_URL_TOOL_NAME,
 	makeAnalyzeUrlRequest,
-} from '../agents/tools/analyze-url.js';
+} from '../ai/tools/analyze-url.js';
 
 const values = {};
 

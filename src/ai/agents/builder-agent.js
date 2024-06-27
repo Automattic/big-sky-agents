@@ -1,7 +1,7 @@
-import Agent from './agent.js';
-import { DotPromptTemplate } from './prompt-template.js';
-import AnalyzeUrlTool from './tools/analyze-url.js';
-import ConfirmTool from './tools/confirm.js';
+import Agent from '../agent.js';
+import { DotPromptTemplate } from '../prompt-template.js';
+import AnalyzeUrlTool from '../tools/analyze-url.js';
+import ConfirmTool from '../tools/confirm.js';
 
 const instructions = DotPromptTemplate.fromString(
 	`You are a helpful assistant. Your mission is to help the user design the perfect site.`

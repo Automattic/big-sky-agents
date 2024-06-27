@@ -10,8 +10,8 @@ import { useMemo } from 'react';
 import AskUserQuestion from './ask-question.jsx';
 import Confirm from './confirm.jsx';
 import MessageContent from './message-content.jsx';
-import { ASK_USER_TOOL_NAME } from '../agents/tools/ask-user.js';
-import { CONFIRM_TOOL_NAME } from '../agents/tools/confirm.js';
+import { ASK_USER_TOOL_NAME } from '../ai/tools/ask-user.js';
+import { CONFIRM_TOOL_NAME } from '../ai/tools/confirm.js';
 import './agent-ui.scss';
 
 const AgentThought = ( { message, ...props } ) => (

@@ -23,6 +23,10 @@ import { useSelect } from '@wordpress/data';
 import useChat from './chat-provider/use-chat.js';
 import './agents-demo-ui.scss';
 
+// if you want to use the default registry, you can just import the default which is shared by all consumers
+
+import defaultAgentRegistry from '../ai/agents/default-agents.js';
+
 /**
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
  *

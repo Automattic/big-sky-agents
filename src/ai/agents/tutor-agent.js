@@ -1,7 +1,7 @@
-import { ASK_USER_TOOL_NAME } from './tools/ask-user.js';
-import Agent from './agent.js';
+import { ASK_USER_TOOL_NAME } from '../tools/ask-user.js';
+import Agent from '../agent.js';
 import { WORDPRESS_TUTOR_AGENT_ID } from './default-agents.js';
-import { DotPromptTemplate } from './prompt-template.js';
+import { DotPromptTemplate } from '../prompt-template.js';
 
 const instructions = DotPromptTemplate.fromString(
 	`You are a helpful WordPress tutor. You are an expert in all things WordPress.`

@@ -8,9 +8,9 @@ export type {
 	LocalAIChatModel,
 	WPCOMJetpackAIChatModel,
 	WPCOMOpenAIChatModel,
-} from './agents/chat-model';
+} from './ai/chat-model';
 
-import { ChatModelType, ChatModelService } from './agents/chat-model';
+import { ChatModelType, ChatModelService } from './ai/chat-model';
 
 /**
  * Hooks

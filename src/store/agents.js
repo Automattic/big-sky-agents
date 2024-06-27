@@ -1,4 +1,4 @@
-import agents, { WAPUU_AGENT_ID } from '../agents/default-agents.js';
+import agents, { WAPUU_AGENT_ID } from '../ai/agents/default-agents.js';
 
 const DEFAULT_AGENT_ID = WAPUU_AGENT_ID;
 const DEFAULT_AGENT_NAME = 'Unknown Agent';

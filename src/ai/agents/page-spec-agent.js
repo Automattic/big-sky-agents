@@ -7,9 +7,9 @@ import {
 	SetPageSectionsTool,
 	SetPageTitleTool,
 	SetSitePagesTool,
-} from './tools/site-tools.js';
+} from '../tools/site-tools.js';
 import { WORDPRESS_SITE_SPEC_AGENT_ID } from './default-agents.js';
-import { DotPromptTemplate } from './prompt-template.js';
+import { DotPromptTemplate } from '../prompt-template.js';
 
 const defaultChoices = [ 'Update the site description', 'Add a page' ];
 

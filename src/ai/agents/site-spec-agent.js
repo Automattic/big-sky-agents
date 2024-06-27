@@ -6,9 +6,9 @@ import {
 	SetSiteTitleTool,
 	SetSiteTopicTool,
 	SetSiteTypeTool,
-} from './tools/site-tools.js';
+} from '../tools/site-tools.js';
 import { WORDPRESS_SITE_SPEC_AGENT_ID } from './default-agents.js';
-import { DotPromptTemplate } from './prompt-template.js';
+import { DotPromptTemplate } from '../prompt-template.js';
 
 const defaultQuestion = 'What would you like to do with your site settings?';
 

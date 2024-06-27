@@ -8,13 +8,13 @@ import { useCallback, useMemo } from 'react';
  * Internal dependencies
  */
 import { store as agentStore } from '../store/index.js';
-import InformTool, { INFORM_TOOL_NAME } from '../agents/tools/inform-user.js';
+import InformTool, { INFORM_TOOL_NAME } from '../ai/tools/inform-user.js';
 import createSetAgentTool, {
 	SET_AGENT_TOOL_NAME,
-} from '../agents/tools/set-agent.js';
+} from '../ai/tools/set-agent.js';
 import SetGoalTool, {
 	SET_AGENT_GOAL_TOOL_NAME,
-} from '../agents/tools/set-goal.js';
+} from '../ai/tools/set-goal.js';
 
 const useReduxAgentToolkit = () => {
 	const { setAgentThought, setAgentGoal, setAgent, setAssistantId } =

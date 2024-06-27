@@ -1,7 +1,7 @@
-import Agent from './agent.js';
-import AnalyzeUrlTool from './tools/analyze-url.js';
+import Agent from '../agent.js';
+import AnalyzeUrlTool from '../tools/analyze-url.js';
 import { WOO_STORE_AGENT_ID } from './default-agents.js';
-import { DotPromptTemplate } from './prompt-template.js';
+import { DotPromptTemplate } from '../prompt-template.js';
 
 const instructions = DotPromptTemplate.fromString(
 	`You are a helpful eCommerce assistant. You are an expert in all things WooCommerce.`

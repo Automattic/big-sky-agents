@@ -10,7 +10,7 @@ import {
 	WORDPRESS_PAGE_SPEC_AGENT_ID,
 	WORDPRESS_SITE_SPEC_AGENT_ID,
 	WORDPRESS_TUTOR_AGENT_ID,
-} from '../agents/default-agents.js';
+} from '../ai/agents/default-agents.js';
 import useChat from '../components/chat-provider/use-chat.js';
 
 /**
@@ -19,6 +19,7 @@ import useChat from '../components/chat-provider/use-chat.js';
 
 const useAgent = ( { agentId, toolkit } ) => {
 	const chat = useChat();
+
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =
@@ -27,24 +28,7 @@ const useAgent = ( { agentId, toolkit } ) => {
 	const { assistantId, setAssistantId } = chat;
 
 	const agent = useMemo( () => {
-		switch ( toolkit.values.agent.id ) {
-			case WAPUU_AGENT_ID:
-				return new WapuuAgent( chat, toolkit );
-			case WORDPRESS_TUTOR_AGENT_ID:
-				return new TutorAgent( chat, toolkit );
-			case WORDPRESS_DESIGN_AGENT_ID:
-				return new DesignAgent( chat, toolkit );
-			case WORDPRESS_SITE_SPEC_AGENT_ID:
-				return new SiteSpecAgent( chat, toolkit );
-			case WORDPRESS_PAGE_SPEC_AGENT_ID:
-				return new PageSpecAgent( chat, toolkit );
-			case WOO_STORE_AGENT_ID:
-				return new WooAgent( chat, toolkit );
-			case JETPACK_STATS_AGENT_ID:
-				return new StatsAgent( chat, toolkit );
-			default:
-				return new WapuuAgent( chat, toolkit );
-		}
+		const agentClass =
 	}, [ agentId, chat, toolkit ] );
 
 	useEffect( () => {

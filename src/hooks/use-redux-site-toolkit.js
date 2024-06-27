@@ -22,7 +22,7 @@ import {
 	SetSiteTitleTool,
 	SetSiteTopicTool,
 	SetSiteTypeTool,
-} from '../agents/tools/site-tools.js';
+} from '../ai/tools/site-tools.js';
 
 const useReduxSiteToolkit = ( { pageId } ) => {
 	const {
@@ -86,12 +86,10 @@ const useReduxSiteToolkit = ( { pageId } ) => {
 				return 'Site colors updated';
 			},
 			[ SetSiteTitleTool.function.name ]: ( { value } ) => {
-				console.warn( 'got request', value );
 				setSiteTitle( value );
 				return `Site title set to "${ value }"`;
 			},
 			[ SetSiteDescriptionTool.function.name ]: ( { value } ) => {
-				console.warn( 'setSiteDescription', value );
 				setSiteDescription( value );
 				return `Site description set to "${ value }"`;
 			},

@@ -6,7 +6,7 @@ import PageSpecAgent from './page-spec-agent.js';
 import WooAgent from './woo-agent.js';
 import StatsAgent from './stats-agent.js';
 
-import SiteSpecToolkit from './toolkits/site-spec.js';
+import SiteSpecToolkit from '../toolkits/site-spec.js';
 
 export const WAPUU_AGENT_ID = 'Wapuu';
 export const WAPUU_ASSISTANT_ID = 'asst_lk7tPSgLWShOx6N0LJuxQGVe';

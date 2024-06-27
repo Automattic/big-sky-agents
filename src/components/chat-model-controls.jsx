@@ -11,7 +11,7 @@ import {
 /**
  * Internal dependencies
  */
-import { ChatModelService, ChatModelType } from '../agents/chat-model.js';
+import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
 
 const ChatModelControls = ( {
 	model,

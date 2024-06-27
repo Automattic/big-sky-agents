@@ -16,7 +16,7 @@ export {
 	LocalAIChatModel,
 	WPCOMJetpackAIChatModel,
 	WPCOMOpenAIChatModel,
-} from './agents/chat-model.js';
+} from './ai/chat-model.js';
 export { default as useChatModel } from './hooks/use-chat-model.js';
 
 /**
@@ -49,7 +49,7 @@ export { default as useChatIcon } from './hooks/use-chat-icon.js';
 /**
  * Core Classes
  */
-export { default as Agent } from './agents/agent.js';
+export { default as Agent } from './ai/agent.js';
 
 /**
  * Prompt Templates
@@ -59,4 +59,4 @@ export {
 	StringPromptTemplate,
 	DotPromptTemplate,
 	FStringPromptTemplate,
-} from './agents/prompt-template.js';
+} from './ai/prompt-template.js';

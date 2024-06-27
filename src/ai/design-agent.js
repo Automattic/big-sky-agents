@@ -1,4 +1,4 @@
-import BuilderAgent from './builder-agent.js';
+import BuilderAgent from './agents/builder-agent.js';
 import { DotPromptTemplate } from './prompt-template.js';
 import { SetSiteColorsTool } from './tools/site-tools.js';
 
