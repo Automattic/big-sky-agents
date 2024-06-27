@@ -20,61 +20,61 @@ class SimpleSiteToolkit extends Toolkit {
 
 	setSiteColors = ( { textColor, backgroundColor, accentColor } ) => {
 		if ( textColor ) {
-			this.stateManager.setState( { textColor } );
+			this.setState( { textColor } );
 		}
 		if ( backgroundColor ) {
-			this.stateManager.setState( { backgroundColor } );
+			this.setState( { backgroundColor } );
 		}
 		if ( accentColor ) {
-			this.stateManager.setState( { accentColor } );
+			this.setState( { accentColor } );
 		}
 		return 'Site colors updated';
 	};
 
 	setSiteTitle = ( { value } ) => {
-		this.stateManager.setState( { siteTitle: value } );
+		this.setState( { siteTitle: value } );
 		return `Site title set to "${ value }"`;
 	};
 
 	setSiteDescription = ( { value } ) => {
-		this.stateManager.setState( { siteDescription: value } );
+		this.setState( { siteDescription: value } );
 		return `Site description set to "${ value }"`;
 	};
 
 	setSiteTopic = ( { value } ) => {
-		this.stateManager.setState( { siteTopic: value } );
+		this.setState( { siteTopic: value } );
 		return `Site topic set to "${ value }"`;
 	};
 
 	setSiteType = ( { value } ) => {
-		this.stateManager.setState( { value } );
+		this.setState( { value } );
 		return `Site type set to "${ value }"`;
 	};
 
 	setSiteLocation = ( { value } ) => {
-		this.stateManager.setState( { siteLocation: value } );
+		this.setState( { siteLocation: value } );
 		return `Site location set to "${ value }"`;
 	};
 
 	setSitePages = ( { pages: newPages } ) => {
-		this.stateManager.setState( { pages: newPages } );
+		this.setState( { pages: newPages } );
 		return 'Site pages set';
 	};
 
 	addSitePage = ( { category, title, description } ) => {
-		const { pages } = this.stateManager.getState();
+		const { pages } = this.state;
 		const newPage = {
 			id: uuidv4(),
 			category,
 			title,
 			description,
 		};
-		this.stateManager.setState( { pages: [ ...pages, newPage ] } );
+		this.setState( { pages: [ ...pages, newPage ] } );
 		return 'Adding site page';
 	};
 
 	onReset = () => {
-		this.stateManager.resetState();
+		this.resetState();
 	};
 
 	getTools = () => [
@@ -89,7 +89,7 @@ class SimpleSiteToolkit extends Toolkit {
 	];
 
 	getValues = () => {
-		const state = this.stateManager.getState();
+		const state = this.state;
 		return {
 			site: {
 				title: state.siteTitle,

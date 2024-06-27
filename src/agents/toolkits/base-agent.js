@@ -14,8 +14,7 @@ class SimpleAgentToolkit extends Toolkit {
 
 	getValues = () => {
 		const { agents } = this.props;
-		const { agentId, agentGoal, agentThought } =
-			this.stateManager.getState();
+		const { agentId, agentGoal, agentThought } = this.state;
 
 		return {
 			agents,
@@ -46,17 +45,17 @@ class SimpleAgentToolkit extends Toolkit {
 					// set assistantId in store
 					newState.assistantId = agentConfig.assistantId;
 				}
-				this.stateManager.setState( newState );
+				this.setState( newState );
 
 				// if values.agents includes this agent
 				return `Agent set to ${ newAgentId }`;
 			},
 			[ SET_AGENT_GOAL_TOOL_NAME ]: ( { goal } ) => {
-				this.stateManager.setState( { agentGoal: goal } );
+				this.setState( { agentGoal: goal } );
 				return `Goal set to "${ goal }"`;
 			},
 			[ INFORM_TOOL_NAME ]: ( { message } ) => {
-				this.stateManager.setState( { agentThought: message } );
+				this.setState( { agentThought: message } );
 				return message
 					? `Agent thinks: "${ message }"`
 					: 'Thought cleared';
@@ -77,7 +76,7 @@ class SimpleAgentToolkit extends Toolkit {
 	};
 
 	onReset = () => {
-		this.stateManager.resetState();
+		this.resetState();
 	};
 }
 

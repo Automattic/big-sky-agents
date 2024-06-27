@@ -4,6 +4,14 @@ class Toolkit {
 		this.stateManager = stateManager;
 	}
 
+	get state() {
+		return this.stateManager.state;
+	}
+
+	setState = ( newState ) => {
+		this.stateManager.setState( newState );
+	};
+
 	onReset = () => {
 		throw new Error( 'Not implemented' );
 	};
