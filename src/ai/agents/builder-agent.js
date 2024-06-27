@@ -1,4 +1,4 @@
-import Agent from '../agent.js';
+import Agent from './agent.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 import AnalyzeUrlTool from '../tools/analyze-url.js';
 import ConfirmTool from '../tools/confirm.js';

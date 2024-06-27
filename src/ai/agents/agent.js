@@ -1,9 +1,9 @@
-import AskUserTool from './tools/ask-user.js';
-import { WAPUU_ASSISTANT_ID } from './agents/default-agents.js';
-import { DotPromptTemplate } from './prompt-template.js';
-import InformUserTool from './tools/inform-user.js';
-import SetGoalTool from './tools/set-goal.js';
-import createSetAgentTool from './tools/set-agent.js';
+import AskUserTool from '../tools/ask-user.js';
+import { WAPUU_ASSISTANT_ID } from './default-agents.js';
+import { DotPromptTemplate } from '../prompt-template.js';
+import InformUserTool from '../tools/inform-user.js';
+import SetGoalTool from '../tools/set-goal.js';
+import createSetAgentTool from '../tools/set-agent.js';
 
 const instructions = DotPromptTemplate.fromString(
 	`You are a helpful assistant.`

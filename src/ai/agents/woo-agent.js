@@ -1,4 +1,4 @@
-import Agent from '../agent.js';
+import Agent from './agent.js';
 import AnalyzeUrlTool from '../tools/analyze-url.js';
 import { WOO_STORE_AGENT_ID } from './default-agents.js';
 import { DotPromptTemplate } from '../prompt-template.js';

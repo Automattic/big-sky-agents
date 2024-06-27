@@ -1,4 +1,4 @@
-import Agent from '../agent.js';
+import Agent from './agent.js';
 import { JETPACK_STATS_AGENT_ID } from './default-agents.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 

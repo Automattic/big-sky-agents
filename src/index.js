@@ -49,7 +49,7 @@ export { default as useChatIcon } from './hooks/use-chat-icon.js';
 /**
  * Core Classes
  */
-export { default as Agent } from './ai/agent.js';
+export { default as Agent } from './ai/agents/agent.js';
 
 /**
  * Prompt Templates
