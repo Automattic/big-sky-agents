@@ -1,8 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-// import { useEffect,  } from 'react';
-/**
- * Internal dependencies
- */
 import WapuuAgent from '../agents/wapuu-agent.js';
 import TutorAgent from '../agents/tutor-agent.js';
 import DesignAgent from '../agents/design-agent.js';
@@ -21,11 +17,7 @@ import {
 } from '../agents/default-agents.js';
 import useChat from '../components/chat-provider/use-chat.js';
 
-/**
- * This is an example of switching dynamically between agents based on the Current Agent. TODO: some kind of registration mechanism.
- */
-
-const useCurrentAgent = ( { toolkit } ) => {
+const useAgent = ( agentId, { toolkit } ) => {
 	const chat = useChat();
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
@@ -35,8 +27,7 @@ const useCurrentAgent = ( { toolkit } ) => {
 	const { assistantId, setAssistantId } = chat;
 
 	const agent = useMemo( () => {
-		console.log( 'toolkit.values.agent.id', toolkit.values.agent.id );
-		switch ( toolkit.values.agent.id ) {
+		switch ( agentId ) {
 			case WAPUU_AGENT_ID:
 				return new WapuuAgent( chat, toolkit );
 			case WORDPRESS_TUTOR_AGENT_ID:
@@ -54,17 +45,13 @@ const useCurrentAgent = ( { toolkit } ) => {
 			default:
 				return new WapuuAgent( chat, toolkit );
 		}
-	}, [ chat, toolkit ] );
+	}, [ agentId, chat, toolkit ] );
 
 	useEffect( () => {
 		if ( agent ) {
-			/**
-			 * Compute new state
-			 */
 			const newTools = agent.getTools();
 			const newInstructions = agent.getInstructions();
 			const newAdditionalInstructions = agent.getAdditionalInstructions();
-
 			const newAssistantId = agent.getAssistantId();
 
 			if ( ! newAssistantId ) {
@@ -76,17 +63,14 @@ const useCurrentAgent = ( { toolkit } ) => {
 			}
 
 			if ( newInstructions && newInstructions !== instructions ) {
-				// console.warn( '🧠 System prompt', newSystemPrompt );
 				setInstructions( newInstructions );
 			}
 
 			if ( newAdditionalInstructions !== additionalInstructions ) {
-				// console.warn( '🧠 Next step prompt', newNextStepPrompt );
 				setAdditionalInstructions( newAdditionalInstructions );
 			}
 
 			if ( JSON.stringify( newTools ) !== JSON.stringify( tools ) ) {
-				// console.warn( '🧠 Tools', newTools );
 				setTools( newTools );
 			}
 		}
@@ -135,4 +119,4 @@ const useCurrentAgent = ( { toolkit } ) => {
 	};
 };
 
-export default useCurrentAgent;
+export default useAgent;
