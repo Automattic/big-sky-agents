@@ -32,6 +32,9 @@ export { default as useSimpleAgentToolkit } from './hooks/use-simple-agent-toolk
 export { default as useChat } from './components/chat-provider/use-chat.js';
 export { default as useReduxToolkit } from './hooks/use-redux-toolkit.js';
 export { default as useReduxAgentToolkit } from './hooks/use-redux-agent-toolkit.js';
+export { default as useCurrentAgent } from './hooks/use-current-agent.js';
+export { default as useToolExecutor } from './hooks/use-tool-executor.js';
+export { default as useAgentStarter } from './hooks/use-agent-starter.js';
 
 /**
  * Components
