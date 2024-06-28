@@ -47,6 +47,7 @@ Format all content in Markdown. The current state of the Page is:
 
 class PageSpecAgent extends BuilderAgent {
 	id = 'WPPageSpec';
+	description = 'Here to help you update a page.';
 
 	instructions( context ) {
 		return SystemPrompt.format( context );

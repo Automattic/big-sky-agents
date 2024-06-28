@@ -1,36 +1,28 @@
 /**
  * WordPress dependencies
  */
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 /**
  * Internal dependencies
  */
 import AnalyzeUrlTool, {
-	ANALYZE_URL_TOOL_NAME,
 	makeAnalyzeUrlRequest,
 } from '../ai/tools/analyze-url.js';
 
-const values = {};
+import useTools from '../components/tools-provider/use-tools.js';
 
 const useAnalyzeSiteToolkit = ( { apiKey } ) => {
-	const callbacks = useMemo( () => {
-		return {
-			[ ANALYZE_URL_TOOL_NAME ]: ( { url } ) => {
+	const { registerTool } = useTools();
+	// register the tools
+	useEffect( () => {
+		registerTool( {
+			...AnalyzeUrlTool,
+			callback: ( { url } ) => {
 				return makeAnalyzeUrlRequest( { url, apiKey } );
 			},
-		};
-	}, [ apiKey ] );
-
-	const tools = useMemo( () => {
-		return [ AnalyzeUrlTool ];
-	}, [] );
-
-	return {
-		tools,
-		values,
-		callbacks,
-	};
+		} );
+	}, [ apiKey, registerTool ] );
 };
 
 export default useAnalyzeSiteToolkit;

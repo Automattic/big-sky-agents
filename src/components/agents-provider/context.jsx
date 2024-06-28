@@ -1,56 +1,30 @@
 /**
  * WordPress dependencies
  */
-import {
-	createContext,
-	useCallback,
-	useMemo,
-	useReducer,
-} from '@wordpress/element';
+import { createContext } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
-import { agentsReducer, initialState } from './agents-reducer';
+import { initialState } from './agents-reducer';
 import defaultAgents from '../../ai/agents/default-agents';
 
-export const Context = createContext();
+export const Context = createContext( {
+	...initialState,
+	agents: defaultAgents,
+} );
 
-function AgentsProvider( { children, config } ) {
-	const [ state, dispatch ] = useReducer(
-		agentsReducer,
-		config ?? initialState
-	);
+const configToState = ( config ) => {
+	return {
+		activeAgentId: config.activeAgentId ?? null,
+		agents: config.agents ?? [],
+	};
+};
 
-	const registerAgent = useCallback( ( agent ) => {
-		dispatch( { type: 'REGISTER_AGENT', payload: { agent } } );
-	}, [] );
-
-	const registerDefaultAgents = useCallback( () => {
-		defaultAgents.forEach( ( agent ) => {
-			registerAgent( agent );
-		} );
-	}, [ registerAgent ] );
-
-	const setActiveAgent = useCallback( ( agentId ) => {
-		dispatch( { type: 'SET_ACTIVE_AGENT', payload: { agentId } } );
-	}, [] );
-
-	const activeAgent = useMemo(
-		() =>
-			state.agents.find( ( agent ) => agent.id === state.activeAgentId ),
-		[ state.activeAgentId, state.agents ]
-	);
-
+function AgentsProvider( { children, ...config } ) {
 	return (
 		<Context.Provider
-			value={ {
-				agents: state.agents,
-				activeAgent,
-				setActiveAgent,
-				registerAgent,
-				registerDefaultAgents,
-			} }
+			value={ config ? configToState( config ) : initialState }
 		>
 			{ children }
 		</Context.Provider>

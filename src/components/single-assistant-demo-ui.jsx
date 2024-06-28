@@ -15,7 +15,6 @@ import PageList from './page-list.jsx';
 import useReduxAgentToolkit from '../hooks/use-redux-agent-toolkit.js';
 // import useAssistantExecutor from '../hooks/use-assistant-executor.js';
 import useChatExecutor from '../hooks/use-chat-executor.js';
-import useToolExecutor from '../hooks/use-tool-executor.js';
 import useAgentStarter from '../hooks/use-agent-starter.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
@@ -23,11 +22,9 @@ import useChat from './chat-provider/use-chat.js';
 import './agents-demo-ui.scss';
 import AgentsProvider from './agents-provider/context.jsx';
 import ToolsProvider from './tools-provider/context.jsx';
-import useAgents from './agents-provider/use-agents.js';
 import AskUserTool from '../ai/tools/ask-user.js';
 import InformUserTool from '../ai/tools/inform-user.js';
-import PopUpContols from './popup-controls.jsx';
-import useCurrentAgent from '../hooks/use-current-agent.js';
+import PopUpControls from './popup-controls.jsx';
 
 // if you want to use the default registry, you can just import the default which is shared by all consumers
 
@@ -78,40 +75,6 @@ import useCurrentAgent from '../hooks/use-current-agent.js';
  *                                         -->
  */
 
-const SingleAgentCreator = ( { agent } ) => {
-	const { registerAgent, setActiveAgent } = useAgents();
-	useEffect( () => {
-		registerAgent( agent );
-		setActiveAgent( agent.id );
-	}, [ agent, registerAgent, setActiveAgent ] );
-};
-
-const SingleAgentProvider = ( { children, agent } ) => {
-	return (
-		<AgentsProvider>
-			<SingleAgentCreator agent={ agent } />
-			{ children }
-		</AgentsProvider>
-	);
-};
-
-// const SingleToolCreator = ( { tool } ) => {
-// 	const { registerTool } = useTools();
-// 	useEffect( () => {
-// 		registerTool( tool );
-// 	}, [ tool, registerTool ] );
-// };
-
-// const ToolsProvider = ( { children, tool } ) => {
-// 	console.warn( 'providing tool', tool );
-// 	return (
-// 		<ToolsProvider>
-// 			<SingleToolCreator tool={ tool } />
-// 			{ children }
-// 		</ToolsProvider>
-// 	);
-// };
-
 const SingleAssistantDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	const [ previewVisible, setPreviewVisible ] = useState( false );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
@@ -136,20 +99,9 @@ const SingleAssistantDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		apiKey,
 	} );
 
-	const agent = useCurrentAgent( {
-		toolkit,
-	} );
-
 	// run the agent
 	useChatExecutor();
-
-	useToolExecutor( {
-		toolkit,
-	} );
-
-	useAgentStarter( {
-		agent,
-	} );
+	useAgentStarter();
 
 	const { pages } = useSelect( ( select ) => {
 		return {
@@ -202,7 +154,7 @@ const SingleAssistantDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 				) }
 			</Flex>
 			<ChatHistory />
-			<PopUpContols toolkit={ toolkit } setApiKey={ onApiKeyChanged } />
+			<PopUpControls toolkit={ toolkit } setApiKey={ onApiKeyChanged } />
 		</>
 	);
 };
@@ -238,27 +190,30 @@ const DemoWithSingleAgent = ( props ) => {
 				},
 			] }
 		>
-			<SingleAgentProvider
-				agent={ {
-					id: 'weatherbot',
-					name: 'WeatherBot',
-					description: 'Looks up the weather for you',
-					instructions: 'You are a helpful weather bot',
-					onStart: ( invoke ) => {
-						invoke.askUser( {
-							question:
-								'What location would you like the weather for?',
-							choices: [
-								'Boston, MA',
-								'New York, NY',
-								'San Francisco, CA',
-							],
-						} );
+			<AgentsProvider
+				activeAgentId="weatherbot"
+				agents={ [
+					{
+						id: 'weatherbot',
+						name: 'WeatherBot',
+						description: 'Looks up the weather for you',
+						instructions: 'You are a helpful weather bot',
+						onStart: ( invoke ) => {
+							invoke.askUser( {
+								question:
+									'What location would you like the weather for?',
+								choices: [
+									'Boston, MA',
+									'New York, NY',
+									'San Francisco, CA',
+								],
+							} );
+						},
 					},
-				} }
+				] }
 			>
 				<SingleAssistantDemoUI { ...props } />
-			</SingleAgentProvider>
+			</AgentsProvider>
 		</ToolsProvider>
 	);
 };

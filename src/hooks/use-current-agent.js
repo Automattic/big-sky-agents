@@ -33,8 +33,6 @@ const useCurrentAgent = () => {
 		useState( '' );
 	const { assistantId, setAssistantId } = chat;
 
-	console.warn( 'all tools', allTools );
-
 	useEffect( () => {
 		if ( activeAgent ) {
 			/**
@@ -96,7 +94,6 @@ const useCurrentAgent = () => {
 
 	const onStart = useCallback( () => {
 		if ( activeAgent ) {
-			console.warn( 'starting', invoke, activeAgent );
 			activeAgent.onStart( invoke );
 		}
 	}, [ activeAgent, invoke ] );
@@ -104,12 +101,12 @@ const useCurrentAgent = () => {
 	const onConfirm = useCallback(
 		( confirmed ) => {
 			if ( activeAgent && activeAgent.onConfirm ) {
-				activeAgent.onConfirm( confirmed );
+				activeAgent.onConfirm( confirmed, invoke );
 			} else {
 				console.warn( 'No onConfirm method found for activeAgent' );
 			}
 		},
-		[ activeAgent ]
+		[ activeAgent, invoke ]
 	);
 
 	return {

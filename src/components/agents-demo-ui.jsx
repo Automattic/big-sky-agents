@@ -14,9 +14,7 @@ import PopUpControls from './popup-controls.jsx';
 import ChatHistory from './chat-history.jsx';
 import PageList from './page-list.jsx';
 import useReduxToolkit from '../hooks/use-redux-toolkit.js';
-import useCurrentAgent from '../hooks/use-current-agent.js';
 import useChatExecutor from '../hooks/use-chat-executor.js';
-import useToolExecutor from '../hooks/use-tool-executor.js';
 import useAgentStarter from '../hooks/use-agent-starter.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
@@ -34,44 +32,18 @@ import './agents-demo-ui.scss';
  *                                         -->
  */
 const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
-	const [ previewVisible, setPreviewVisible ] = useState( false );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
-	const chat = useChat();
-
-	// if chat.apiKey !== apiKey, set it
-	useEffect( () => {
-		if ( chat.apiKey !== apiKey ) {
-			chat.setApiKey( apiKey );
-		}
-	}, [ apiKey, chat ] );
-
-	// set the feature to big-sky
-	useEffect( () => {
-		if ( chat.feature !== 'big-sky' ) {
-			chat.setFeature( 'big-sky' );
-		}
-	}, [ chat ] );
+	useChat( { apiKey, feature: 'big-sky' } );
 
 	const toolkit = useReduxToolkit( {
 		apiKey,
 		pageId: selectedPageId,
 	} );
 
-	const agent = useCurrentAgent( {
-		toolkit,
-	} );
-
 	// run the agent
 	useChatExecutor();
-
-	useToolExecutor( {
-		toolkit,
-	} );
-
-	useAgentStarter( {
-		agent,
-	} );
+	useAgentStarter();
 
 	const { pages } = useSelect( ( select ) => {
 		return {
@@ -87,35 +59,22 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		}
 	}, [] );
 
-	// the first time agentState gets set to "running", we should show the preview
-	useEffect( () => {
-		if ( ! previewVisible && chat.running ) {
-			setPreviewVisible( true );
-		}
-	}, [ chat.running, previewVisible ] );
-
 	return (
 		<>
 			<Flex direction="row" align="stretch" justify="center">
 				<div className="big-sky__agent-column">
-					<AgentUI
-						toolkit={ toolkit }
-						agent={ agent }
-						chat={ chat }
-					/>
+					<AgentUI toolkit={ toolkit } />
 				</div>
-				{ previewVisible && (
-					<div className="big-sky__current-preview-wrapper">
-						{ selectedPageId ? (
-							<PageSpecPreview
-								disabled={ toolkit.running }
-								pageId={ selectedPageId }
-							/>
-						) : (
-							<SiteSpecPreview disabled={ toolkit.running } />
-						) }
-					</div>
-				) }
+				<div className="big-sky__current-preview-wrapper">
+					{ selectedPageId ? (
+						<PageSpecPreview
+							disabled={ toolkit.running }
+							pageId={ selectedPageId }
+						/>
+					) : (
+						<SiteSpecPreview disabled={ toolkit.running } />
+					) }
+				</div>
 
 				{ pages?.length > 0 && (
 					<div className="big-sky__page-list-wrapper">
@@ -128,7 +87,7 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 				) }
 			</Flex>
 			<ChatHistory />
-			<PopUpControls setApiKey={ onApiKeyChanged } />
+			<PopUpControls toolkit={ toolkit } setApiKey={ onApiKeyChanged } />
 		</>
 	);
 };

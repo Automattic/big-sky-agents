@@ -16,6 +16,7 @@ const defaultChoices = [
 
 class DesignAgent extends BuilderAgent {
 	id = 'WPDesign';
+	description = 'Here to help you design the perfect site.';
 
 	instructions( context ) {
 		return instructions.format( context );

@@ -12,49 +12,24 @@ import useReduxAgentToolkit from './use-redux-agent-toolkit.js';
 
 const useReduxToolkit = ( { pageId, apiKey } ) => {
 	// set and get site title, description, topic, type, location, colors, pages, page sections
-	const {
-		onReset: onSiteSpecReset,
-		tools: siteSpecTools,
-		values: siteSpecValues,
-		callbacks: siteSpecCallbacks,
-	} = useReduxSiteToolkit( { pageId } );
+	const { onReset: onSiteSpecReset, context: siteSpecContext } =
+		useReduxSiteToolkit( { pageId } );
 
 	// set and get current agent, goals, thought
-	const {
-		onReset: onAgentToolkitReset,
-		tools: agentTools,
-		values: agentValues,
-		callbacks: agentCallbacks,
-	} = useReduxAgentToolkit();
+	const { onReset: onAgentToolkitReset, context: agentContext } =
+		useReduxAgentToolkit();
 
 	// get site analysis
-	const {
-		tools: analyzeSiteTools,
-		values: analyzeSiteValues,
-		callbacks: analyzeSiteCallbacks,
-	} = useAnalyzeSiteToolkit( { apiKey } );
+	useAnalyzeSiteToolkit( { apiKey } );
 
 	// these are fed to the templating engine on each render of the system/after-call prompt
-	const values = useMemo(
+	const context = useMemo(
 		() => ( {
-			...siteSpecValues,
-			...agentValues,
-			...analyzeSiteValues,
+			...siteSpecContext,
+			...agentContext,
 		} ),
-		[ agentValues, analyzeSiteValues, siteSpecValues ]
+		[ agentContext, siteSpecContext ]
 	);
-
-	const callbacks = useMemo( () => {
-		return {
-			...siteSpecCallbacks,
-			...agentCallbacks,
-			...analyzeSiteCallbacks,
-		};
-	}, [ agentCallbacks, analyzeSiteCallbacks, siteSpecCallbacks ] );
-
-	const tools = useMemo( () => {
-		return [ ...siteSpecTools, ...agentTools, ...analyzeSiteTools ];
-	}, [ agentTools, analyzeSiteTools, siteSpecTools ] );
 
 	const onReset = useCallback( () => {
 		onSiteSpecReset();
@@ -62,9 +37,7 @@ const useReduxToolkit = ( { pageId, apiKey } ) => {
 	}, [ onSiteSpecReset, onAgentToolkitReset ] );
 
 	return {
-		tools,
-		values,
-		callbacks,
+		context,
 		onReset,
 	};
 };

@@ -16,7 +16,7 @@ import useTools from '../components/tools-provider/use-tools.js';
 
 const useReduxAgentToolkit = () => {
 	const { agents, activeAgent, setActiveAgent } = useAgents();
-	const { tools, registerTool } = useTools();
+	const { registerTool } = useTools();
 	const { setAgentThought, setAgentGoal } = useDispatch( agentStore );
 	const { goal, thought } = useSelect( ( select ) => ( {
 		goal: select( agentStore ).getAgentGoal(),
@@ -75,7 +75,6 @@ const useReduxAgentToolkit = () => {
 
 	return {
 		onReset,
-		tools,
 		context,
 	};
 };

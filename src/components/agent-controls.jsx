@@ -201,7 +201,7 @@ const AgentControls = ( { toolkit } ) => {
 					onChange={ ( newAgentId ) => {
 						onResetChat();
 						onResetToolkit();
-						setActiveAgent( { agentId: newAgentId } );
+						setActiveAgent( newAgentId );
 					} }
 				/>
 				<HStack align="center">

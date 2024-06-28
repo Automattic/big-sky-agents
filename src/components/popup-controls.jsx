@@ -2,7 +2,7 @@ import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
 import { useEffect, useState } from 'react';
 
-const PopUpContols = ( { toolkit, setApiKey } ) => {
+const PopUpControls = ( { toolkit, setApiKey } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
 
 	// show the debug window when CTRL-D is pressed
@@ -42,4 +42,4 @@ const PopUpContols = ( { toolkit, setApiKey } ) => {
 	);
 };
 
-export default PopUpContols;
+export default PopUpControls;

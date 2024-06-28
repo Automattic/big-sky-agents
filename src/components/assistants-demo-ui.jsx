@@ -15,13 +15,12 @@ import PageList from './page-list.jsx';
 import useReduxToolkit from '../hooks/use-redux-toolkit.js';
 import useCurrentAgent from '../hooks/use-current-agent.js';
 import useAssistantExecutor from '../hooks/use-assistant-executor.js';
-import useToolExecutor from '../hooks/use-tool-executor.js';
 import useAgentStarter from '../hooks/use-agent-starter.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChat from './chat-provider/use-chat.js';
 import './agents-demo-ui.scss';
-import PopUpContols from './popup-controls.jsx';
+import PopUpControls from './popup-controls.jsx';
 
 /**
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
@@ -68,13 +67,7 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		agent,
 	} );
 
-	useToolExecutor( {
-		toolkit,
-	} );
-
-	useAgentStarter( {
-		agent,
-	} );
+	useAgentStarter();
 
 	const { pages } = useSelect( ( select ) => {
 		return {
@@ -101,11 +94,7 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		<>
 			<Flex direction="row" align="stretch" justify="center">
 				<div className="big-sky__agent-column">
-					<AgentUI
-						toolkit={ toolkit }
-						agent={ agent }
-						chat={ chat }
-					/>
+					<AgentUI toolkit={ toolkit } />
 				</div>
 				{ previewVisible && (
 					<div className="big-sky__current-preview-wrapper">
@@ -131,7 +120,7 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 				) }
 			</Flex>
 			<ChatHistory />
-			<PopUpContols toolkit={ toolkit } setApiKey={ onApiKeyChanged } />
+			<PopUpControls toolkit={ toolkit } setApiKey={ onApiKeyChanged } />
 		</>
 	);
 };

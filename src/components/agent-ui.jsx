@@ -72,6 +72,7 @@ function AgentUI( { toolkit } ) {
 		},
 	} = toolkit;
 	const {
+		invoke: { informUser },
 		error,
 		enabled,
 		loading,
@@ -85,10 +86,6 @@ function AgentUI( { toolkit } ) {
 	} = useChat();
 
 	const { onConfirm } = useCurrentAgent( { toolkit } );
-
-	const {
-		invoke: { informUser },
-	} = useTools();
 
 	const { agentQuestion, agentConfirm } = useMemo( () => {
 		return {

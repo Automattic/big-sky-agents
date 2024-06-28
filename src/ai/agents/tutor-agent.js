@@ -7,6 +7,7 @@ const instructions = DotPromptTemplate.fromString(
 
 class TutorAgent extends Agent {
 	id = 'WPTutor';
+	description = 'Here to help you learn WordPress.';
 
 	instructions( context ) {
 		return instructions.format( context );

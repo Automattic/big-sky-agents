@@ -8,6 +8,7 @@ const instructions = DotPromptTemplate.fromString(
 
 class WooAgent extends Agent {
 	id = 'WooStore';
+	description = 'Here to help you with your WooCommerce store.';
 
 	instructions( context ) {
 		return instructions.format( context );

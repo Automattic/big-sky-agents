@@ -1,65 +1,29 @@
 /**
  * WordPress dependencies
  */
-import {
-	createContext,
-	useCallback,
-	useMemo,
-	useReducer,
-} from '@wordpress/element';
+import { createContext } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
-import { initialState, toolsReducer } from './tools-reducer';
+import { initialState } from './tools-reducer';
 import defaultTools from '../../ai/tools/default-tools';
-import useChat from '../chat-provider/use-chat';
 
-export const Context = createContext();
+const configToState = ( config ) => {
+	return {
+		tools: config.tools ?? [],
+	};
+};
 
-function ToolsProvider( { children, tools } ) {
-	const { call } = useChat();
+export const Context = createContext( {
+	...initialState,
+	tools: defaultTools,
+} );
 
-	const [ state, dispatch ] = useReducer(
-		toolsReducer,
-		tools ? { ...initialState, tools } : initialState
-	);
-
-	const registerTool = useCallback( ( tool ) => {
-		dispatch( { type: 'REGISTER_TOOL', payload: { tool } } );
-	}, [] );
-
-	const registerDefaultTools = useCallback( () => {
-		defaultTools.forEach( ( tool ) => {
-			registerTool( tool );
-		} );
-	}, [ registerTool ] );
-
-	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
-	const invoke = useMemo( () => {
-		return state.tools.reduce( ( acc, tool ) => {
-			acc[ tool.name ] = ( args, id ) => call( tool.name, args, id );
-			return acc;
-		}, {} );
-	}, [ call, state.tools ] );
-
-	// used to actually call the tool, e.g. callbacks.getWeather( { location: "Boston, MA" } )
-	const callbacks = useMemo( () => {
-		return state.tools.reduce( ( acc, tool ) => {
-			acc[ tool.name ] = tool.callback;
-			return acc;
-		}, {} );
-	}, [ state.tools ] );
-
+function ToolsProvider( { children, ...config } ) {
 	return (
 		<Context.Provider
-			value={ {
-				tools: state.tools,
-				invoke,
-				callbacks,
-				registerTool,
-				registerDefaultTools,
-			} }
+			value={ config ? configToState( config ) : initialState }
 		>
 			{ children }
 		</Context.Provider>
