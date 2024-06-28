@@ -22,20 +22,17 @@ const instructions = DotPromptTemplate.fromString(
 );
 
 class WapuuAgent extends Agent {
-	getId() {
-		return WAPUU_AGENT_ID;
+	id = WAPUU_AGENT_ID;
+	assistantId = WAPUU_ASSISTANT_ID;
+	description =
+		'Here to understand your goal and choose the best agent to help you.';
+
+	getInstructions( context ) {
+		return instructions.format( context );
 	}
 
-	getAssistantId() {
-		return WAPUU_ASSISTANT_ID;
-	}
-
-	getInstructions() {
-		return instructions.format( this.toolkit.values );
-	}
-
-	getTools() {
-		return [ ...super.getTools(), AnalyzeUrlTool ];
+	getTools( context ) {
+		return [ ...super.getTools( context ), AnalyzeUrlTool ];
 	}
 
 	getDefaultQuestion() {
@@ -46,8 +43,8 @@ class WapuuAgent extends Agent {
 		return defaultChoices;
 	}
 
-	onStart() {
-		this.askUser( {
+	onStart( toolkit ) {
+		toolkit.askUser( {
 			question: defaultQuestion,
 			choices: defaultChoices,
 		} );

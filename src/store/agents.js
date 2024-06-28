@@ -1,19 +1,10 @@
-import agents, { WAPUU_AGENT_ID } from '../ai/agents/default-agents.js';
-
-const DEFAULT_AGENT_ID = WAPUU_AGENT_ID;
-const DEFAULT_AGENT_NAME = 'Unknown Agent';
 const DEFAULT_GOAL = "Find out the user's goal";
 
 const initialState = {
-	agentId: DEFAULT_AGENT_ID,
+	agentId: null,
 	agentGoal: DEFAULT_GOAL,
 	agentThought: null,
-	agents,
 };
-
-function getAgent( state, agentId ) {
-	return state.agents.find( ( agent ) => agent.id === agentId );
-}
 
 export const actions = {
 	setAgent: ( agentId ) => {
@@ -52,15 +43,6 @@ export const reducer = ( state = initialState, action ) => {
 export const selectors = {
 	getAgentId: ( state ) => {
 		return state.agentId;
-	},
-	getAgentName: ( state ) => {
-		return getAgent( state, state.agentId )?.name ?? DEFAULT_AGENT_NAME;
-	},
-	getAgent: ( state, agentId ) => {
-		return getAgent( state, agentId );
-	},
-	getAgents: ( state ) => {
-		return state.agents;
 	},
 	getAgentGoal: ( state ) => {
 		return state.agentGoal;

@@ -1,5 +1,4 @@
 import AskUserTool from '../tools/ask-user.js';
-import { WAPUU_ASSISTANT_ID } from './default-agents.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 import InformUserTool from '../tools/inform-user.js';
 import SetGoalTool from '../tools/set-goal.js';
@@ -14,76 +13,52 @@ const additionalInstructions = DotPromptTemplate.fromString(
 	[ 'agent' ]
 );
 
+const STANDARD_TOOLKIT = 'standard';
+
 class Agent {
-	constructor( chat, toolkit ) {
-		this.chat = chat;
-		this.toolkit = toolkit;
+	get id() {
+		throw new Error( 'Agent must implement id' );
 	}
 
-	getId() {
-		throw new Error( 'Agent must implement getId' );
+	get assistantId() {
+		throw new Error( 'Agent must implement assistantId' );
 	}
 
-	getAssistantId() {
-		return WAPUU_ASSISTANT_ID;
+	getToolkits() {
+		return [ STANDARD_TOOLKIT ];
 	}
 
-	getInstructions() {
-		return instructions.format( this.toolkit.values );
+	getDescription() {
+		throw new Error( 'Agent must implement getDescription' );
 	}
 
-	getAdditionalInstructions() {
-		return additionalInstructions.format( this.toolkit.values );
+	getInstructions( context ) {
+		return instructions.format( context );
+	}
+
+	getAdditionalInstructions( context ) {
+		return additionalInstructions.format( context );
 	}
 
 	/**
 	 * Tools
 	 */
 
-	getTools() {
+	getTools( { agents } ) {
 		return [
 			AskUserTool,
 			InformUserTool,
 			SetGoalTool,
-			createSetAgentTool( this.toolkit.values?.agents ),
+			createSetAgentTool( agents ),
 		];
-	}
-
-	/**
-	 * Make it seem as if the user said something. Good for scripting behind-the-scenes workflows triggered by "Now build me a contact form", etc.
-	 */
-
-	userSay( message, file_urls = [] ) {
-		this.chat.userSay( message, file_urls );
-	}
-
-	/**
-	 * "Remote control" methods that make the Agent perform a given action
-	 * e.g. agent.askUser( { question: 'What can I help you with?', choices: [ 'A task', 'A question' ] } )
-	 */
-
-	call( toolName, args, id ) {
-		this.chat.call( toolName, args, id );
-	}
-
-	askUser( { question, choices } ) {
-		this.call( AskUserTool.function.name, { question, choices } );
-	}
-
-	informUser( message ) {
-		this.call( InformUserTool.function.name, { message } );
-	}
-
-	setGoal( goal ) {
-		this.call( SetGoalTool.function.name, { goal } );
 	}
 
 	/**
 	 * Lifecycle methods
 	 */
 
-	onStart() {
-		this.askUser( {
+	onStart( { askUser } ) {
+		askUser( {
 			question: 'What can I help you with?',
 		} );
 	}

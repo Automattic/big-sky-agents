@@ -52,11 +52,11 @@ class PageSpecAgent extends BuilderAgent {
 	}
 
 	getInstructions() {
-		return SystemPrompt.format( this.toolkit.values );
+		return SystemPrompt.format( this.context );
 	}
 
 	getAdditionalInstructions() {
-		return NextStepPrompt.format( this.toolkit.values );
+		return NextStepPrompt.format( this.context );
 	}
 
 	getTools() {
@@ -73,25 +73,25 @@ class PageSpecAgent extends BuilderAgent {
 		];
 	}
 
-	onStart() {
-		this.askUser( {
+	onStart( tools ) {
+		tools.askUser( {
 			question: 'What would you like to do?',
 			choices: defaultChoices,
 		} );
 	}
 
-	onConfirm( confirmed ) {
+	onConfirm( confirmed, tools ) {
 		if ( confirmed ) {
-			this.setGoal( 'Find out what the user wants to do next' );
-			this.informUser( 'Got it!' );
-			this.askUser( {
+			tools.setGoal( 'Find out what the user wants to do next' );
+			tools.informUser( 'Got it!' );
+			tools.askUser( {
 				question: 'What would you like to do next?',
 				choices: defaultChoices,
 			} );
 		} else {
-			this.userSay( 'I would like to make some changes' );
-			this.informUser( 'Looks like you requested some changes' );
-			this.askUser( {
+			tools.userSay( 'I would like to make some changes' );
+			tools.informUser( 'Looks like you requested some changes' );
+			tools.askUser( {
 				question: 'What would you like to change?',
 				choices: [
 					'Change the title',

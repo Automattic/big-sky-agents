@@ -51,17 +51,17 @@ class PageSpecAgent extends BuilderAgent {
 		return WORDPRESS_SITE_SPEC_AGENT_ID;
 	}
 
-	getInstructions() {
-		return SystemPrompt.format( this.toolkit.values );
+	getInstructions( context ) {
+		return SystemPrompt.format( context );
 	}
 
-	getAdditionalInstructions() {
-		return NextStepPrompt.format( this.toolkit.values );
+	getAdditionalInstructions( context ) {
+		return NextStepPrompt.format( context );
 	}
 
-	getTools() {
+	getTools( context ) {
 		return [
-			...super.getTools(),
+			...super.getTools( context ),
 			// TODO: only enable these tools under certain conditions, e.g. only confirm when page is valid
 			AddPageSectionTool,
 			AddSitePageTool,
@@ -73,25 +73,25 @@ class PageSpecAgent extends BuilderAgent {
 		];
 	}
 
-	onStart() {
-		this.askUser( {
+	onStart( toolkit ) {
+		toolkit.askUser( {
 			question: 'What would you like to do?',
 			choices: defaultChoices,
 		} );
 	}
 
-	onConfirm( confirmed ) {
+	onConfirm( confirmed, toolkit ) {
 		if ( confirmed ) {
-			this.setGoal( 'Find out what the user wants to do next' );
-			this.informUser( 'Got it!' );
-			this.askUser( {
+			toolkit.setGoal( 'Find out what the user wants to do next' );
+			toolkit.informUser( 'Got it!' );
+			toolkit.askUser( {
 				question: 'What would you like to do next?',
 				choices: defaultChoices,
 			} );
 		} else {
-			this.userSay( 'I would like to make some changes' );
-			this.informUser( 'Looks like you requested some changes' );
-			this.askUser( {
+			toolkit.userSay( 'I would like to make some changes' );
+			toolkit.informUser( 'Looks like you requested some changes' );
+			toolkit.askUser( {
 				question: 'What would you like to change?',
 				choices: [
 					'Change the title',

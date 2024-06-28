@@ -4,6 +4,15 @@
 export { default as useChatExecutor } from './hooks/use-chat-executor.js';
 
 /**
+ * Register agents, tools and toolkits
+ */
+import defaultAgentRegistry from './ai/agents/default-agent-registry.js';
+import defaultToolRegistry from './ai/tools/default-tool-registry.js';
+import defaultToolkitRegistry from './ai/toolkits/default-toolkit-registry.js';
+
+export const getAgent = defaultAgentRegistry.getAgent;
+
+/**
  * ChatModel and hooks
  */
 export {

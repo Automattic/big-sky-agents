@@ -8,39 +8,31 @@ const instructions = DotPromptTemplate.fromString(
 );
 
 class BuilderAgent extends Agent {
-	getInstructions() {
-		return instructions.format( this.toolkit.values );
+	getInstructions( context ) {
+		return instructions.format( context );
 	}
 
-	getTools() {
-		return [ ...super.getTools(), AnalyzeUrlTool, ConfirmTool ];
+	getTools( context ) {
+		return [ ...super.getTools( context ), AnalyzeUrlTool, ConfirmTool ];
 	}
 
-	onStart() {
-		this.askUser( {
+	onStart( toolkit ) {
+		toolkit.askUser( {
 			question: 'What would you like to do?',
 		} );
 	}
 
-	analyzeUrl( { url } ) {
-		this.call( AnalyzeUrlTool.function.name, { url } );
-	}
-
-	confirm( { message } ) {
-		this.call( ConfirmTool.function.name, { message } );
-	}
-
-	onConfirm( confirmed ) {
+	onConfirm( confirmed, toolkit ) {
 		if ( confirmed ) {
-			this.setGoal( 'Find out what the user wants to do next' );
-			this.informUser( 'Got it!' );
-			this.askUser( {
+			toolkit.setGoal( 'Find out what the user wants to do next' );
+			toolkit.informUser( 'Got it!' );
+			toolkit.askUser( {
 				question: 'What would you like to do next?',
 			} );
 		} else {
-			this.informUser( 'Looks like you requested some changes' );
-			this.userSay( 'I would like to make some changes' );
-			this.askUser( {
+			toolkit.informUser( 'Looks like you requested some changes' );
+			toolkit.userSay( 'I would like to make some changes' );
+			toolkit.askUser( {
 				question: 'What would you like to change?',
 			} );
 		}

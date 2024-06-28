@@ -12,27 +12,25 @@ import InformTool, { INFORM_TOOL_NAME } from '../ai/tools/inform-user.js';
 import createSetAgentTool, {
 	SET_AGENT_TOOL_NAME,
 } from '../ai/tools/set-agent.js';
-import SetGoalTool, {
-	SET_AGENT_GOAL_TOOL_NAME,
-} from '../ai/tools/set-goal.js';
+import SetGoalTool, { SET_AGENT_GOAL_TOOL_NAME } from '../ai/tools/set-goal.js';
 
 const useReduxAgentToolkit = () => {
 	const { setAgentThought, setAgentGoal, setAgent, setAssistantId } =
 		useDispatch( agentStore );
 
+	const { agents } = useAgents();
+
 	// these are fed to the templating engine on each render of the system/after-call prompt
 	const values = useSelect(
 		( select ) => ( {
-			agents: select( agentStore ).getAgents(),
+			agents,
 			agent: {
-				assistantId: select( agentStore ).getAssistantId(),
 				id: select( agentStore ).getAgentId(),
-				name: select( agentStore ).getAgentName(),
 				goal: select( agentStore ).getAgentGoal(),
 				thought: select( agentStore ).getAgentThought(),
 			},
 		} ),
-		[]
+		[ agents ]
 	);
 
 	const callbacks = useMemo( () => {

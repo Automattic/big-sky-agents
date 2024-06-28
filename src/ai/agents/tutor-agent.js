@@ -1,4 +1,3 @@
-import { ASK_USER_TOOL_NAME } from '../tools/ask-user.js';
 import Agent from './agent.js';
 import { WORDPRESS_TUTOR_AGENT_ID } from './default-agents.js';
 import { DotPromptTemplate } from '../prompt-template.js';
@@ -12,12 +11,12 @@ class TutorAgent extends Agent {
 		return WORDPRESS_TUTOR_AGENT_ID;
 	}
 
-	getInstructions() {
-		return instructions.format( this.toolkit.values );
+	getInstructions( context ) {
+		return instructions.format( context );
 	}
 
-	onStart() {
-		this.toolkit.call( ASK_USER_TOOL_NAME, {
+	onStart( toolkit ) {
+		toolkit.askUser( {
 			question: 'What can I help you with?',
 			choices: [
 				'How do I add a page?',

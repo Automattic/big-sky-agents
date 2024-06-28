@@ -11,12 +11,12 @@ class StatsAgent extends Agent {
 		return JETPACK_STATS_AGENT_ID;
 	}
 
-	getInstructions() {
-		return instructions.format( this.toolkit.values );
+	getInstructions( context ) {
+		return instructions.format( context );
 	}
 
-	onStart() {
-		this.askUser( {
+	onStart( toolkit ) {
+		toolkit.askUser( {
 			question: 'What are you looking to do today?',
 			choices: [
 				'I want to increase search engine traffic',

@@ -6,7 +6,7 @@ import PageSpecAgent from './page-spec-agent.js';
 import WooAgent from './woo-agent.js';
 import StatsAgent from './stats-agent.js';
 
-// import SiteSpecToolkit from '../toolkits/site-spec.js';
+import SiteSpecToolkit from '../toolkits/site-spec.js';
 
 export const WAPUU_AGENT_ID = 'Wapuu';
 export const WAPUU_ASSISTANT_ID = 'asst_lk7tPSgLWShOx6N0LJuxQGVe';
@@ -78,11 +78,10 @@ export const WOO_STORE_AGENT_ID = 'WooStore';
 
 // pass in a registry object with a registerAgent function
 export default ( { registerAgent } ) => {
-	registerAgent( new WapuuAgent() );
-	registerAgent( new SiteSpecAgent() );
-	registerAgent( new PageSpecAgent() );
-	registerAgent( new DesignAgent() );
-	registerAgent( new TutorAgent() );
-	registerAgent( new StatsAgent() );
-	registerAgent( new WooAgent() );
+	registerAgent( WAPUU_AGENT_ID, WapuuAgent );
+	registerAgent( WORDPRESS_SITE_SPEC_AGENT_ID, SiteSpecAgent );
+	registerAgent( WORDPRESS_PAGE_SPEC_AGENT_ID, PageSpecAgent );
+	registerAgent( WORDPRESS_DESIGN_AGENT_ID, DesignAgent );
+	registerAgent( WORDPRESS_TUTOR_AGENT_ID, TutorAgent );
+	registerAgent( JETPACK_STATS_AGENT_ID, StatsAgent );
 };

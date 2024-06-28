@@ -25,7 +25,40 @@ import './agents-demo-ui.scss';
 
 // if you want to use the default registry, you can just import the default which is shared by all consumers
 
-import defaultAgentRegistry from '../ai/agents/default-agents.js';
+// import defaultAgentRegistry from '../ai/agents/default-agents.js';
+import createAgentRegistry from '../ai/agents/agent-registry.js';
+import createToolRegistry from '../ai/tools/tool-registry.js';
+
+const agentRegistry = createAgentRegistry();
+const toolRegistry = createToolRegistry();
+
+toolRegistry.registerTool( 'getWeather', {
+	name: 'Get Weather',
+	description: 'Get the weather for a location',
+	parameters: {
+		type: 'object',
+		properties: {
+			location: {
+				type: 'string',
+			},
+		},
+		required: [ 'location' ],
+	},
+	callback: async ( { location } ) => {
+		const response = await fetch(
+			`https://wttr.in/${ location }?format=%C+%t`
+		);
+		const text = await response.text();
+		return text;
+	},
+} );
+
+agentRegistry.registerAgent( 'demo-agent', {
+	name: 'WeatherBot',
+	description: 'Looks up the weather for you',
+	instructions: 'You are a helpful weather bot',
+	tools: [ 'getWeather' ],
+} );
 
 /**
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.

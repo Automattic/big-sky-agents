@@ -8,5 +8,9 @@ import { useContext } from '@wordpress/element';
  */
 import { Context } from './context';
 export default function useAgents() {
-	return useContext( Context );
+	const agentRegistry = useContext( Context );
+
+	return {
+		agents: agentRegistry.getAgents(),
+	}
 }

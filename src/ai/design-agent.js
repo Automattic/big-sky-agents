@@ -16,7 +16,7 @@ const defaultChoices = [
 
 class DesignAgent extends BuilderAgent {
 	getInstructions() {
-		return instructions.format( this.toolkit.values );
+		return instructions.format( this.context );
 	}
 
 	getTools() {
@@ -30,18 +30,18 @@ class DesignAgent extends BuilderAgent {
 		} );
 	}
 
-	onConfirm( confirmed ) {
+	onConfirm( confirmed, tools ) {
 		if ( confirmed ) {
-			this.setGoal( 'Find out what the user wants to do next' );
-			this.informUser( 'Got it!' );
-			this.askUser( {
+			tools.setGoal( 'Find out what the user wants to do next' );
+			tools.informUser( 'Got it!' );
+			tools.askUser( {
 				question: 'What would you like to do next?',
 				choices: defaultChoices,
 			} );
 		} else {
-			this.informUser( 'Looks like you requested some changes' );
-			this.userSay( 'I would like to make some changes' );
-			this.askUser( {
+			tools.informUser( 'Looks like you requested some changes' );
+			tools.userSay( 'I would like to make some changes' );
+			tools.askUser( {
 				question: 'What would you like to change?',
 				choices: defaultChoices,
 			} );

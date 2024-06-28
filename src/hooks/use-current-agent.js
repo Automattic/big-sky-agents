@@ -25,7 +25,7 @@ import useChat from '../components/chat-provider/use-chat.js';
  * This is an example of switching dynamically between agents based on the Current Agent. TODO: some kind of registration mechanism.
  */
 
-const useCurrentAgent = ( { toolkit } ) => {
+const useCurrentAgent = ( { toolkit: { context } } ) => {
 	const chat = useChat();
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
@@ -36,34 +36,35 @@ const useCurrentAgent = ( { toolkit } ) => {
 
 	const agent = useMemo( () => {
 		// const newAgent = agentRegistry.getAgent( toolkit.values.agent.id );
-		switch ( toolkit.values.agent.id ) {
+		switch ( context.agent.id ) {
 			case WAPUU_AGENT_ID:
-				return new WapuuAgent( chat, toolkit );
+				return new WapuuAgent( chat );
 			case WORDPRESS_TUTOR_AGENT_ID:
-				return new TutorAgent( chat, toolkit );
+				return new TutorAgent( chat );
 			case WORDPRESS_DESIGN_AGENT_ID:
-				return new DesignAgent( chat, toolkit );
+				return new DesignAgent( chat );
 			case WORDPRESS_SITE_SPEC_AGENT_ID:
-				return new SiteSpecAgent( chat, toolkit );
+				return new SiteSpecAgent( chat );
 			case WORDPRESS_PAGE_SPEC_AGENT_ID:
-				return new PageSpecAgent( chat, toolkit );
+				return new PageSpecAgent( chat );
 			case WOO_STORE_AGENT_ID:
-				return new WooAgent( chat, toolkit );
+				return new WooAgent( chat );
 			case JETPACK_STATS_AGENT_ID:
-				return new StatsAgent( chat, toolkit );
+				return new StatsAgent( chat );
 			default:
-				return new WapuuAgent( chat, toolkit );
+				return new WapuuAgent( chat );
 		}
-	}, [ chat, toolkit ] );
+	}, [ chat, context ] );
 
 	useEffect( () => {
 		if ( agent ) {
 			/**
 			 * Compute new state
 			 */
-			const newTools = agent.getTools();
-			const newInstructions = agent.getInstructions();
-			const newAdditionalInstructions = agent.getAdditionalInstructions();
+			const newTools = agent.getTools( context );
+			const newInstructions = agent.getInstructions( context );
+			const newAdditionalInstructions =
+				agent.getAdditionalInstructions( context );
 
 			const newAssistantId = agent.getAssistantId();
 
@@ -97,6 +98,7 @@ const useCurrentAgent = ( { toolkit } ) => {
 		setAssistantId,
 		instructions,
 		tools,
+		context,
 	] );
 
 	const onStart = useCallback( () => {

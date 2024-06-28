@@ -12,16 +12,16 @@ class WooAgent extends Agent {
 		return WOO_STORE_AGENT_ID;
 	}
 
-	getInstructions() {
-		return instructions.format( this.toolkit.values );
+	getInstructions( context ) {
+		return instructions.format( context );
 	}
 
-	getTools() {
-		return [ ...super.getTools(), AnalyzeUrlTool ];
+	getTools( context ) {
+		return [ ...super.getTools( context ), AnalyzeUrlTool ];
 	}
 
-	onStart() {
-		this.askUser( {
+	onStart( toolkit ) {
+		toolkit.askUser( {
 			question: 'What are you looking to do with Woo?',
 			choices: [ 'I want to add a product', 'I want to edit a product' ],
 		} );

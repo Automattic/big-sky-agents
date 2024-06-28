@@ -15,33 +15,37 @@ const defaultChoices = [
 ];
 
 class DesignAgent extends BuilderAgent {
-	getInstructions() {
-		return instructions.format( this.toolkit.values );
+	getId() {
+		return 'WPDesign';
 	}
 
-	getTools() {
-		return [ ...super.getTools(), SetSiteColorsTool ];
+	getInstructions( context ) {
+		return instructions.format( context );
 	}
 
-	onStart() {
-		this.askUser( {
+	getTools( context ) {
+		return [ ...super.getTools( context ), SetSiteColorsTool ];
+	}
+
+	onStart( toolkit ) {
+		toolkit.askUser( {
 			question: 'How can I help refine your design?',
 			choices: defaultChoices,
 		} );
 	}
 
-	onConfirm( confirmed ) {
+	onConfirm( confirmed, toolkit ) {
 		if ( confirmed ) {
-			this.setGoal( 'Find out what the user wants to do next' );
-			this.informUser( 'Got it!' );
-			this.askUser( {
+			toolkit.setGoal( 'Find out what the user wants to do next' );
+			toolkit.informUser( 'Got it!' );
+			toolkit.askUser( {
 				question: 'What would you like to do next?',
 				choices: defaultChoices,
 			} );
 		} else {
-			this.informUser( 'Looks like you requested some changes' );
-			this.userSay( 'I would like to make some changes' );
-			this.askUser( {
+			toolkit.informUser( 'Looks like you requested some changes' );
+			toolkit.userSay( 'I would like to make some changes' );
+			toolkit.askUser( {
 				question: 'What would you like to change?',
 				choices: defaultChoices,
 			} );
