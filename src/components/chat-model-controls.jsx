@@ -12,17 +12,19 @@ import {
  * Internal dependencies
  */
 import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
+import useChat from './chat-provider/use-chat.js';
 
-const ChatModelControls = ( {
-	model,
-	service,
-	temperature,
-	apiKey,
-	setService,
-	setModel,
-	setTemperature,
-	setApiKey,
-} ) => {
+const ChatModelControls = ( { onApiKeyChanged } ) => {
+	const {
+		model,
+		service,
+		temperature,
+		apiKey,
+		setService,
+		setModel,
+		setTemperature,
+		setApiKey,
+	} = useChat();
 	return (
 		<>
 			<HStack>
@@ -80,7 +82,12 @@ const ChatModelControls = ( {
 				label="API Key"
 				placeholder="sk-..."
 				value={ apiKey }
-				onChange={ setApiKey }
+				onChange={ ( newApiKey ) => {
+					setApiKey( newApiKey );
+					if ( typeof onApiKeyChanged === 'function' ) {
+						onApiKeyChanged( newApiKey );
+					}
+				} }
 			/>
 		</>
 	);

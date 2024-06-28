@@ -1,7 +1,9 @@
 import Agent from './agent.js';
 import AnalyzeUrlTool from '../tools/analyze-url.js';
-import { WAPUU_AGENT_ID, WAPUU_ASSISTANT_ID } from './default-agents.js';
 import { DotPromptTemplate } from '../prompt-template.js';
+
+export const WAPUU_AGENT_ID = 'Wapuu';
+export const WAPUU_ASSISTANT_ID = 'asst_lk7tPSgLWShOx6N0LJuxQGVe';
 
 const defaultQuestion = 'What can I help you with?';
 
@@ -27,12 +29,12 @@ class WapuuAgent extends Agent {
 	description =
 		'Here to understand your goal and choose the best agent to help you.';
 
-	getInstructions( context ) {
+	instructions( context ) {
 		return instructions.format( context );
 	}
 
-	getTools( context ) {
-		return [ ...super.getTools( context ), AnalyzeUrlTool ];
+	tools( context ) {
+		return [ ...super.tools( context ), AnalyzeUrlTool ];
 	}
 
 	getDefaultQuestion() {

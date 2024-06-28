@@ -191,15 +191,14 @@ export declare class DotPromptTemplate extends StringPromptTemplate {
  */
 
 declare class Agent {
-	constructor( chat: Chat );
-	getId(): string;
-	call( toolName: string, args: any ): string;
-	userSay( message: string, file_urls?: string[] ): void;
-	getTools(): Tool[];
-	findTools( ...toolNames: string[] ): Tool[];
-	getInstructions(): string;
-	getAdditionalInstructions( context: any ): string;
-	onStart(): void;
+	constructor();
+	get id(): string;
+	get description(): string;
+	get assistantId(): string;
+	tools( context: any ): Tool[];
+	instructions( context: any ): string;
+	additionalInstructions( context: any ): string;
+	onStart( chat: any, context: any ): void;
 }
 
 interface AgentState {

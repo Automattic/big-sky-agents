@@ -9,7 +9,7 @@ import CombinedToolkit from './src/ai/toolkits/combined.js';
 import promptSync from 'prompt-sync';
 import AssistantModel from './src/ai/assistant-model.js';
 
-import agents, { WAPUU_AGENT_ID } from './src/ai/agents/default-agents.js';
+import agents from './src/ai/agents/default-agents.js';
 import { ASK_USER_TOOL_NAME } from './src/ai/tools/ask-user.js';
 import { CONFIRM_TOOL_NAME } from './src/ai/tools/confirm.js';
 
@@ -64,9 +64,9 @@ class CLIChat {
 		const request = {
 			model: ChatModelType.GPT_4O,
 			messages: this.messages,
-			tools: this.agent.getTools(),
-			instructions: this.agent.getInstructions(),
-			additionalInstructions: this.agent.getAdditionalInstructions(),
+			tools: this.agent.tools(),
+			instructions: this.agent.instructions(),
+			additionalInstructions: this.agent.additionalInstructions(),
 			temperature: 0,
 		};
 		logVerbose( '📡 Request:', request );

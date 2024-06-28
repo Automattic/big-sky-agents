@@ -15,7 +15,7 @@ class SimpleAgentToolkit extends Toolkit {
 	constructor( props ) {
 		super( props, INITIAL_STATE );
 
-		this.tools = this.getTools();
+		this.tools = this.tools();
 	}
 
 	getValues = () => {

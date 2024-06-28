@@ -16,7 +16,7 @@ class CombinedToolkit extends Toolkit {
 
 	getTools = () => {
 		return this.props.toolkits.reduce( ( tools, toolkit ) => {
-			return [ ...tools, ...toolkit.getTools() ];
+			return [ ...tools, ...toolkit.tools() ];
 		}, [] );
 	};
 

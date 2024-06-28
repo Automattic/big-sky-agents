@@ -1,5 +1,4 @@
 import Agent from './agent.js';
-import { JETPACK_STATS_AGENT_ID } from './default-agents.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 
 const instructions = DotPromptTemplate.fromString(
@@ -7,11 +6,9 @@ const instructions = DotPromptTemplate.fromString(
 );
 
 class StatsAgent extends Agent {
-	getId() {
-		return JETPACK_STATS_AGENT_ID;
-	}
+	id = 'JetpackStats';
 
-	getInstructions( context ) {
+	instructions( context ) {
 		return instructions.format( context );
 	}
 

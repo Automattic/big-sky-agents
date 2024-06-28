@@ -2,80 +2,71 @@
  * WordPress dependencies
  */
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 /**
  * Internal dependencies
  */
 import { store as agentStore } from '../store/index.js';
-import InformTool, { INFORM_TOOL_NAME } from '../ai/tools/inform-user.js';
-import createSetAgentTool, {
-	SET_AGENT_TOOL_NAME,
-} from '../ai/tools/set-agent.js';
-import SetGoalTool, { SET_AGENT_GOAL_TOOL_NAME } from '../ai/tools/set-goal.js';
+import InformTool from '../ai/tools/inform-user.js';
+import createSetAgentTool from '../ai/tools/set-agent.js';
+import SetGoalTool from '../ai/tools/set-goal.js';
+import useAgents from '../components/agents-provider/use-agents.js';
+import useTools from '../components/tools-provider/use-tools.js';
 
 const useReduxAgentToolkit = () => {
-	const { setAgentThought, setAgentGoal, setAgent, setAssistantId } =
-		useDispatch( agentStore );
+	const { agents, activeAgent, setActiveAgent } = useAgents();
+	const { tools, registerTool } = useTools();
+	const { setAgentThought, setAgentGoal } = useDispatch( agentStore );
+	const { goal, thought } = useSelect( ( select ) => ( {
+		goal: select( agentStore ).getAgentGoal(),
+		thought: select( agentStore ).getAgentThought(),
+	} ) );
 
-	const { agents } = useAgents();
-
-	// these are fed to the templating engine on each render of the system/after-call prompt
-	const values = useSelect(
-		( select ) => ( {
-			agents,
-			agent: {
-				id: select( agentStore ).getAgentId(),
-				goal: select( agentStore ).getAgentGoal(),
-				thought: select( agentStore ).getAgentThought(),
+	// register the tools
+	useEffect( () => {
+		registerTool( {
+			...SetGoalTool,
+			callback: ( { goal: newGoal } ) => {
+				setAgentGoal( newGoal );
+				return `Goal set to "${ newGoal }"`;
 			},
-		} ),
-		[ agents ]
-	);
-
-	const callbacks = useMemo( () => {
-		return {
-			[ SET_AGENT_TOOL_NAME ]: ( { agentId } ) => {
-				// check that values.agents includes an element with agent.id == agentId
-				// if not, return error message
-				const agentConfig = values.agents.find(
-					( agent ) => agent.id === agentId
-				);
-				if ( ! agentConfig ) {
-					return `Agent ${ agentId } not found`;
-				}
-				setAgent( agentId );
-
-				if ( agentConfig.assistantId ) {
-					// set assistantId in store
-					setAssistantId( agentConfig.assistantId );
-				}
-
-				// if values.agents includes this agent
-				return `Agent set to ${ agentId }`;
-			},
-			[ SET_AGENT_GOAL_TOOL_NAME ]: ( { goal } ) => {
-				setAgentGoal( goal );
-				return `Goal set to "${ goal }"`;
-			},
-			[ INFORM_TOOL_NAME ]: ( { message } ) => {
+		} );
+		registerTool( {
+			...InformTool,
+			callback: ( { message } ) => {
 				setAgentThought( message );
 				return message
 					? `Agent thinks: "${ message }"`
 					: 'Thought cleared';
 			},
-		};
+		} );
+		registerTool( {
+			...createSetAgentTool( agents ),
+			callback: ( { agentId } ) => {
+				setActiveAgent( agentId );
+				return `Agent set to ${ agentId }`;
+			},
+		} );
 	}, [
-		setAgent,
+		agents,
+		registerTool,
+		setActiveAgent,
 		setAgentGoal,
 		setAgentThought,
-		setAssistantId,
-		values.agents,
 	] );
 
-	const tools = useMemo( () => {
-		return [ createSetAgentTool( values.agents ), SetGoalTool, InformTool ];
-	}, [ values.agents ] );
+	const context = useMemo( () => {
+		return {
+			agents,
+			agent: {
+				id: activeAgent?.id,
+				assistantId: activeAgent?.assistantId,
+				goal,
+				thought,
+			},
+		};
+	}, [ agents, activeAgent, goal, thought ] );
 
 	const onReset = useCallback( () => {
 		setAgentGoal( null );
@@ -85,8 +76,7 @@ const useReduxAgentToolkit = () => {
 	return {
 		onReset,
 		tools,
-		values,
-		callbacks,
+		context,
 	};
 };
 

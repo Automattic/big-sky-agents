@@ -10,8 +10,6 @@ import { Flex } from '@wordpress/components';
 import SiteSpecPreview from './site-spec-preview.jsx';
 import PageSpecPreview from './page-spec-preview.jsx';
 import AgentUI from './agent-ui.jsx';
-import ChatModelControls from './chat-model-controls.jsx';
-import AgentControls from './agent-controls.jsx';
 import ChatHistory from './chat-history.jsx';
 import PageList from './page-list.jsx';
 import useReduxToolkit from '../hooks/use-redux-toolkit.js';
@@ -23,6 +21,7 @@ import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChat from './chat-provider/use-chat.js';
 import './agents-demo-ui.scss';
+import PopUpContols from './popup-controls.jsx';
 
 /**
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
@@ -35,54 +34,6 @@ import './agents-demo-ui.scss';
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  *                                         -->
  */
-
-const PopUpContols = ( { toolkit, agent, setApiKey } ) => {
-	const [ controlsVisible, setControlsVisible ] = useState( false );
-	const chat = useChat();
-
-	// show the debug window when CTRL-D is pressed
-	useEffect( () => {
-		const handleKeyDown = ( event ) => {
-			if ( event.ctrlKey && event.key === 'd' ) {
-				setControlsVisible( ( prevVisible ) => ! prevVisible );
-			}
-		};
-
-		window.addEventListener( 'keydown', handleKeyDown );
-
-		return () => {
-			window.removeEventListener( 'keydown', handleKeyDown );
-		};
-	}, [] );
-
-	return (
-		<div className="big-sky__agent-debug">
-			{ controlsVisible ? (
-				<>
-					<AgentControls
-						toolkit={ toolkit }
-						agent={ agent }
-						chat={ chat }
-					/>
-					<ChatModelControls
-						{ ...chat }
-						setApiKey={ ( newApiKey ) => {
-							chat.setApiKey( newApiKey );
-							if ( typeof setApiKey === 'function' ) {
-								setApiKey( newApiKey );
-							}
-						} }
-					/>
-				</>
-			) : (
-				<button onClick={ () => setControlsVisible( true ) }>
-					Show Debug Controls
-				</button>
-			) }
-		</div>
-	);
-};
-
 const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	const [ previewVisible, setPreviewVisible ] = useState( false );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
@@ -179,15 +130,8 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 					</div>
 				) }
 			</Flex>
-			<ChatHistory
-				history={ chat.history }
-				toolOutputs={ chat.toolOutputs }
-			/>
-			<PopUpContols
-				toolkit={ toolkit }
-				agent={ agent }
-				setApiKey={ onApiKeyChanged }
-			/>
+			<ChatHistory />
+			<PopUpContols toolkit={ toolkit } setApiKey={ onApiKeyChanged } />
 		</>
 	);
 };

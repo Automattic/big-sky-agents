@@ -1,9 +1,12 @@
 /* eslint-disable camelcase, no-console */
 import { useEffect } from 'react';
 import useChat from '../components/chat-provider/use-chat';
+import useTools from '../components/tools-provider/use-tools';
 
-const useToolExecutor = ( { toolkit: { callbacks } } ) => {
+const useToolExecutor = () => {
 	const { error, running, pendingToolCalls, setToolResult } = useChat();
+	const { callbacks } = useTools();
+
 	useEffect( () => {
 		// process tool calls for any tools with callbacks
 		// note that tools without callbacks will be processed outside this loop,

@@ -6,11 +6,7 @@ import { useContext } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import { Context } from './context';
+import { Context } from './context.jsx';
 export default function useAgents() {
-	const agentRegistry = useContext( Context );
-
-	return {
-		agents: agentRegistry.getAgents(),
-	}
+	return useContext( Context );
 }

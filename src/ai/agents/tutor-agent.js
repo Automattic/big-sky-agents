@@ -1,5 +1,4 @@
 import Agent from './agent.js';
-import { WORDPRESS_TUTOR_AGENT_ID } from './default-agents.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 
 const instructions = DotPromptTemplate.fromString(
@@ -7,11 +6,9 @@ const instructions = DotPromptTemplate.fromString(
 );
 
 class TutorAgent extends Agent {
-	getId() {
-		return WORDPRESS_TUTOR_AGENT_ID;
-	}
+	id = 'WPTutor';
 
-	getInstructions( context ) {
+	instructions( context ) {
 		return instructions.format( context );
 	}
 

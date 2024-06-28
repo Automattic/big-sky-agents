@@ -29,8 +29,8 @@ const useAssistantExecutor = ( {
 	// 	if ( threadId && ! running && agent && ! assistantId ) {
 	// 		console.warn( 'creating assistant' );
 	// 		createAssistant( {
-	// 			instructions: agent.getInstructions(),
-	// 			tools: agent.getTools(),
+	// 			instructions: agent.instructions(),
+	// 			tools: agent.tools(),
 	// 		} );
 	// 	}
 	// }, [ createAssistant, assistantId, agent, values, running, threadId ] );

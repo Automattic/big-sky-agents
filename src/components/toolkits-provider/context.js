@@ -6,7 +6,7 @@ import { createContext } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import createToolkitRegistry from './toolkit-registry';
+import createToolkitRegistry from '../../ai/toolkits/toolkit-registry';
 
 const defaultRegistry = createToolkitRegistry();
 export const Context = createContext( defaultRegistry );

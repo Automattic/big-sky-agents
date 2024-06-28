@@ -69,7 +69,7 @@ const useReduxSiteToolkit = ( { pageId } ) => {
 
 	const callbacks = useMemo( () => {
 		return {
-			[ SetSiteColorsTool.function.name ]: ( {
+			[ SetSiteColorsTool.name ]: ( {
 				textColor,
 				backgroundColor,
 				accentColor,
@@ -85,31 +85,31 @@ const useReduxSiteToolkit = ( { pageId } ) => {
 				}
 				return 'Site colors updated';
 			},
-			[ SetSiteTitleTool.function.name ]: ( { value } ) => {
+			[ SetSiteTitleTool.name ]: ( { value } ) => {
 				setSiteTitle( value );
 				return `Site title set to "${ value }"`;
 			},
-			[ SetSiteDescriptionTool.function.name ]: ( { value } ) => {
+			[ SetSiteDescriptionTool.name ]: ( { value } ) => {
 				setSiteDescription( value );
 				return `Site description set to "${ value }"`;
 			},
-			[ SetSiteTopicTool.function.name ]: ( { value } ) => {
+			[ SetSiteTopicTool.name ]: ( { value } ) => {
 				setSiteTopic( value );
 				return `Site topic set to "${ value }"`;
 			},
-			[ SetSiteTypeTool.function.name ]: ( { value } ) => {
+			[ SetSiteTypeTool.name ]: ( { value } ) => {
 				setSiteType( value );
 				return `Site type set to "${ value }"`;
 			},
-			[ SetSiteLocationTool.function.name ]: ( { value } ) => {
+			[ SetSiteLocationTool.name ]: ( { value } ) => {
 				setSiteLocation( value );
 				return `Site location set to "${ value }"`;
 			},
-			[ SetSitePagesTool.function.name ]: ( { pages } ) => {
+			[ SetSitePagesTool.name ]: ( { pages } ) => {
 				setPages( pages );
 				return 'Site pages set';
 			},
-			[ AddSitePageTool.function.name ]: ( {
+			[ AddSitePageTool.name ]: ( {
 				category,
 				title,
 				description,
@@ -117,26 +117,26 @@ const useReduxSiteToolkit = ( { pageId } ) => {
 				addPage( { category, title, description } );
 				return 'Adding site page';
 			},
-			[ SetPageSectionsTool.function.name ]: ( { sections } ) => {
+			[ SetPageSectionsTool.name ]: ( { sections } ) => {
 				setPageSections( pageId, sections );
 				return 'Set page sections';
 			},
-			[ AddPageSectionTool.function.name ]: ( {
+			[ AddPageSectionTool.name ]: ( {
 				category,
 				description,
 			} ) => {
 				addPageSection( pageId, { category, description } );
 				return 'Adding page section';
 			},
-			[ SetPageCategoryTool.function.name ]: ( { category } ) => {
+			[ SetPageCategoryTool.name ]: ( { category } ) => {
 				setPageCategory( pageId, category );
 				return `Set page category to "${ category }"`;
 			},
-			[ SetPageDescriptionTool.function.name ]: ( { description } ) => {
+			[ SetPageDescriptionTool.name ]: ( { description } ) => {
 				setPageDescription( pageId, description );
 				return `Set page description to "${ description }"`;
 			},
-			[ SetPageTitleTool.function.name ]: ( { title } ) => {
+			[ SetPageTitleTool.name ]: ( { title } ) => {
 				setPageTitle( pageId, title );
 				return `Set page title to "${ title }"`;
 			},

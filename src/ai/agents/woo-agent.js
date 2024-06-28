@@ -1,6 +1,5 @@
 import Agent from './agent.js';
 import AnalyzeUrlTool from '../tools/analyze-url.js';
-import { WOO_STORE_AGENT_ID } from './default-agents.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 
 const instructions = DotPromptTemplate.fromString(
@@ -8,16 +7,14 @@ const instructions = DotPromptTemplate.fromString(
 );
 
 class WooAgent extends Agent {
-	getId() {
-		return WOO_STORE_AGENT_ID;
-	}
+	id = 'WooStore';
 
-	getInstructions( context ) {
+	instructions( context ) {
 		return instructions.format( context );
 	}
 
-	getTools( context ) {
-		return [ ...super.getTools( context ), AnalyzeUrlTool ];
+	tools( context ) {
+		return [ ...super.tools( context ), AnalyzeUrlTool ];
 	}
 
 	onStart( toolkit ) {

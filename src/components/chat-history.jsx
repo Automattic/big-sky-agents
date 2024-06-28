@@ -2,8 +2,10 @@
  * Internal dependencies
  */
 import MessageContent from './message-content.jsx';
+import useChat from './chat-provider/use-chat.js';
 
-function ChatHistory( { history, toolOutputs } ) {
+function ChatHistory() {
+	const { history, toolOutputs } = useChat();
 	return (
 		<div className="big-sky__chat-history">
 			{ history

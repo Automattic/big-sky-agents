@@ -7,7 +7,6 @@ import {
 	SetSiteTopicTool,
 	SetSiteTypeTool,
 } from '../tools/site-tools.js';
-import { WORDPRESS_SITE_SPEC_AGENT_ID } from './default-agents.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 
 const defaultQuestion = 'What would you like to do with your site settings?';
@@ -49,21 +48,19 @@ const additionalInstructions = new DotPromptTemplate( {
 } );
 
 class SiteSpecAgent extends BuilderAgent {
-	getId() {
-		return WORDPRESS_SITE_SPEC_AGENT_ID;
-	}
+	id = 'WPSiteSpec';
 
-	getInstructions( context ) {
+	instructions( context ) {
 		return instructions.format( context );
 	}
 
-	getAdditionalInstructions( context ) {
+	additionalInstructions( context ) {
 		return additionalInstructions.format( context );
 	}
 
-	getTools( context ) {
+	tools( context ) {
 		return [
-			...super.getTools( context ),
+			...super.tools( context ),
 			SetSiteTitleTool,
 			SetSiteDescriptionTool,
 			SetSiteTopicTool,

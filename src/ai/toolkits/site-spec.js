@@ -27,7 +27,7 @@ class SimpleSiteToolkit extends Toolkit {
 	constructor( props ) {
 		super( props, INITIAL_STATE );
 
-		this.tools = this.getTools();
+		this.tools = this.tools();
 	}
 
 	setSiteColors = ( { textColor, backgroundColor, accentColor } ) => {

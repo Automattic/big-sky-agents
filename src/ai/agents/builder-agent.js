@@ -8,12 +8,12 @@ const instructions = DotPromptTemplate.fromString(
 );
 
 class BuilderAgent extends Agent {
-	getInstructions( context ) {
+	instructions( context ) {
 		return instructions.format( context );
 	}
 
-	getTools( context ) {
-		return [ ...super.getTools( context ), AnalyzeUrlTool, ConfirmTool ];
+	tools( context ) {
+		return [ ...super.tools( context ), AnalyzeUrlTool, ConfirmTool ];
 	}
 
 	onStart( toolkit ) {

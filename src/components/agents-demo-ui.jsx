@@ -10,8 +10,7 @@ import { Flex } from '@wordpress/components';
 import SiteSpecPreview from './site-spec-preview.jsx';
 import PageSpecPreview from './page-spec-preview.jsx';
 import AgentUI from './agent-ui.jsx';
-import ChatModelControls from './chat-model-controls.jsx';
-import AgentControls from './agent-controls.jsx';
+import PopUpControls from './popup-controls.jsx';
 import ChatHistory from './chat-history.jsx';
 import PageList from './page-list.jsx';
 import useReduxToolkit from '../hooks/use-redux-toolkit.js';
@@ -35,7 +34,6 @@ import './agents-demo-ui.scss';
  *                                         -->
  */
 const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
-	const [ controlsVisible, setControlsVisible ] = useState( false );
 	const [ previewVisible, setPreviewVisible ] = useState( false );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
@@ -65,10 +63,7 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	} );
 
 	// run the agent
-	useChatExecutor( {
-		agent,
-		toolkit,
-	} );
+	useChatExecutor();
 
 	useToolExecutor( {
 		toolkit,
@@ -98,21 +93,6 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 			setPreviewVisible( true );
 		}
 	}, [ chat.running, previewVisible ] );
-
-	// show the debug window when CTRL-D is pressed
-	useEffect( () => {
-		const handleKeyDown = ( event ) => {
-			if ( event.ctrlKey && event.key === 'd' ) {
-				setControlsVisible( ( prevVisible ) => ! prevVisible );
-			}
-		};
-
-		window.addEventListener( 'keydown', handleKeyDown );
-
-		return () => {
-			window.removeEventListener( 'keydown', handleKeyDown );
-		};
-	}, [] );
 
 	return (
 		<>
@@ -147,28 +127,8 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 					</div>
 				) }
 			</Flex>
-			<ChatHistory
-				history={ chat.history }
-				toolOutputs={ chat.toolOutputs }
-			/>
-			{ controlsVisible && (
-				<div className="big-sky__agent-debug">
-					<AgentControls
-						toolkit={ toolkit }
-						agent={ agent }
-						chat={ chat }
-					/>
-					<ChatModelControls
-						{ ...chat }
-						setApiKey={ ( newToken ) => {
-							chat.setApiKey( newToken );
-							if ( typeof onApiKeyChanged === 'function' ) {
-								onApiKeyChanged( newToken );
-							}
-						} }
-					/>
-				</div>
-			) }
+			<ChatHistory />
+			<PopUpControls setApiKey={ onApiKeyChanged } />
 		</>
 	);
 };

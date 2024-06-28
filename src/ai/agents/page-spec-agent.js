@@ -8,7 +8,6 @@ import {
 	SetPageTitleTool,
 	SetSitePagesTool,
 } from '../tools/site-tools.js';
-import { WORDPRESS_SITE_SPEC_AGENT_ID } from './default-agents.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 
 const defaultChoices = [ 'Update the site description', 'Add a page' ];
@@ -47,21 +46,19 @@ Format all content in Markdown. The current state of the Page is:
 } );
 
 class PageSpecAgent extends BuilderAgent {
-	getId() {
-		return WORDPRESS_SITE_SPEC_AGENT_ID;
-	}
+	id = 'WPPageSpec';
 
-	getInstructions( context ) {
+	instructions( context ) {
 		return SystemPrompt.format( context );
 	}
 
-	getAdditionalInstructions( context ) {
+	additionalInstructions( context ) {
 		return NextStepPrompt.format( context );
 	}
 
-	getTools( context ) {
+	tools( context ) {
 		return [
-			...super.getTools( context ),
+			...super.tools( context ),
 			// TODO: only enable these tools under certain conditions, e.g. only confirm when page is valid
 			AddPageSectionTool,
 			AddSitePageTool,

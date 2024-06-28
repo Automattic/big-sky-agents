@@ -15,16 +15,14 @@ const defaultChoices = [
 ];
 
 class DesignAgent extends BuilderAgent {
-	getId() {
-		return 'WPDesign';
-	}
+	id = 'WPDesign';
 
-	getInstructions( context ) {
+	instructions( context ) {
 		return instructions.format( context );
 	}
 
-	getTools( context ) {
-		return [ ...super.getTools( context ), SetSiteColorsTool ];
+	tools( context ) {
+		return [ ...super.tools( context ), SetSiteColorsTool ];
 	}
 
 	onStart( toolkit ) {

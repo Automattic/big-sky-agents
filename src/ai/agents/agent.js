@@ -24,19 +24,19 @@ class Agent {
 		throw new Error( 'Agent must implement assistantId' );
 	}
 
+	get description() {
+		throw new Error( 'Agent must implement getDescription' );
+	}
+
 	getToolkits() {
 		return [ STANDARD_TOOLKIT ];
 	}
 
-	getDescription() {
-		throw new Error( 'Agent must implement getDescription' );
-	}
-
-	getInstructions( context ) {
+	instructions( context ) {
 		return instructions.format( context );
 	}
 
-	getAdditionalInstructions( context ) {
+	additionalInstructions( context ) {
 		return additionalInstructions.format( context );
 	}
 
@@ -44,7 +44,7 @@ class Agent {
 	 * Tools
 	 */
 
-	getTools( { agents } ) {
+	tools( { agents } ) {
 		return [
 			AskUserTool,
 			InformUserTool,
