@@ -1,18 +1,11 @@
 /**
  * WordPress dependencies
  */
-import {
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useReducer,
-} from '@wordpress/element';
+import { useCallback, useContext, useMemo } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
-import { toolsReducer } from './tools-reducer';
 import defaultTools from '../../ai/tools/default-tools';
 // import useChat from '../chat-provider/use-chat';
 
@@ -20,15 +13,12 @@ import defaultTools from '../../ai/tools/default-tools';
  * Internal dependencies
  */
 import { Context } from './context.jsx';
+import { useDispatch, useSelect } from '@wordpress/data';
 
 export default function useTools() {
-	const config = useContext( Context );
-
-	const [ state, dispatch ] = useReducer( toolsReducer, config );
-
-	const registerTool = useCallback( ( tool ) => {
-		dispatch( { type: 'REGISTER_TOOL', payload: { tool } } );
-	}, [] );
+	const toolStore = useContext( Context );
+	const { registerTool } = useDispatch( toolStore );
+	const tools = useSelect( ( select ) => select( toolStore ).getTools() );
 
 	const registerDefaultTools = useCallback( () => {
 		defaultTools.forEach( ( tool ) => {
@@ -38,14 +28,14 @@ export default function useTools() {
 
 	// used to actually call the tool, e.g. callbacks.getWeather( { location: "Boston, MA" } )
 	const callbacks = useMemo( () => {
-		return state.tools.reduce( ( acc, tool ) => {
+		return tools.reduce( ( acc, tool ) => {
 			acc[ tool.name ] = tool.callback;
 			return acc;
 		}, {} );
-	}, [ state.tools ] );
+	}, [ tools ] );
 
 	return {
-		tools: state.tools,
+		tools,
 		callbacks,
 		registerTool,
 		registerDefaultTools,

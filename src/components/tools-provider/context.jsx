@@ -1,34 +1,16 @@
-/**
- * WordPress dependencies
- */
+import { register } from '@wordpress/data';
 import { createContext } from '@wordpress/element';
+import { store as defaultToolsStore } from '../../store/index.js';
+import { createToolsStore } from '../../store/tools.js';
 
-/**
- * Internal dependencies
- */
-import { initialState } from './tools-reducer';
-import defaultTools from '../../ai/tools/default-tools';
+export const Context = createContext( defaultToolsStore );
+const { Consumer, Provider } = Context;
+export const ToolsConsumer = Consumer;
 
-const configToState = ( config ) => {
-	return {
-		tools: config.tools ?? [],
-	};
-};
-
-export const Context = createContext( {
-	...initialState,
-	tools: defaultTools,
-} );
-
-function ToolsProvider( { children, ...config } ) {
-	return (
-		<Context.Provider
-			value={ config ? configToState( config ) : initialState }
-		>
-			{ children }
-		</Context.Provider>
-	);
+function ToolsProvider( { children, tools } ) {
+	// create a store from teh default config
+	const store = createToolsStore( 'custom-tools-store', { tools } );
+	register( store );
+	return <Provider value={ store }>{ children }</Provider>;
 }
-
-export const ToolsConsumer = Context.Consumer;
 export default ToolsProvider;

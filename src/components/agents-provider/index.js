@@ -1,2 +1,2 @@
-export { default as AgentsProvider, AgentsConsumer } from './context';
-export { default as useAgents } from './use-agents';
+export { default as AgentsProvider } from './context.jsx';
+export { default as useAgents } from './use-agents.js';

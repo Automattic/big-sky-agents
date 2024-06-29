@@ -348,7 +348,12 @@ export default function useChat( options ) {
 
 	useEffect( () => {
 		if ( activeAgent ) {
-			const context = {}; // for now, we don't need any context
+			const context = {
+				agents,
+				agent: {
+					goal: 'test',
+				},
+			}; // for now, we don't need any context
 			/**
 			 * Compute new state
 			 */
@@ -403,6 +408,7 @@ export default function useChat( options ) {
 		instructions,
 		tools,
 		allTools,
+		agents,
 	] );
 
 	const runChat = useCallback( () => {

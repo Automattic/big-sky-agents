@@ -19,7 +19,7 @@ import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChat from './chat-provider/use-chat.js';
 import './agents-demo-ui.scss';
-import AgentsProvider from './agents-provider/context.jsx';
+import { AgentsProvider } from './agents-provider';
 import ToolsProvider from './tools-provider/context.jsx';
 import AskUserTool from '../ai/tools/ask-user.js';
 import InformUserTool from '../ai/tools/inform-user.js';

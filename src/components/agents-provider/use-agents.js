@@ -1,43 +1,26 @@
-/**
- * WordPress dependencies
- */
-import { useCallback, useContext, useReducer } from '@wordpress/element';
-
-/**
- * Internal dependencies
- */
+import { useContext } from '@wordpress/element';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { Context } from './context.jsx';
-import { agentsReducer } from './agents-reducer';
-import defaultAgents from '../../ai/agents/default-agents';
 
-export default function useAgents() {
-	const config = useContext( Context );
-	const [ state, dispatch ] = useReducer( agentsReducer, config );
+function useAgents() {
+	const agentStore = useContext( Context );
 
-	const registerAgent = useCallback( ( agent ) => {
-		dispatch( { type: 'REGISTER_AGENT', payload: { agent } } );
-	}, [] );
-
-	const registerDefaultAgents = useCallback( () => {
-		defaultAgents.forEach( ( agent ) => {
-			registerAgent( agent );
-		} );
-	}, [ registerAgent ] );
-
-	const setActiveAgent = useCallback( ( agentId ) => {
-		dispatch( { type: 'SET_ACTIVE_AGENT', payload: { agentId } } );
-	}, [] );
-
-	console.log( 're-render useAgents', state );
+	const { registerAgent, setActiveAgent } = useDispatch( agentStore );
+	const { agents, activeAgentId, activeAgent } = useSelect( ( select ) => {
+		return {
+			agents: select( agentStore ).getAgents(),
+			activeAgent: select( agentStore ).getActiveAgent(),
+			activeAgentId: select( agentStore ).getActiveAgentId(),
+		};
+	} );
 
 	return {
-		agents: state.agents,
-		activeAgent: state.agents.find(
-			( agent ) => agent.id === state.activeAgentId
-		),
-		activeAgentId: state.activeAgentId,
+		agents,
+		activeAgent,
+		activeAgentId,
 		setActiveAgent,
 		registerAgent,
-		registerDefaultAgents,
 	};
 }
+
+export default useAgents;
