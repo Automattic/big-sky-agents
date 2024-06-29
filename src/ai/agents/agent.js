@@ -20,12 +20,16 @@ class Agent {
 		throw new Error( 'Agent must implement id' );
 	}
 
+	get name() {
+		throw new Error( 'Agent must implement name' );
+	}
+
 	get assistantId() {
 		throw new Error( 'Agent must implement assistantId' );
 	}
 
 	get description() {
-		throw new Error( 'Agent must implement getDescription' );
+		throw new Error( 'Agent must implement description' );
 	}
 
 	getToolkits() {

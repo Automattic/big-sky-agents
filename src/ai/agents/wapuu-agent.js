@@ -25,6 +25,7 @@ const instructions = DotPromptTemplate.fromString(
 
 class WapuuAgent extends Agent {
 	id = WAPUU_AGENT_ID;
+	name = 'Wapuu';
 	assistantId = WAPUU_ASSISTANT_ID;
 	description =
 		'Here to understand your goal and choose the best agent to help you.';

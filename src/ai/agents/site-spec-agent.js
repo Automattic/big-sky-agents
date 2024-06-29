@@ -49,6 +49,7 @@ const additionalInstructions = new DotPromptTemplate( {
 
 class SiteSpecAgent extends BuilderAgent {
 	id = 'WPSiteSpec';
+	name = 'Site Building Assistant';
 	description = 'Here to help you update your site settings.';
 
 	instructions( context ) {

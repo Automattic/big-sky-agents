@@ -187,7 +187,6 @@ const AgentControls = ( { toolkit } ) => {
 					value={ activeAgent?.id ?? '' }
 					options={ [
 						...agents.map( ( anAgent ) => {
-							console.warn( 'anAgent', anAgent );
 							return {
 								label: anAgent.name,
 								value: anAgent.id,

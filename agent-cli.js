@@ -125,7 +125,7 @@ class CLIChat {
 					await callback( resultArgs )
 				);
 				const agentId = this.agent.toolkit.values.agent.id;
-				if ( agentId && agentId !== this.agent.getId() ) {
+				if ( agentId && agentId !== this.agent.id ) {
 					logVerbose( `🔄 Switching to new agent ${ agentId }` );
 					const newAgent = agents.find( ( ag ) => ag.id === agentId );
 					if ( newAgent ) {

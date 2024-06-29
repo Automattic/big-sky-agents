@@ -7,6 +7,7 @@ const instructions = DotPromptTemplate.fromString(
 
 class StatsAgent extends Agent {
 	id = 'JetpackStats';
+	name = 'Jetpack Stats';
 	description = 'Here to help you understand your site stats.';
 
 	instructions( context ) {
