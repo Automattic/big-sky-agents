@@ -85,7 +85,7 @@ function AgentUI( { toolkit } ) {
 		onReset: onResetChat,
 	} = useChat();
 
-	const { onConfirm } = useCurrentAgent( { toolkit } );
+	// const { onConfirm } = useCurrentAgent( { toolkit } );
 
 	const { agentQuestion, agentConfirm } = useMemo( () => {
 		return {

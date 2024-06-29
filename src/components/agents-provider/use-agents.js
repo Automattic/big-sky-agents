@@ -33,15 +33,14 @@ export default function useAgents() {
 		dispatch( { type: 'SET_ACTIVE_AGENT', payload: { agentId } } );
 	}, [] );
 
-	const activeAgent = useMemo(
-		() =>
-			state.agents.find( ( agent ) => agent.id === state.activeAgentId ),
-		[ state.activeAgentId, state.agents ]
-	);
+	console.log( 're-render useAgents', state );
 
 	return {
 		agents: state.agents,
-		activeAgent,
+		activeAgent: state.agents.find(
+			( agent ) => agent.id === state.activeAgentId
+		),
+		activeAgentId: state.activeAgentId,
 		setActiveAgent,
 		registerAgent,
 		registerDefaultAgents,

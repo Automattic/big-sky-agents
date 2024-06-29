@@ -1,15 +1,15 @@
 /* eslint-disable camelcase, no-console */
 import { useEffect } from 'react';
 import useChat from '../components/chat-provider/use-chat';
-import useCurrentAgent from './use-current-agent';
 
 const useChatExecutor = () => {
-	const { runChat } = useChat();
-	const { tools, instructions, additionalInstructions } = useCurrentAgent();
+	const { running, error, runChat } = useChat();
 
 	useEffect( () => {
-		runChat( tools, instructions, additionalInstructions );
-	}, [ runChat, instructions, additionalInstructions, tools ] );
+		if ( ! running && ! error ) {
+			runChat();
+		}
+	}, [ running, error, runChat ] );
 };
 
 export default useChatExecutor;

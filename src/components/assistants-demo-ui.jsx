@@ -15,7 +15,6 @@ import PageList from './page-list.jsx';
 import useReduxToolkit from '../hooks/use-redux-toolkit.js';
 import useCurrentAgent from '../hooks/use-current-agent.js';
 import useAssistantExecutor from '../hooks/use-assistant-executor.js';
-import useAgentStarter from '../hooks/use-agent-starter.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChat from './chat-provider/use-chat.js';
@@ -58,16 +57,12 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		pageId: selectedPageId,
 	} );
 
-	const agent = useCurrentAgent( {
-		toolkit,
-	} );
+	// const agent = useCurrentAgent( {
+	// 	toolkit,
+	// } );
 
 	// run the agent
-	useAssistantExecutor( {
-		agent,
-	} );
-
-	useAgentStarter();
+	useAssistantExecutor();
 
 	const { pages } = useSelect( ( select ) => {
 		return {

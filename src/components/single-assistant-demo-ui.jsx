@@ -15,7 +15,6 @@ import PageList from './page-list.jsx';
 import useReduxAgentToolkit from '../hooks/use-redux-agent-toolkit.js';
 // import useAssistantExecutor from '../hooks/use-assistant-executor.js';
 import useChatExecutor from '../hooks/use-chat-executor.js';
-import useAgentStarter from '../hooks/use-agent-starter.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChat from './chat-provider/use-chat.js';
@@ -101,7 +100,6 @@ const SingleAssistantDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 
 	// run the agent
 	useChatExecutor();
-	useAgentStarter();
 
 	const { pages } = useSelect( ( select ) => {
 		return {

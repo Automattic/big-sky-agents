@@ -20,6 +20,7 @@ export function agentsReducer( state, action ) {
 			// If agent with the same ID doesn't exist, add the new agent to the array
 			return { ...state, agents: [ ...state.agents, agent ] };
 		case 'SET_ACTIVE_AGENT':
+			console.warn( 'SET_ACTIVE_AGENT', action.payload );
 			return { ...state, activeAgentId: action.payload.agentId };
 		default:
 			return state;
