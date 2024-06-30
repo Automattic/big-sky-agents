@@ -12,14 +12,55 @@ import PageSpecPreview from './page-spec-preview.jsx';
 import AgentUI from './agent-ui.jsx';
 import ChatHistory from './chat-history.jsx';
 import PageList from './page-list.jsx';
-import useReduxToolkit from '../hooks/use-redux-toolkit.js';
-import useCurrentAgent from '../hooks/use-current-agent.js';
-import useAssistantExecutor from '../hooks/use-assistant-executor.js';
+import useReduxAgentToolkit from '../hooks/use-redux-agent-toolkit.js';
+// import useAssistantExecutor from '../hooks/use-assistant-executor.js';
+import useChatExecutor from '../hooks/use-chat-executor.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChat from './chat-provider/use-chat.js';
 import './agents-demo-ui.scss';
+import { AgentsProvider } from './agents-provider';
+import ToolsProvider from './tools-provider/context.jsx';
+import AskUserTool from '../ai/tools/ask-user.js';
+import InformUserTool from '../ai/tools/inform-user.js';
 import PopUpControls from './popup-controls.jsx';
+
+// if you want to use the default registry, you can just import the default which is shared by all consumers
+
+// import defaultAgentRegistry from '../ai/agents/default-agents.js';
+// import createAgentRegistry from '../ai/agents/agent-registry.js';
+// import createToolRegistry from '../ai/tools/tool-registry.js';
+
+// const agentRegistry = createAgentRegistry();
+// const toolRegistry = createToolRegistry();
+
+// toolRegistry.registerTool( 'getWeather', {
+// 	name: 'Get Weather',
+// 	description: 'Get the weather for a location',
+// 	parameters: {
+// 		type: 'object',
+// 		properties: {
+// 			location: {
+// 				type: 'string',
+// 			},
+// 		},
+// 		required: [ 'location' ],
+// 	},
+// 	callback: async ( { location } ) => {
+// 		const response = await fetch(
+// 			`https://wttr.in/${ location }?format=%C+%t`
+// 		);
+// 		const text = await response.text();
+// 		return text;
+// 	},
+// } );
+
+// agentRegistry.registerAgent( 'demo-agent', {
+// 	name: 'WeatherBot',
+// 	description: 'Looks up the weather for you',
+// 	instructions: 'You are a helpful weather bot',
+// 	tools: [ 'getWeather' ],
+// } );
 
 /**
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
@@ -32,7 +73,8 @@ import PopUpControls from './popup-controls.jsx';
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  *                                         -->
  */
-const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
+
+const SingleAssistantDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	const [ previewVisible, setPreviewVisible ] = useState( false );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
@@ -52,17 +94,12 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		}
 	}, [ chat ] );
 
-	const toolkit = useReduxToolkit( {
+	const toolkit = useReduxAgentToolkit( {
 		apiKey,
-		pageId: selectedPageId,
 	} );
 
-	// const agent = useCurrentAgent( {
-	// 	toolkit,
-	// } );
-
 	// run the agent
-	useAssistantExecutor();
+	useChatExecutor();
 
 	const { pages } = useSelect( ( select ) => {
 		return {
@@ -120,4 +157,63 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	);
 };
 
-export default AssistantsDemoUI;
+const DemoWithSingleAgent = ( props ) => {
+	return (
+		<ToolsProvider
+			tools={ [
+				AskUserTool,
+				{
+					...InformUserTool,
+					callback: ( { message } ) => `Agent thought: ${ message }`,
+				},
+				{
+					name: 'getWeather',
+					description: 'Get the weather for a location',
+					parameters: {
+						type: 'object',
+						properties: {
+							location: {
+								type: 'string',
+							},
+						},
+						required: [ 'location' ],
+					},
+					callback: async ( { location } ) => {
+						const response = await fetch(
+							`https://wttr.in/${ location }?format=%C+%t`
+						);
+						const text = await response.text();
+						return text;
+					},
+				},
+			] }
+		>
+			<AgentsProvider
+				activeAgentId="weatherbot"
+				agents={ [
+					{
+						id: 'weatherbot',
+						name: 'WeatherBot',
+						description: 'Looks up the weather for you',
+						instructions: 'You are a helpful weather bot',
+						onStart: ( invoke ) => {
+							invoke.askUser( {
+								question:
+									'What location would you like the weather for?',
+								choices: [
+									'Boston, MA',
+									'New York, NY',
+									'San Francisco, CA',
+								],
+							} );
+						},
+					},
+				] }
+			>
+				<SingleAssistantDemoUI { ...props } />
+			</AgentsProvider>
+		</ToolsProvider>
+	);
+};
+
+export default DemoWithSingleAgent;

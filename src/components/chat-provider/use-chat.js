@@ -1,14 +1,31 @@
 /**
  * WordPress dependencies
  */
-import { useContext } from '@wordpress/element';
+import {
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from '@wordpress/element';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useCallback, useEffect, useMemo } from 'react';
 
 /**
  * Internal dependencies
  */
 import { Context } from './context';
+import useTools from '../tools-provider/use-tools';
+import useAgents from '../agents-provider/use-agents';
+// import useCurrentAgent from '../../hooks/use-current-agent';
+
+const toOpenAITool = ( tool ) => ( {
+	type: 'function',
+	function: {
+		name: tool.name,
+		description: tool.description,
+		parameters: tool.parameters,
+	},
+} );
 
 /**
  * A custom react hook exposing the chat context for use.
@@ -45,8 +62,14 @@ import { Context } from './context';
  * @return {Function}  A custom react hook exposing the chat context value.
  */
 
-export default function useChat() {
+export default function useChat( options ) {
 	const agentStore = useContext( Context );
+	const { callbacks, tools: allTools } = useTools();
+	const { activeAgent, agents, activeAgentId } = useAgents();
+	const [ tools, setTools ] = useState( [] );
+	const [ instructions, setInstructions ] = useState( '' );
+	const [ additionalInstructions, setAdditionalInstructions ] =
+		useState( '' );
 
 	const {
 		reset,
@@ -123,6 +146,13 @@ export default function useChat() {
 			feature: select( agentStore ).getFeature(),
 		};
 	} );
+
+	// if chat.apiKey !== apiKey, set it
+	useEffect( () => {
+		if ( options?.apiKey !== apiKey ) {
+			setApiKey( apiKey );
+		}
+	}, [ apiKey, options?.apiKey, setApiKey ] );
 
 	const isThreadRunComplete = useMemo( () => {
 		return (
@@ -221,6 +251,73 @@ export default function useChat() {
 		toolOutputs,
 	] );
 
+	// execute tools using callbacks
+	useEffect( () => {
+		// process tool calls for any tools with callbacks
+		// note that tools without callbacks will be processed outside this loop,
+		// and will need responses before the ChatModel can run again
+		if ( ! error && ! running && pendingToolCalls.length > 0 ) {
+			pendingToolCalls.forEach( ( tool_call ) => {
+				if ( tool_call.inProgress ) {
+					return;
+				}
+
+				if ( tool_call.error ) {
+					// console.error( '⚙️ Tool call error', tool_call.error );
+					throw new Error( tool_call.error );
+				}
+
+				// parse arguments if they're a string
+				const args =
+					typeof tool_call.function.arguments === 'string'
+						? JSON.parse( tool_call.function.arguments )
+						: tool_call.function.arguments;
+
+				// see: https://community.openai.com/t/model-tries-to-call-unknown-function-multi-tool-use-parallel/490653/7
+				if ( tool_call.function.name === 'multi_tool_use.parallel' ) {
+					/**
+					 * Looks like this:
+					 * multi_tool_use.parallel({"tool_uses":[{"recipient_name":"WPSiteSpec","parameters":{"title":"Lorem Ipsum","description":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.","type":"Blog","topic":"Lorem Ipsum","location":"Lorem Ipsum"}}]})
+					 *
+					 * I assume the result is supposed to be an array...
+					 */
+					// create an array of promises for the tool uses
+					const promises = args.tool_uses.map( ( tool_use ) => {
+						const callback = callbacks[ tool_use.recipient_name ];
+
+						if ( typeof callback === 'function' ) {
+							console.warn(
+								'🧠 Parallel tool callback',
+								tool_use.recipient_name
+							);
+							return callback( tool_use.parameters );
+						}
+						return `Unknown tool ${ tool_use.recipient_name }`;
+					} );
+
+					// set to tool result to the promise
+					setToolCallResult( tool_call.id, Promise.all( promises ) );
+				}
+
+				const callback = callbacks[ tool_call.function.name ];
+
+				if ( typeof callback === 'function' ) {
+					console.warn( '🧠 Tool callback', tool_call.function.name );
+					setToolCallResult( tool_call.id, callback( args ) );
+				}
+			} );
+		}
+	}, [ error, callbacks, pendingToolCalls, running, setToolCallResult ] );
+
+	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
+	const invoke = useMemo( () => {
+		return allTools.reduce( ( acc, tool ) => {
+			acc[ tool.name ] = ( args, id ) =>
+				addToolCall( tool.name, args, id );
+			return acc;
+		}, {} );
+	}, [ addToolCall, allTools ] );
+
 	// while threadRun.status is queued or in_progress, poll for thread run status
 	useEffect( () => {
 		if ( ! running && isThreadRunInProgress ) {
@@ -249,61 +346,142 @@ export default function useChat() {
 		runAddMessageToThread,
 	] );
 
-	const runChat = useCallback(
-		( tools, instructions, additionalInstructions ) => {
-			if (
-				! instructions ||
-				! enabled || // disabled
-				running || // already running
-				error || // there's an error
-				! history.length > 0 || // nothing to process
-				isAwaitingUserInput
-			) {
-				return;
-			}
-			runChatCompletion( {
-				tools,
-				instructions,
-				additionalInstructions,
-			} );
-		},
-		[
-			enabled,
-			running,
-			error,
-			history,
-			isAwaitingUserInput,
-			runChatCompletion,
-		]
-	);
+	useEffect( () => {
+		if ( activeAgent ) {
+			const context = {
+				agents,
+				agent: {
+					goal: 'test',
+				},
+			}; // for now, we don't need any context
+			/**
+			 * Compute new state
+			 */
 
-	const createThreadRun = useCallback(
-		( tools, instructions, additionalInstructions ) => {
-			if (
-				! isThreadRunComplete ||
-				isAwaitingUserInput ||
-				additionalMessages.length > 0 ||
-				history.length === 0
-			) {
-				return;
+			let newTools =
+				typeof activeAgent.tools === 'function'
+					? activeAgent.tools( context )
+					: activeAgent.tools;
+
+			if ( ! newTools ) {
+				// use all tools
+				newTools = allTools;
 			}
 
-			runCreateThreadRun( {
-				tools,
-				instructions,
-				additionalInstructions,
-				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
-				additionalMessages,
-			} );
-		},
-		[
+			const newInstructions =
+				typeof activeAgent.instructions === 'function'
+					? activeAgent.instructions( context )
+					: activeAgent.instructions;
+
+			const newAdditionalInstructions =
+				typeof activeAgent.additionalInstructions === 'function'
+					? activeAgent.additionalInstructions( context )
+					: activeAgent.additionalInstructions;
+
+			if ( activeAgent.assistantId !== assistantId ) {
+				setAssistantId( activeAgent.assistantId );
+			}
+
+			if ( newInstructions && newInstructions !== instructions ) {
+				console.warn( '🧠 System prompt', newInstructions );
+				setInstructions( newInstructions );
+			}
+
+			if ( newAdditionalInstructions !== additionalInstructions ) {
+				console.warn(
+					'🧠 Next step prompt',
+					newAdditionalInstructions
+				);
+				setAdditionalInstructions( newAdditionalInstructions );
+			}
+
+			if ( JSON.stringify( newTools ) !== JSON.stringify( tools ) ) {
+				console.warn( '🧠 Tools', newTools );
+				setTools( newTools.map( toOpenAITool ) );
+			}
+		}
+	}, [
+		additionalInstructions,
+		activeAgent,
+		assistantId,
+		setAssistantId,
+		instructions,
+		tools,
+		allTools,
+		agents,
+	] );
+
+	const runChat = useCallback( () => {
+		if (
+			! instructions ||
+			! enabled || // disabled
+			running || // already running
+			error || // there's an error
+			! history.length > 0 || // nothing to process
+			isAwaitingUserInput
+		) {
+			return;
+		}
+		runChatCompletion( {
+			tools,
+			instructions,
+			additionalInstructions,
+		} );
+	}, [
+		instructions,
+		enabled,
+		running,
+		error,
+		history.length,
+		isAwaitingUserInput,
+		runChatCompletion,
+		tools,
+		additionalInstructions,
+	] );
+
+	const createThreadRun = useCallback( () => {
+		if (
+			! isThreadRunComplete ||
+			isAwaitingUserInput ||
+			additionalMessages.length > 0 ||
+			history.length === 0
+		) {
+			return;
+		}
+
+		runCreateThreadRun( {
+			tools,
+			instructions,
+			additionalInstructions,
+			// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
 			additionalMessages,
-			history,
-			isAwaitingUserInput,
-			isThreadRunComplete,
-			runCreateThreadRun,
-		]
-	);
+		} );
+	}, [
+		additionalInstructions,
+		additionalMessages,
+		history.length,
+		instructions,
+		isAwaitingUserInput,
+		isThreadRunComplete,
+		runCreateThreadRun,
+		tools,
+	] );
+
+	// /**
+	//  * Call agent.onStart() at the beginning
+	//  */
+	// useEffect( () => {
+	// 	if ( onStart && ! running && ! loading && ! started ) {
+	// 		onStart();
+	// 	}
+	// }, [ running, started, loading, onStart ] );
+
+	const onStart = useCallback( () => {
+		console.log( 'onStart', agents, activeAgent, activeAgentId );
+		if ( activeAgent ) {
+			activeAgent.onStart( invoke );
+		}
+	}, [ activeAgent, invoke, activeAgentId ] );
 
 	return {
 		// running state
@@ -360,5 +538,7 @@ export default function useChat() {
 		additionalMessages,
 
 		onReset: reset,
+		onStart,
+		invoke,
 	};
 }

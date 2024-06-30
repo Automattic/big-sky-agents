@@ -7,6 +7,12 @@ import {
 } from './agents.js';
 
 import {
+	actions as toolsActions,
+	reducer as toolsReducer,
+	selectors as toolsSelectors,
+} from './tools.js';
+
+import {
 	actions as chatActions,
 	reducer as chatReducer,
 	selectors as chatSelectors,
@@ -48,9 +54,10 @@ const createNamespacedSelectors = ( namespace, selectors ) => {
 	return namespacedSelectors;
 };
 
-const store = createReduxStore( 'big-sky-agent', {
+const store = createReduxStore( 'big-sky-agents', {
 	reducer: combineReducers( {
 		agents: agentsReducer,
+		tools: toolsReducer,
 		messages: chatReducer,
 		site: siteReducer,
 		design: designReducer,
@@ -59,6 +66,7 @@ const store = createReduxStore( 'big-sky-agent', {
 	} ),
 	actions: {
 		...agentsActions,
+		...toolsActions,
 		...chatActions,
 		...siteActions,
 		...designActions,
@@ -67,6 +75,7 @@ const store = createReduxStore( 'big-sky-agent', {
 	},
 	selectors: {
 		...createNamespacedSelectors( 'agents', agentsSelectors ),
+		...createNamespacedSelectors( 'tools', toolsSelectors ),
 		...createNamespacedSelectors( 'messages', chatSelectors ),
 		...createNamespacedSelectors( 'site', siteSelectors ),
 		...createNamespacedSelectors( 'design', designSelectors ),

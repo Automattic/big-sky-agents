@@ -4,6 +4,15 @@
 export { default as useChatExecutor } from './hooks/use-chat-executor.js';
 
 /**
+ * Register agents, tools and toolkits
+ */
+import defaultAgentRegistry from './ai/agents/default-agent-registry.js';
+import defaultToolRegistry from './ai/tools/default-tool-registry.js';
+import defaultToolkitRegistry from './ai/toolkits/default-toolkit-registry.js';
+
+export const getAgent = defaultAgentRegistry.getAgent;
+
+/**
  * ChatModel and hooks
  */
 export {
@@ -16,7 +25,7 @@ export {
 	LocalAIChatModel,
 	WPCOMJetpackAIChatModel,
 	WPCOMOpenAIChatModel,
-} from './agents/chat-model.js';
+} from './ai/chat-model.js';
 export { default as useChatModel } from './hooks/use-chat-model.js';
 
 /**
@@ -49,7 +58,7 @@ export { default as useChatIcon } from './hooks/use-chat-icon.js';
 /**
  * Core Classes
  */
-export { default as Agent } from './agents/agent.js';
+export { default as Agent } from './ai/agents/agent.js';
 
 /**
  * Prompt Templates
@@ -59,4 +68,4 @@ export {
 	StringPromptTemplate,
 	DotPromptTemplate,
 	FStringPromptTemplate,
-} from './agents/prompt-template.js';
+} from './ai/prompt-template.js';

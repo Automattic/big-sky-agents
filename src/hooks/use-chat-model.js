@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 /**
  * Internal dependencies
  */
-import ChatModel from '../agents/chat-model.js';
+import ChatModel from '../ai/chat-model.js';
 
 const useChatModel = ( { apiKey, service, feature, sessionId } ) => {
 	const [ chatModel, setChatModel ] = useState();

@@ -6,9 +6,8 @@ import {
 	SetSiteTitleTool,
 	SetSiteTopicTool,
 	SetSiteTypeTool,
-} from './tools/site-tools.js';
-import { WORDPRESS_SITE_SPEC_AGENT_ID } from './default-agents.js';
-import { DotPromptTemplate } from './prompt-template.js';
+} from '../tools/site-tools.js';
+import { DotPromptTemplate } from '../prompt-template.js';
 
 const defaultQuestion = 'What would you like to do with your site settings?';
 
@@ -49,21 +48,21 @@ const additionalInstructions = new DotPromptTemplate( {
 } );
 
 class SiteSpecAgent extends BuilderAgent {
-	getId() {
-		return WORDPRESS_SITE_SPEC_AGENT_ID;
+	id = 'WPSiteSpec';
+	name = 'Site Building Assistant';
+	description = 'Here to help you update your site settings.';
+
+	instructions( context ) {
+		return instructions.format( context );
 	}
 
-	getInstructions() {
-		return instructions.format( this.toolkit.values );
+	additionalInstructions( context ) {
+		return additionalInstructions.format( context );
 	}
 
-	getAdditionalInstructions() {
-		return additionalInstructions.format( this.toolkit.values );
-	}
-
-	getTools() {
+	tools( context ) {
 		return [
-			...super.getTools(),
+			...super.tools( context ),
 			SetSiteTitleTool,
 			SetSiteDescriptionTool,
 			SetSiteTopicTool,
@@ -81,25 +80,25 @@ class SiteSpecAgent extends BuilderAgent {
 		return defaultChoices;
 	}
 
-	onStart() {
-		this.askUser( {
+	onStart( toolkit ) {
+		toolkit.askUser( {
 			question: defaultQuestion,
 			choices: defaultChoices,
 		} );
 	}
 
-	onConfirm( confirmed ) {
+	onConfirm( confirmed, toolkit ) {
 		if ( confirmed ) {
-			this.setGoal( 'Find out what the user wants to do next' );
-			this.informUser( 'Got it!' );
-			this.askUser( {
+			toolkit.setGoal( 'Find out what the user wants to do next' );
+			toolkit.informUser( 'Got it!' );
+			toolkit.askUser( {
 				question: 'What would you like to do next?',
 				choices: defaultChoices,
 			} );
 		} else {
-			this.userSay( 'I would like to make some changes' );
-			this.informUser( 'Looks like you requested some changes' );
-			this.askUser( {
+			toolkit.userSay( 'I would like to make some changes' );
+			toolkit.informUser( 'Looks like you requested some changes' );
+			toolkit.askUser( {
 				question: 'What would you like to change?',
 				choices: [
 					'Change the title',

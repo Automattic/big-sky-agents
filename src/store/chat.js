@@ -2,8 +2,8 @@ import uuidv4 from '../utils/uuid.js';
 import ChatModel, {
 	ChatModelService,
 	ChatModelType,
-} from '../agents/chat-model.js';
-import AssistantModel from '../agents/assistant-model.js';
+} from '../ai/chat-model.js';
+import AssistantModel from '../ai/assistant-model.js';
 
 export const THREAD_RUN_ACTIVE_STATUSES = [
 	'queued',

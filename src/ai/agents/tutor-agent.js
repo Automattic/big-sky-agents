@@ -1,23 +1,21 @@
-import { ASK_USER_TOOL_NAME } from './tools/ask-user.js';
 import Agent from './agent.js';
-import { WORDPRESS_TUTOR_AGENT_ID } from './default-agents.js';
-import { DotPromptTemplate } from './prompt-template.js';
+import { DotPromptTemplate } from '../prompt-template.js';
 
 const instructions = DotPromptTemplate.fromString(
 	`You are a helpful WordPress tutor. You are an expert in all things WordPress.`
 );
 
 class TutorAgent extends Agent {
-	getId() {
-		return WORDPRESS_TUTOR_AGENT_ID;
+	id = 'WPTutor';
+	name = 'WordPress Tutor';
+	description = 'Here to help you learn WordPress.';
+
+	instructions( context ) {
+		return instructions.format( context );
 	}
 
-	getInstructions() {
-		return instructions.format( this.toolkit.values );
-	}
-
-	onStart() {
-		this.toolkit.call( ASK_USER_TOOL_NAME, {
+	onStart( toolkit ) {
+		toolkit.askUser( {
 			question: 'What can I help you with?',
 			choices: [
 				'How do I add a page?',

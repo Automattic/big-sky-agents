@@ -9,6 +9,8 @@ import {
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import './agent-controls.scss';
+import useAgents from './agents-provider/use-agents.js';
+import useChat from './chat-provider/use-chat.js';
 
 const RunningIndicator = ( { running, enabled } ) => {
 	return (
@@ -23,7 +25,8 @@ const RunningIndicator = ( { running, enabled } ) => {
 	);
 };
 
-const AgentControls = ( { agent, toolkit, chat } ) => {
+const AgentControls = ( { toolkit } ) => {
+	const { agents, activeAgent, setActiveAgent } = useAgents();
 	const {
 		threadId,
 		assistantId,
@@ -38,16 +41,17 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 		updateThreadRuns,
 		updateThreadMessages,
 		threadRun,
-	} = chat;
+		onStart,
+	} = useChat();
 
 	const {
 		onReset: onResetToolkit,
-		values: {
-			agents,
-			agent: { id: agentId, goal: agentGoal },
+		context: {
+			agent: { goal: agentGoal },
 		},
-		callbacks: { setAgent, setAgentGoal },
 	} = toolkit;
+
+	// const agent = useCurrentAgent( { toolkit } );
 
 	return (
 		<div className="big-sky__agent-controls">
@@ -170,7 +174,6 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 								onClick={ () => {
 									onResetChat();
 									onResetToolkit();
-									setAgentGoal( { goal: null } );
 								} }
 							>
 								Reset
@@ -181,7 +184,7 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 				<SelectControl
 					label="Agent"
 					labelPosition="side"
-					value={ agentId ?? '' }
+					value={ activeAgent?.id ?? '' }
 					options={ [
 						...agents.map( ( anAgent ) => {
 							return {
@@ -197,14 +200,14 @@ const AgentControls = ( { agent, toolkit, chat } ) => {
 					onChange={ ( newAgentId ) => {
 						onResetChat();
 						onResetToolkit();
-						setAgent( { agentId: newAgentId } );
+						setActiveAgent( newAgentId );
 					} }
 				/>
 				<HStack align="center">
 					<Button
 						style={ { width: '100%' } }
 						variant="primary"
-						onClick={ () => agent.onStart() }
+						onClick={ () => onStart() }
 					>
 						Start
 					</Button>

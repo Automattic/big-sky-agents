@@ -10,9 +10,12 @@ import { useMemo } from 'react';
 import AskUserQuestion from './ask-question.jsx';
 import Confirm from './confirm.jsx';
 import MessageContent from './message-content.jsx';
-import { ASK_USER_TOOL_NAME } from '../agents/tools/ask-user.js';
-import { CONFIRM_TOOL_NAME } from '../agents/tools/confirm.js';
+import { ASK_USER_TOOL_NAME } from '../ai/tools/ask-user.js';
+import { CONFIRM_TOOL_NAME } from '../ai/tools/confirm.js';
+import useChat from './chat-provider/use-chat.js';
+import useTools from './tools-provider/use-tools.js';
 import './agent-ui.scss';
+import useCurrentAgent from '../hooks/use-current-agent.js';
 
 const AgentThought = ( { message, ...props } ) => (
 	<div { ...props }>
@@ -61,8 +64,15 @@ const getNextPendingRequest = ( pendingToolCalls, toolName ) => {
 	);
 };
 
-function AgentUI( {
-	chat: {
+function AgentUI( { toolkit } ) {
+	const {
+		onReset: onResetTools,
+		context: {
+			agent: { name: agentName, thought: agentThought },
+		},
+	} = toolkit;
+	const {
+		invoke: { informUser },
 		error,
 		enabled,
 		loading,
@@ -73,13 +83,10 @@ function AgentUI( {
 		userSay,
 		setToolResult,
 		onReset: onResetChat,
-	},
-	agent: { informUser, onConfirm },
-	toolkit: {
-		onReset: onResetTools,
-		values: { agentName, agentThought },
-	},
-} ) {
+	} = useChat();
+
+	// const { onConfirm } = useCurrentAgent( { toolkit } );
+
 	const { agentQuestion, agentConfirm } = useMemo( () => {
 		return {
 			agentQuestion: getNextPendingRequest(
@@ -143,7 +150,7 @@ function AgentUI( {
 							} }
 							onAnswer={ ( answer, files ) => {
 								// clear the current thought
-								informUser( null );
+								informUser( {} );
 								setToolResult( agentQuestion.id, answer );
 								userSay( answer, files );
 							} }
@@ -153,7 +160,7 @@ function AgentUI( {
 						<Confirm
 							{ ...agentConfirm.function.arguments }
 							onConfirm={ ( confirmed ) => {
-								informUser( null );
+								informUser( {} );
 								setToolResult(
 									agentConfirm.id,
 									confirmed

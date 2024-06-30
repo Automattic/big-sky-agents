@@ -1,6 +1,6 @@
 import BuilderAgent from './builder-agent.js';
-import { DotPromptTemplate } from './prompt-template.js';
-import { SetSiteColorsTool } from './tools/site-tools.js';
+import { DotPromptTemplate } from '../prompt-template.js';
+import { SetSiteColorsTool } from '../tools/site-tools.js';
 
 const instructions = DotPromptTemplate.fromString(
 	`You are a helpful design assistant. Your mission is to help the user design the perfect site.`
@@ -15,33 +15,37 @@ const defaultChoices = [
 ];
 
 class DesignAgent extends BuilderAgent {
-	getInstructions() {
-		return instructions.format( this.toolkit.values );
+	id = 'WPDesign';
+	name = 'Design Assistant';
+	description = 'Here to help you design the perfect site.';
+
+	instructions( context ) {
+		return instructions.format( context );
 	}
 
-	getTools() {
-		return [ ...super.getTools(), SetSiteColorsTool ];
+	tools( context ) {
+		return [ ...super.tools( context ), SetSiteColorsTool ];
 	}
 
-	onStart() {
-		this.askUser( {
+	onStart( toolkit ) {
+		toolkit.askUser( {
 			question: 'How can I help refine your design?',
 			choices: defaultChoices,
 		} );
 	}
 
-	onConfirm( confirmed ) {
+	onConfirm( confirmed, toolkit ) {
 		if ( confirmed ) {
-			this.setGoal( 'Find out what the user wants to do next' );
-			this.informUser( 'Got it!' );
-			this.askUser( {
+			toolkit.setGoal( 'Find out what the user wants to do next' );
+			toolkit.informUser( 'Got it!' );
+			toolkit.askUser( {
 				question: 'What would you like to do next?',
 				choices: defaultChoices,
 			} );
 		} else {
-			this.informUser( 'Looks like you requested some changes' );
-			this.userSay( 'I would like to make some changes' );
-			this.askUser( {
+			toolkit.informUser( 'Looks like you requested some changes' );
+			toolkit.userSay( 'I would like to make some changes' );
+			toolkit.askUser( {
 				question: 'What would you like to change?',
 				choices: defaultChoices,
 			} );

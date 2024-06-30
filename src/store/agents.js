@@ -1,24 +1,18 @@
-import agents, { WAPUU_AGENT_ID } from '../agents/default-agents.js';
+import { createReduxStore } from '@wordpress/data';
 
-const DEFAULT_AGENT_ID = WAPUU_AGENT_ID;
-const DEFAULT_AGENT_NAME = 'Unknown Agent';
 const DEFAULT_GOAL = "Find out the user's goal";
 
 const initialState = {
-	agentId: DEFAULT_AGENT_ID,
+	agents: [],
+	activeAgentId: null,
 	agentGoal: DEFAULT_GOAL,
 	agentThought: null,
-	agents,
 };
 
-function getAgent( state, agentId ) {
-	return state.agents.find( ( agent ) => agent.id === agentId );
-}
-
 export const actions = {
-	setAgent: ( agentId ) => {
+	setActiveAgent: ( agentId ) => {
 		return {
-			type: 'SET_AGENT',
+			type: 'SET_ACTIVE_AGENT',
 			agentId,
 		};
 	},
@@ -34,12 +28,30 @@ export const actions = {
 			thought,
 		};
 	},
+	registerAgent: ( agent ) => {
+		return {
+			type: 'REGISTER_AGENT',
+			agent,
+		};
+	},
 };
 
 export const reducer = ( state = initialState, action ) => {
 	switch ( action.type ) {
-		case 'SET_AGENT':
-			return { ...state, agentId: action.agentId };
+		case 'REGISTER_AGENT':
+			const { agent } = action;
+			const existingAgentIndex = state.agents.findIndex(
+				( a ) => a.id === agent.id
+			);
+
+			if ( existingAgentIndex !== -1 ) {
+				const updatedAgents = [ ...state.agents ];
+				updatedAgents[ existingAgentIndex ] = agent;
+				return { ...state, agents: updatedAgents };
+			}
+			return { ...state, agents: [ ...state.agents, agent ] };
+		case 'SET_ACTIVE_AGENT':
+			return { ...state, activeAgentId: action.agentId };
 		case 'SET_AGENT_GOAL':
 			return { ...state, agentGoal: action.goal };
 		case 'SET_AGENT_THOUGHT':
@@ -50,14 +62,13 @@ export const reducer = ( state = initialState, action ) => {
 };
 
 export const selectors = {
-	getAgentId: ( state ) => {
-		return state.agentId;
+	getActiveAgentId: ( state ) => {
+		return state.activeAgentId;
 	},
-	getAgentName: ( state ) => {
-		return getAgent( state, state.agentId )?.name ?? DEFAULT_AGENT_NAME;
-	},
-	getAgent: ( state, agentId ) => {
-		return getAgent( state, agentId );
+	getActiveAgent: ( state ) => {
+		return state.agents.find(
+			( agent ) => agent.id === state.activeAgentId
+		);
 	},
 	getAgents: ( state ) => {
 		return state.agents;
@@ -69,3 +80,13 @@ export const selectors = {
 		return state.agentThought;
 	},
 };
+
+// also export createAgentsStore, which initializes a standalone store for an AgentsContext
+export function createAgentsStore( name, defaultValues ) {
+	return createReduxStore( name, {
+		reducer,
+		actions,
+		selectors,
+		initialState: defaultValues,
+	} );
+}

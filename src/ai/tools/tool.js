@@ -27,12 +27,9 @@ export const createTool = ( { name, description, parameters } ) => {
 		};
 	}
 	return {
-		type: 'function',
-		function: {
-			name,
-			description,
-			parameters,
-		},
+		name,
+		description,
+		parameters,
 	};
 };
 

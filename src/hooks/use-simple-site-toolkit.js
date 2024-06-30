@@ -21,7 +21,7 @@ import {
 	SetSiteTitleTool,
 	SetSiteTopicTool,
 	SetSiteTypeTool,
-} from '../agents/tools/site-tools.js';
+} from '../ai/tools/site-tools.js';
 
 import uuidv4 from '../utils/uuid.js';
 
