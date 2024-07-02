@@ -10,7 +10,6 @@ import AnalyzeUrlTool, {
 	makeAnalyzeUrlRequest,
 } from '../ai/tools/analyze-url.js';
 
-import useTools from '../components/tools-provider/use-tools.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 
 const useAnalyzeSiteToolkit = ( { apiKey } ) => {

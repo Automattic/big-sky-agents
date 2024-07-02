@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { createContext, useRef } from '@wordpress/element';
+import { createContext } from '@wordpress/element';
 import { dispatch, register } from '@wordpress/data';
 
 /**

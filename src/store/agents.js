@@ -1,5 +1,4 @@
-import { combineReducers, createReduxStore } from '@wordpress/data';
-import { createNamespacedActions, createNamespacedSelectors } from './utils';
+import { createReduxStore } from '@wordpress/data';
 
 const DEFAULT_GOAL = "Find out the user's goal";
 

@@ -10,7 +10,8 @@ const createSetAgentTool = ( agents ) => {
 					` * ${ agent.id }: "${ agent.name }", ${ agent.description }`
 			)
 			.join( '\n' ) ?? 'No registered agents';
-	const validAgentIds = agents?.map( ( agent ) => agent.id ).join( ', ' ) ?? '';
+	const validAgentIds =
+		agents?.map( ( agent ) => agent.id ).join( ', ' ) ?? '';
 	return createTool( {
 		name: SET_AGENT_TOOL_NAME,
 		description: `Use this to select the agent best suited to accomplish the user's goal.

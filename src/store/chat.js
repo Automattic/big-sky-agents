@@ -1,5 +1,4 @@
 import { createReduxStore } from '@wordpress/data';
-import { createNamespacedActions } from './utils.js';
 import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../ai/chat-model.js';
 import AssistantModel from '../ai/assistant-model.js';
