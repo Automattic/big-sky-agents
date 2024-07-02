@@ -25,6 +25,7 @@ const useAgentExecutor = () => {
 		isThreadRunAwaitingToolOutputs,
 		isThreadRunInProgress,
 		isThreadRunComplete,
+		isThreadDataLoaded,
 		threadId,
 		enabled,
 		assistantEnabled,
@@ -73,20 +74,14 @@ const useAgentExecutor = () => {
 			threadId &&
 			threadRunsUpdated === null
 		) {
-			console.warn( '🧠 Update thread runs', {
-				isAssistantAvailable,
-				running,
-				threadId,
-				threadRunsUpdated,
-			} );
 			updateThreadRuns();
 		}
 	}, [
 		isAssistantAvailable,
-		updateThreadRuns,
 		running,
 		threadId,
 		threadRunsUpdated,
+		updateThreadRuns,
 	] );
 
 	// update messages if they haven't been updated
@@ -102,12 +97,11 @@ const useAgentExecutor = () => {
 		}
 	}, [
 		isAssistantAvailable,
-		updateThreadMessages,
 		running,
 		threadId,
 		threadMessagesUpdated,
-		threadRun,
 		threadRun?.created_at,
+		updateThreadMessages,
 	] );
 
 	// if there are required tool outputs, run the agent
@@ -338,6 +332,7 @@ const useAgentExecutor = () => {
 			instructions &&
 			isAssistantAvailable &&
 			isThreadRunComplete &&
+			isThreadDataLoaded &&
 			! isAwaitingUserInput &&
 			additionalMessages.length === 0 &&
 			messages.length > 0

@@ -18,7 +18,6 @@ export { default as useChatModel } from './hooks/use-chat-model.js';
  * Redux chat, toolkit, and agent toolkit
  */
 export { default as useChat } from './components/chat-provider/use-chat.js';
-export { default as useToolkit } from './hooks/use-toolkit.js';
 export { default as useAgentToolkit } from './hooks/use-agent-toolkit.js';
 
 /**

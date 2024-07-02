@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { useContext, useMemo } from '@wordpress/element';
+import { useContext } from '@wordpress/element';
 import { useDispatch, useSelect } from '@wordpress/data';
 
 /**
@@ -203,6 +203,7 @@ export default function useChat() {
 		isThreadRunAwaitingToolOutputs,
 		isThreadRunInProgress,
 		isAwaitingUserInput,
+		isThreadDataLoaded,
 		additionalMessages,
 
 		onReset: reset,
