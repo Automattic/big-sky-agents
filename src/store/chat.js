@@ -277,7 +277,6 @@ const runGetThreadRuns =
 	() =>
 	async ( { select, dispatch } ) => {
 		const threadId = select( ( state ) => state.root.threadId );
-		console.warn( 'threadId', threadId );
 		dispatch( { type: 'GET_THREAD_RUNS_BEGIN_REQUEST' } );
 		try {
 			const threadRunsResponse =
@@ -975,7 +974,6 @@ const getToolOutputs = ( state ) =>
 		} ) );
 
 const getActiveThreadRun = ( state ) => {
-	console.warn( 'active thread run state', state );
 	return state.threadRuns.find( ( threadRun ) =>
 		THREAD_RUN_ACTIVE_STATUSES.includes( threadRun.status )
 	);
