@@ -98,6 +98,9 @@ export default function useChat() {
 		isAssistantAvailable,
 		isThreadRunInProgress,
 		isThreadDataLoaded,
+		isThreadRunComplete,
+		isAwaitingUserInput,
+		isThreadRunAwaitingToolOutputs,
 		feature,
 	} = useSelect( ( select ) => {
 		const store = select( agentStore );
@@ -126,32 +129,13 @@ export default function useChat() {
 			isAssistantAvailable: store.isAssistantAvailable(),
 			isThreadRunInProgress: store.isThreadRunInProgress(),
 			isThreadDataLoaded: store.isThreadDataLoaded(),
+			isThreadRunComplete: store.isThreadRunComplete(),
+			isAwaitingUserInput: store.isAwaitingUserInput(),
+			isThreadRunAwaitingToolOutputs:
+				store.isThreadRunAwaitingToolOutputs(),
 			feature: store.getFeature(),
 		};
 	} );
-
-	const isThreadRunComplete = useMemo( () => {
-		return (
-			isThreadDataLoaded &&
-			! running &&
-			( ! threadRun || threadRun?.status === 'completed' )
-		);
-	}, [ isThreadDataLoaded, running, threadRun ] );
-
-	const isAwaitingUserInput = useMemo( () => {
-		return pendingToolCalls.length > 0 || assistantMessage;
-	}, [ assistantMessage, pendingToolCalls ] );
-
-	const isThreadRunAwaitingToolOutputs = useMemo( () => {
-		return (
-			isThreadDataLoaded &&
-			! running &&
-			threadRun &&
-			threadRun.status === 'requires_action' &&
-			threadRun.required_action.type === 'submit_tool_outputs' &&
-			requiredToolOutputs.length > 0
-		);
-	}, [ isThreadDataLoaded, requiredToolOutputs.length, running, threadRun ] );
 
 	return {
 		// running state

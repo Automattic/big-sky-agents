@@ -195,7 +195,7 @@ function filterChatMessage( message ) {
 const reset =
 	() =>
 	async ( { dispatch, select } ) => {
-		const threadId = select( ( state ) => state.threadId );
+		const threadId = select( ( state ) => state.root.threadId );
 		dispatch( clearMessages() );
 		dispatch( clearError() );
 		if ( threadId ) {
@@ -230,7 +230,6 @@ const runChatCompletion =
 	( request ) =>
 	async ( { select, dispatch } ) => {
 		const { model, temperature, messages, feature } = select( ( state ) => {
-			console.warn( 'select', state );
 			return {
 				model: state.root.model,
 				temperature: state.root.temperature,
@@ -277,7 +276,8 @@ const runChatCompletion =
 const runGetThreadRuns =
 	() =>
 	async ( { select, dispatch } ) => {
-		const threadId = select( ( state ) => state.threadId );
+		const threadId = select( ( state ) => state.root.threadId );
+		console.warn( 'threadId', threadId );
 		dispatch( { type: 'GET_THREAD_RUNS_BEGIN_REQUEST' } );
 		try {
 			const threadRunsResponse =
@@ -300,8 +300,8 @@ const runGetThreadRun =
 	() =>
 	async ( { select, dispatch } ) => {
 		const { threadId, threadRun } = select( ( state ) => ( {
-			threadId: state.threadId,
-			threadRun: getActiveThreadRun( state.messages ),
+			threadId: state.root.threadId,
+			threadRun: getActiveThreadRun( state.root.messages ),
 		} ) );
 		dispatch( { type: 'GET_THREAD_RUN_BEGIN_REQUEST' } );
 		try {
@@ -325,7 +325,7 @@ const runGetThreadRun =
 const runGetThreadMessages =
 	() =>
 	async ( { select, dispatch } ) => {
-		const threadId = select( ( state ) => state.threadId );
+		const threadId = select( ( state ) => state.root.threadId );
 		dispatch( { type: 'GET_THREAD_MESSAGES_BEGIN_REQUEST' } );
 		try {
 			const threadMessagesResponse =
@@ -648,7 +648,7 @@ export const reducer = ( state = initialState, action ) => {
 		case 'SET_ENABLED':
 			return { ...state, enabled: action.enabled };
 		case 'SET_ASSISTANT_ENABLED':
-			return { ...state, assistantEnabled: action.assistantEnabled };
+			return { ...state, assistantEnabled: action.enabled };
 		case 'SET_SERVICE':
 			return { ...state, service: action.service };
 		case 'SET_API_KEY':
@@ -974,10 +974,12 @@ const getToolOutputs = ( state ) =>
 			output: message.content,
 		} ) );
 
-const getActiveThreadRun = ( state ) =>
-	state.threadRuns.find( ( threadRun ) =>
+const getActiveThreadRun = ( state ) => {
+	console.warn( 'active thread run state', state );
+	return state.threadRuns.find( ( threadRun ) =>
 		THREAD_RUN_ACTIVE_STATUSES.includes( threadRun.status )
 	);
+};
 
 export const selectors = {
 	isEnabled: ( state ) => {
@@ -1032,9 +1034,25 @@ export const selectors = {
 	isThreadRunComplete: ( state ) => {
 		const threadRunStatus = selectors.getActiveThreadRunStatus( state );
 		return (
-			( selectors.isThreadDataLoaded( state ) &&
+			( ! selectors.isRunning( state ) &&
+				selectors.isThreadDataLoaded( state ) &&
 				THREAD_RUN_COMPLETED_STATUSES.includes( threadRunStatus ) ) ||
 			! threadRunStatus
+		);
+	},
+	isAwaitingUserInput: ( state ) =>
+		selectors.getPendingToolCalls( state ).length > 0 ||
+		selectors.getAssistantMessage( state ),
+	isThreadRunAwaitingToolOutputs: ( state ) => {
+		const threadRun = getActiveThreadRun( state );
+		const requiredToolOutputs = selectors.getRequiredToolOutputs( state );
+		return (
+			selectors.isThreadDataLoaded( state ) &&
+			! selectors.isRunning( state ) &&
+			threadRun &&
+			threadRun.status === 'requires_action' &&
+			threadRun.required_action.type === 'submit_tool_outputs' &&
+			requiredToolOutputs.length > 0
 		);
 	},
 	getService: ( state ) => state.service,

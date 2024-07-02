@@ -57,7 +57,6 @@ class SiteSpecAgent extends BuilderAgent {
 	}
 
 	additionalInstructions( context ) {
-		console.warn( 'formatting', context );
 		return additionalInstructions.format( context );
 	}
 

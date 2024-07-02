@@ -181,9 +181,9 @@ const AssistantModelControls = ( { onApiKeyChanged } ) => {
 };
 
 const ModelControls = ( { onApiKeyChanged } ) => {
-	const { isAssistantEnabled } = useChat();
+	const { assistantEnabled } = useChat();
 
-	return isAssistantEnabled ? (
+	return assistantEnabled ? (
 		<AssistantModelControls onApiKeyChanged={ onApiKeyChanged } />
 	) : (
 		<ChatModelControls onApiKeyChanged={ onApiKeyChanged } />

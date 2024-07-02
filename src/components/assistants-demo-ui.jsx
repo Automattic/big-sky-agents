@@ -21,7 +21,7 @@ import {
 	AssistantModelType,
 } from '../ai/assistant-model.js';
 import { WAPUU_AGENT_ID } from '../ai/agents/wapuu-agent.js';
-import './agents-demo-ui.scss';
+import './chat-demo-ui.scss';
 import PopUpControls from './popup-controls.jsx';
 import useAgentToolkit from '../hooks/use-agent-toolkit.js';
 import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';

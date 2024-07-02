@@ -8,7 +8,7 @@
 import AgentUI from './agent-ui.jsx';
 import ChatHistory from './chat-history.jsx';
 import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
-import './agents-demo-ui.scss';
+import './chat-demo-ui.scss';
 
 // providers allow us to inject and sandbox certain configurations from other components on the page
 import { AgentsProvider } from './agents-provider';

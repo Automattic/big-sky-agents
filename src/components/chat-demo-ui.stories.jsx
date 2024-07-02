@@ -1,10 +1,10 @@
 import React from 'react';
 
-import AgentsDemoUI from './agents-demo-ui';
+import ChatDemoUI from './chat-demo-ui';
 
 export default {
-	title: 'Example/AgentsDemoUI',
-	component: AgentsDemoUI,
+	title: 'Example/ChatDemoUI',
+	component: ChatDemoUI,
 	argTypes: {
 		apiKey: {
 			control: 'text',
@@ -20,10 +20,10 @@ export default {
 	],
 };
 
-const Template = ( args ) => <AgentsDemoUI { ...args } />;
+const Template = ( args ) => <ChatDemoUI { ...args } />;
 
-export const AgentsDemoUIOpenAI = Template.bind( {} );
+export const ChatDemoUIOpenAI = Template.bind( {} );
 
-AgentsDemoUIOpenAI.args = {
+ChatDemoUIOpenAI.args = {
 	apiKey: import.meta.env.STORYBOOK_OPENAI_API_KEY,
 };

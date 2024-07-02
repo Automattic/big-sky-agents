@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { useCallback, useEffect, useMemo } from '@wordpress/element';
+import { useCallback, useEffect } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -13,7 +13,6 @@ import createSetAgentTool, {
 import AskUserTool from '../ai/tools/ask-user.js';
 import SetGoalTool from '../ai/tools/set-goal.js';
 import useAgents from '../components/agents-provider/use-agents.js';
-import useChat from '../components/chat-provider/use-chat.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 
 const useAgentToolkit = () => {
@@ -26,20 +25,7 @@ const useAgentToolkit = () => {
 		goal,
 		setAgentGoal,
 	} = useAgents();
-
-	const { call } = useChat();
-
-	const { tools: allTools, registerToolkit } = useToolkits(
-		activeAgent?.toolkits
-	);
-
-	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
-	const invoke = useMemo( () => {
-		return allTools.reduce( ( acc, tool ) => {
-			acc[ tool.name ] = ( args, id ) => call( tool.name, args, id );
-			return acc;
-		}, {} );
-	}, [ call, allTools ] );
+	const { registerToolkit } = useToolkits();
 
 	const reset = useCallback( () => {
 		setAgentGoal( null );
@@ -88,12 +74,11 @@ const useAgentToolkit = () => {
 		activeAgent,
 		goal,
 		thought,
-		registerToolkit,
-		invoke,
 		setAgentThought,
 		setAgentGoal,
 		setActiveAgent,
 		reset,
+		registerToolkit,
 	] );
 };
 

@@ -19,14 +19,14 @@ import useChatSettings from '../hooks/use-chat-settings.js';
 import useAgents from './agents-provider/use-agents.js';
 import { WAPUU_AGENT_ID } from '../ai/agents/wapuu-agent.js';
 import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
-import './agents-demo-ui.scss';
+import './chat-demo-ui.scss';
 import useAgentToolkit from '../hooks/use-agent-toolkit.js';
 import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 import useAgentExecutor from '../hooks/use-agent-executor.js';
 import useSiteToolkit from '../hooks/use-site-toolkit.js';
 
 /**
- * Renders the Agents Demo UI component.
+ * Renders the Chat Demo UI component - a simple chat without persistence.
  *
  * This component displays the user interface for the Agents Demo, which allows users to interact with agents and preview generated content.
  * <!--

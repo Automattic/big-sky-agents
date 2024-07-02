@@ -14,18 +14,11 @@ import defaultToolkits from '../../ai/toolkits/default-toolkits';
 import { Context } from './context.jsx';
 import { useDispatch, useSelect } from '@wordpress/data';
 
-export default function useToolkits( requestedToolkits ) {
+export default function useToolkits() {
 	const toolkitsStore = useContext( Context );
 	const { registerToolkit } = useDispatch( toolkitsStore );
 	const toolkits = useSelect( ( select ) =>
-		select( toolkitsStore )
-			.getToolkits()
-			.filter( ( toolkit ) => {
-				if ( requestedToolkits ) {
-					return requestedToolkits.includes( toolkit.name );
-				}
-				return true;
-			} )
+		select( toolkitsStore ).getToolkits()
 	);
 
 	const registerDefaultToolkits = useCallback( () => {
@@ -79,20 +72,16 @@ export default function useToolkits( requestedToolkits ) {
 		}, [] );
 	}, [ toolkits, context ] );
 
-	// console.warn( 'render context', requestedToolkits, toolkits, context );
-
-	// toolkits are considered "loaded" when all requested toolkits are available
-	// for example, some are registered on async hooks that may take several cycles/requests to resolve
-	const loaded = useMemo( () => {
-		if ( requestedToolkits ) {
+	const hasToolkits = useCallback(
+		( requestedToolkits ) => {
 			return requestedToolkits.every( ( requestedToolkit ) =>
 				toolkits.some(
 					( toolkit ) => toolkit.name === requestedToolkit
 				)
 			);
-		}
-		return true;
-	}, [ requestedToolkits, toolkits ] );
+		},
+		[ toolkits ]
+	);
 
 	const reset = useCallback( () => {
 		// call reset() on each toolkit if defined and it's a function
@@ -105,7 +94,7 @@ export default function useToolkits( requestedToolkits ) {
 
 	return {
 		reset,
-		loaded,
+		hasToolkits,
 		tools,
 		context,
 		callbacks,

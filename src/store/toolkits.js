@@ -22,7 +22,9 @@ export const reducer = ( state = initialState, action ) => {
 			);
 
 			if ( existingToolkitIndex !== -1 ) {
-				console.warn( 'a toolkit should only be registered once' );
+				// throw new Error(
+				// 	`a toolkit should only be registered once: ${ toolkit.name }`
+				// );
 				return state;
 				// // If tool with the same name already exists, replace it with the new tool
 				// const updatedAgents = [ ...state.toolkits ];

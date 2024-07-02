@@ -50,12 +50,7 @@ const useAgentExecutor = () => {
 		setAssistantId,
 	} = useChat();
 
-	const {
-		tools: allTools,
-		loaded,
-		context,
-		callbacks,
-	} = useToolkits( activeAgent?.toolkits );
+	const { tools: allTools, hasToolkits, context, callbacks } = useToolkits();
 
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
@@ -78,6 +73,12 @@ const useAgentExecutor = () => {
 			threadId &&
 			threadRunsUpdated === null
 		) {
+			console.warn( '🧠 Update thread runs', {
+				isAssistantAvailable,
+				running,
+				threadId,
+				threadRunsUpdated,
+			} );
 			updateThreadRuns();
 		}
 	}, [
@@ -243,6 +244,10 @@ const useAgentExecutor = () => {
 		addMessageToThread,
 		isAssistantAvailable,
 	] );
+
+	const loaded = useMemo( () => {
+		return ! activeAgent?.toolkits || hasToolkits( activeAgent?.toolkits );
+	}, [ hasToolkits, activeAgent ] );
 
 	useEffect( () => {
 		if ( activeAgent && loaded ) {
