@@ -11,18 +11,32 @@ import AnalyzeUrlTool, {
 } from '../ai/tools/analyze-url.js';
 
 import useTools from '../components/tools-provider/use-tools.js';
+import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 
 const useAnalyzeSiteToolkit = ( { apiKey } ) => {
-	const { registerTool } = useTools();
+	// const { registerTool } = useTools();
+	const { registerToolkit } = useToolkits();
 	// register the tools
+	// useEffect( () => {
+	// 	registerTool( {
+	// 		...AnalyzeUrlTool,
+	// 		callback: ( { url } ) => {
+	// 			return makeAnalyzeUrlRequest( { url, apiKey } );
+	// 		},
+	// 	} );
+	// }, [ apiKey, registerTool ] );
+
 	useEffect( () => {
-		registerTool( {
-			...AnalyzeUrlTool,
-			callback: ( { url } ) => {
-				return makeAnalyzeUrlRequest( { url, apiKey } );
+		registerToolkit( {
+			name: 'analyzeSite',
+			tools: [ AnalyzeUrlTool ],
+			callbacks: {
+				[ AnalyzeUrlTool.name ]: ( { url } ) => {
+					return makeAnalyzeUrlRequest( { url, apiKey } );
+				},
 			},
 		} );
-	}, [ apiKey, registerTool ] );
+	}, [ apiKey, registerToolkit ] );
 };
 
 export default useAnalyzeSiteToolkit;

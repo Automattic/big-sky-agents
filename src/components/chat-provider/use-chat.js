@@ -11,14 +11,17 @@ import { Context } from './context';
 import useToolkits from '../toolkits-provider/use-toolkits';
 import useAgents from '../agents-provider/use-agents';
 
-const toOpenAITool = ( tool ) => ( {
-	type: 'function',
-	function: {
-		name: tool.name,
-		description: tool.description,
-		parameters: tool.parameters,
-	},
-} );
+const toOpenAITool = ( tool ) => {
+	console.warn( '🧠 toOpenAITool', tool );
+	return {
+		type: 'function',
+		function: {
+			name: tool.name,
+			description: tool.description,
+			parameters: tool.parameters,
+		},
+	};
+};
 
 /**
  * A custom react hook exposing the chat context for use.
@@ -91,6 +94,7 @@ export default function useChat() {
 		setTemperature,
 		setApiKey,
 		setFeature,
+		setAssistantEnabled,
 	} = useDispatch( agentStore );
 
 	const {
@@ -368,10 +372,28 @@ export default function useChat() {
 					? activeAgent.tools( context )
 					: activeAgent.tools;
 
+			// for any tools that are a string, look up the definition from allTools by name
+
 			if ( ! newTools ) {
 				// use all tools if none specified
 				newTools = allTools;
 			}
+
+			// map string tools to globally registered tool definitions
+			newTools = newTools
+				.map( ( tool ) => {
+					if ( typeof tool === 'string' ) {
+						const registeredTool = allTools.find(
+							( t ) => t.name === tool
+						);
+						if ( ! registeredTool ) {
+							console.warn( '🧠 Tool not found', tool );
+						}
+						return registeredTool;
+					}
+					return tool;
+				} )
+				.filter( Boolean );
 
 			// remap using toOpenAITool
 			newTools = newTools.map( toOpenAITool );
@@ -417,7 +439,10 @@ export default function useChat() {
 
 	useEffect( () => {
 		console.warn( 'run chat completion', {
+			isChatAvailable,
 			enabled,
+			service,
+			apiKey,
 			running,
 			error,
 			instructions,
@@ -429,21 +454,18 @@ export default function useChat() {
 			pendingToolCalls,
 		} );
 		if (
-			! isChatAvailable ||
-			! instructions ||
-			! enabled || // disabled
-			running || // already running
-			error || // there's an error
-			! messages.length > 0 || // nothing to process
-			isAwaitingUserInput
+			isChatAvailable &&
+			! running &&
+			instructions &&
+			messages.length > 0 &&
+			! isAwaitingUserInput
 		) {
-			return;
+			runChatCompletion( {
+				tools,
+				instructions,
+				additionalInstructions,
+			} );
 		}
-		runChatCompletion( {
-			tools,
-			instructions,
-			additionalInstructions,
-		} );
 	}, [
 		additionalInstructions,
 		assistantEnabled,
@@ -460,11 +482,19 @@ export default function useChat() {
 		running,
 		service,
 		tools,
+		apiKey,
 	] );
 
 	useEffect( () => {
 		if ( isAssistantAvailable && ! running && ! error && ! threadId ) {
 			runCreateThread();
+		} else {
+			console.warn( 'not creating thread', {
+				isAssistantAvailable,
+				running,
+				error,
+				threadId,
+			} );
 		}
 	}, [ error, isAssistantAvailable, runCreateThread, running, threadId ] );
 
@@ -549,6 +579,8 @@ export default function useChat() {
 		// running state
 		enabled,
 		setEnabled,
+		assistantEnabled,
+		setAssistantEnabled,
 		loading,
 		running,
 		// started,

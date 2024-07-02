@@ -30,6 +30,8 @@ class WapuuAgent extends Agent {
 	description =
 		'Here to understand your goal and choose the best agent to help you.';
 
+	toolkits = [ 'agents', 'analyzeSite' ];
+
 	instructions( context ) {
 		return instructions.format( context );
 	}

@@ -12,10 +12,9 @@ import PageSpecPreview from './page-spec-preview.jsx';
 import AgentUI from './agent-ui.jsx';
 import ChatHistory from './chat-history.jsx';
 import PageList from './page-list.jsx';
-import useToolkit from '../hooks/use-toolkit.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
-import useChat from './chat-provider/use-chat.js';
+import useChatSettings from '../hooks/use-chat-settings.js';
 import useAgents from './agents-provider/use-agents.js';
 import {
 	AssistantModelService,
@@ -24,6 +23,8 @@ import {
 import { WAPUU_AGENT_ID } from '../ai/agents/wapuu-agent.js';
 import './agents-demo-ui.scss';
 import PopUpControls from './popup-controls.jsx';
+import useAgentToolkit from '../hooks/use-agent-toolkit.js';
+import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 
 /**
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
@@ -39,13 +40,16 @@ import PopUpControls from './popup-controls.jsx';
 const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
-	useChat( {
+	useChatSettings( {
 		apiKey,
 		feature: 'big-sky',
 		assistantEnabled: true,
 		service: AssistantModelService.OPENAI,
 		model: AssistantModelType.GPT_4O,
 	} );
+
+	useAgentToolkit();
+	useAnalyzeSiteToolkit( { apiKey } );
 
 	const { setActiveAgent } = useAgents();
 

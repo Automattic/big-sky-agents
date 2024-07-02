@@ -1,7 +1,6 @@
 /**
  * WordPress dependencies
  */
-import { useSelect } from '@wordpress/data';
 import { useCallback, useEffect, useMemo } from '@wordpress/element';
 
 /**

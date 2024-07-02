@@ -20,7 +20,8 @@ import useAgents from './agents-provider/use-agents.js';
 import { WAPUU_AGENT_ID } from '../ai/agents/wapuu-agent.js';
 import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
 import './agents-demo-ui.scss';
-import { useAgentToolkit } from '../index.js';
+import useAgentToolkit from '../hooks/use-agent-toolkit.js';
+import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 
 /**
  * Renders the Agents Demo UI component.
@@ -43,6 +44,7 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	} );
 
 	useAgentToolkit();
+	useAnalyzeSiteToolkit( { apiKey } );
 
 	const { setActiveAgent } = useAgents();
 

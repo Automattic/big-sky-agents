@@ -1,5 +1,5 @@
 import { combineReducers, createReduxStore } from '@wordpress/data';
-import { createNamespacedSelectors } from './utils.js';
+import { createNamespacedActions, createNamespacedSelectors } from './utils.js';
 
 const initialState = {
 	tools: [],
@@ -44,7 +44,7 @@ export const selectors = {
 export function createToolsStore( name, defaultValues ) {
 	return createReduxStore( name, {
 		reducer: combineReducers( { tools: reducer } ),
-		actions,
+		actions: createNamespacedActions( 'tools', actions ),
 		selectors: createNamespacedSelectors( 'tools', selectors ),
 		initialState: { ...initialState, ...defaultValues },
 	} );

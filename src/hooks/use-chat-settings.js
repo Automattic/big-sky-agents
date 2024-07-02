@@ -7,10 +7,12 @@ const useChatSettings = ( options ) => {
 		feature,
 		service,
 		model,
+		assistantEnabled,
 		setApiKey,
 		setService,
 		setFeature,
 		setModel,
+		setAssistantEnabled,
 	} = useChat();
 
 	// if chat.apiKey !== apiKey, set it
@@ -44,6 +46,16 @@ const useChatSettings = ( options ) => {
 			setFeature( options?.feature );
 		}
 	}, [ feature, options?.feature, setFeature ] );
+
+	// if assistantEnabled !== assistantEnabled, set it
+	useEffect( () => {
+		if (
+			typeof options?.assistantEnabled !== 'undefined' &&
+			options?.assistantEnabled !== assistantEnabled
+		) {
+			setAssistantEnabled( options?.assistantEnabled );
+		}
+	}, [ assistantEnabled, options?.assistantEnabled, setAssistantEnabled ] );
 };
 
 export default useChatSettings;

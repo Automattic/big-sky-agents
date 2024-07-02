@@ -1,5 +1,5 @@
-import { combineReducers, createReduxStore } from '@wordpress/data';
-import { createNamespacedActions, createNamespacedSelectors } from './utils.js';
+import { createReduxStore } from '@wordpress/data';
+import { createNamespacedActions } from './utils.js';
 import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../ai/chat-model.js';
 import AssistantModel from '../ai/assistant-model.js';
@@ -206,8 +206,8 @@ const reset =
 
 const getChatModel = ( select ) => {
 	const { service, apiKey } = select( ( state ) => ( {
-		service: state.service,
-		apiKey: state.apiKey,
+		service: state.root.service,
+		apiKey: state.root.apiKey,
 	} ) );
 	if ( ! service || ! apiKey ) {
 		throw new Error( 'Service and API key are required' );
@@ -233,10 +233,10 @@ const runChatCompletion =
 		const { model, temperature, messages, feature } = select( ( state ) => {
 			console.warn( 'select', state );
 			return {
-				model: state.model,
-				temperature: state.temperature,
-				messages: state.messages,
-				feature: state.feature,
+				model: state.root.model,
+				temperature: state.root.temperature,
+				messages: state.root.messages,
+				feature: state.root.feature,
 			};
 		} );
 
@@ -344,8 +344,8 @@ const runGetThreadMessages =
 
 const getAssistantModel = ( select ) => {
 	const { service, apiKey } = select( ( state ) => ( {
-		service: state.service,
-		apiKey: state.apiKey,
+		service: state.root.service,
+		apiKey: state.root.apiKey,
 	} ) );
 	if ( ! service || ! apiKey ) {
 		console.warn( 'Service and API key are required', {
@@ -383,7 +383,7 @@ const runCreateThread =
 const runDeleteThread =
 	() =>
 	async ( { select, dispatch } ) => {
-		const threadId = select( ( state ) => state.threadId );
+		const threadId = select( ( state ) => state.root.threadId );
 		dispatch( { type: 'DELETE_THREAD_BEGIN_REQUEST' } );
 		try {
 			await getAssistantModel( select ).deleteThread( threadId );
@@ -416,10 +416,10 @@ const runCreateThreadRun =
 	async ( { select, dispatch } ) => {
 		const { threadId, assistantId, model, temperature } = select(
 			( state ) => ( {
-				threadId: state.threadId,
-				assistantId: state.assistantId,
-				model: state.model,
-				temperature: state.temperature,
+				threadId: state.root.threadId,
+				assistantId: state.root.assistantId,
+				model: state.root.model,
+				temperature: state.root.temperature,
 			} )
 		);
 		dispatch( { type: 'RUN_THREAD_BEGIN_REQUEST' } );
@@ -462,8 +462,8 @@ const runSubmitToolOutputs =
 	( { toolOutputs } ) =>
 	async ( { select, dispatch } ) => {
 		const { threadId, threadRun } = select( ( state ) => ( {
-			threadId: state.threadId,
-			threadRun: getActiveThreadRun( state.messages ),
+			threadId: state.root.threadId,
+			threadRun: getActiveThreadRun( state.root.messages ),
 		} ) );
 		try {
 			dispatch( { type: 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST' } );
@@ -519,7 +519,7 @@ const runAddMessageToThread =
 		if ( ! message.id ) {
 			throw new Error( 'Message must have an ID' );
 		}
-		const threadId = select( ( state ) => state.threadId );
+		const threadId = select( ( state ) => state.root.threadId );
 		dispatch( { type: 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST' } );
 		try {
 			const newMessage = await getAssistantModel(
@@ -1006,17 +1006,14 @@ export const selectors = {
 		state.isCreatingThreadMessage ||
 		state.isFetchingThreadMessages ||
 		state.isSubmittingToolOutputs,
+	isServiceAvailable: ( state ) =>
+		state.enabled && ! state.error && state.service && state.apiKey,
 	isChatAvailable: ( state ) =>
-		! state.assistantEnabled &&
-		state.service &&
-		state.apiKey &&
-		! state.error,
+		selectors.isServiceAvailable( state ) && ! state.assistantEnabled,
 	isAssistantAvailable: ( state ) =>
+		selectors.isServiceAvailable( state ) &&
 		state.assistantEnabled &&
-		state.service &&
-		state.apiKey &&
-		state.assistantId &&
-		! state.error,
+		state.assistantId,
 	isAvailable: ( state ) =>
 		selectors.isChatAvailable( state ) ||
 		selectors.isAssistantAvailable( state ),
@@ -1234,11 +1231,9 @@ export const actions = {
 export function createChatStore( name, defaultValues ) {
 	console.warn( 'createChatStore', name, defaultValues );
 	return createReduxStore( name, {
-		reducer: combineReducers( {
-			chat: reducer,
-		} ),
-		actions: createNamespacedActions( 'chat', actions ),
-		selectors: createNamespacedSelectors( 'chat', selectors ),
+		reducer,
+		actions,
+		selectors,
 		initialState: { ...initialState, ...defaultValues },
 	} );
 }
