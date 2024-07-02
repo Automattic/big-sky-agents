@@ -65,14 +65,22 @@ const getNextPendingRequest = ( pendingToolCalls, toolName ) => {
 };
 
 function AgentUI() {
-	const {
-		context: {
-			agent: { name: agentName, thought: agentThought },
-		},
-	} = useToolkits();
+	// useAgentToolkit();
+	// const {
+	// 	context: {
+	// 		agent: { name: agentName, thought: agentThought },
+	// 	},
+	// } = useToolkits( [ 'agents' ] );
+	const agentName = 'Agent';
+	const agentThought = 'Help the user find out about the weather';
+
+	// const toolkits = useToolkits( [ 'agents' ] );
+	// console.warn( 'toolkits', toolkits );
+	const informUser = ( message ) => {
+		console.warn( '🚀 Informing user', message );
+	};
 
 	const {
-		invoke: { informUser },
 		error,
 		enabled,
 		loading,

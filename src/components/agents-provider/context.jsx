@@ -18,6 +18,7 @@ function AgentsProvider( { children, ...options } ) {
 	console.warn( 'using custom agents provider', options );
 	// create a hash of the options to use as a unique store name
 	const store = createAgentsStore( `agents-${ uuidv4() }`, options );
+	console.warn( 'store name', store.name );
 	register( store );
 
 	return <Provider value={ store }>{ children }</Provider>;

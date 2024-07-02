@@ -1,21 +1,12 @@
 /**
  * WordPress dependencies
  */
-import { useCallback, useState } from 'react';
-import { Flex } from '@wordpress/components';
 
 /**
  * Internal dependencies
  */
-import SiteSpecPreview from './site-spec-preview.jsx';
-import PageSpecPreview from './page-spec-preview.jsx';
 import AgentUI from './agent-ui.jsx';
-import AgentsToolkit from '../ai/toolkits/agents.js';
 import ChatHistory from './chat-history.jsx';
-import PageList from './page-list.jsx';
-
-import { store as siteSpecStore } from '../store/index.js';
-import { useSelect } from '@wordpress/data';
 import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
 import './agents-demo-ui.scss';
 
@@ -23,6 +14,9 @@ import './agents-demo-ui.scss';
 import { AgentsProvider } from './agents-provider';
 import { ChatProvider } from './chat-provider';
 import { ToolkitsProvider } from './toolkits-provider';
+
+// Toolkits allows us to register tools and state that use redux stores and can integrate with core Gutenberg libraries
+// the Agent Toolkit supports core functionality like determining the current agent and switching agents
 import useAgentToolkit from '../hooks/use-agent-toolkit.js';
 import PopUpControls from './popup-controls.jsx';
 
@@ -53,8 +47,8 @@ const GetWeatherTool = {
 };
 
 const GetWeatherToolkit = {
-	name: 'getWeatherToolkit',
-	values: {
+	name: 'weather',
+	context: {
 		exampleValue: 'foo',
 	},
 	tools: [ GetWeatherTool ],
@@ -69,34 +63,34 @@ const GetWeatherToolkit = {
 	},
 };
 
+const WeatherAgent = {
+	id: 'weatherbot',
+	name: 'WeatherBot',
+	description: 'Looks up the weather for you',
+	instructions: 'You are a helpful weather bot',
+	toolkits: [ 'agents', 'weather' ],
+	onStart: ( invoke ) => {
+		invoke.askUser( {
+			question: 'What location would you like the weather for?',
+			choices: [
+				'Boston, MA',
+				'New York, NY',
+				'San Francisco, CA',
+				'Compare the weather in London and Melbourne',
+			],
+		} );
+	},
+};
+
 const DemoWithSingleAgent = ( { apiKey } ) => {
 	return (
-		<AgentsProvider
-			goal="Help the user find out about the weather"
-			thought="I am going to help the user find out about the weather"
-			activeAgentId="weatherbot"
-			agents={ [
-				{
-					id: 'weatherbot',
-					name: 'WeatherBot',
-					description: 'Looks up the weather for you',
-					instructions: 'You are a helpful weather bot',
-					onStart: ( invoke ) => {
-						invoke.askUser( {
-							question:
-								'What location would you like the weather for?',
-							choices: [
-								'Boston, MA',
-								'New York, NY',
-								'San Francisco, CA',
-								'Compare the weather in London and Melbourne',
-							],
-						} );
-					},
-				},
-			] }
-		>
-			<ToolkitsProvider toolkits={ [ GetWeatherToolkit ] }>
+		<ToolkitsProvider toolkits={ [ GetWeatherToolkit ] }>
+			<AgentsProvider
+				goal="Help the user find out about the weather"
+				thought="I am going to help the user find out about the weather"
+				activeAgentId="weatherbot"
+				agents={ [ WeatherAgent ] }
+			>
 				<ChatProvider
 					service={ ChatModelService.OPENAI }
 					model={ ChatModelType.GPT_4O }
@@ -106,8 +100,8 @@ const DemoWithSingleAgent = ( { apiKey } ) => {
 				>
 					<SingleAssistantDemoUI />
 				</ChatProvider>
-			</ToolkitsProvider>
-		</AgentsProvider>
+			</AgentsProvider>
+		</ToolkitsProvider>
 	);
 };
 

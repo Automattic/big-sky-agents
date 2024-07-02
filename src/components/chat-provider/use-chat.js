@@ -8,7 +8,6 @@ import { useDispatch, useSelect } from '@wordpress/data';
  * Internal dependencies
  */
 import { Context } from './context';
-import useTools from '../tools-provider/use-tools';
 import useToolkits from '../toolkits-provider/use-toolkits';
 import useAgents from '../agents-provider/use-agents';
 
@@ -58,8 +57,13 @@ const toOpenAITool = ( tool ) => ( {
 
 export default function useChat() {
 	const agentStore = useContext( Context );
-	const { context, callbacks, tools: allTools } = useToolkits();
 	const { activeAgent, agents } = useAgents();
+	const {
+		loaded: toolkitsLoaded,
+		context,
+		callbacks,
+		tools: allTools,
+	} = useToolkits( activeAgent?.toolkits );
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =
@@ -68,7 +72,6 @@ export default function useChat() {
 	const {
 		reset,
 		setEnabled,
-		setStarted,
 		addToolCall,
 		addUserMessage,
 		clearMessages,
@@ -99,7 +102,6 @@ export default function useChat() {
 		error,
 		loading,
 		enabled,
-		started,
 		running,
 		messages,
 		assistantMessage,
@@ -127,7 +129,6 @@ export default function useChat() {
 			error: store.getError(),
 			model: store.getModel(),
 			loading: store.isLoading(),
-			started: store.isStarted(),
 			running: store.isRunning(),
 			enabled: store.isEnabled(),
 			messages: store.getMessages(),
@@ -313,20 +314,12 @@ export default function useChat() {
 		}
 	}, [
 		callbacks,
+		error,
 		isAvailable,
 		pendingToolCalls,
 		running,
 		setToolCallResult,
 	] );
-
-	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
-	const invoke = useMemo( () => {
-		return allTools.reduce( ( acc, tool ) => {
-			acc[ tool.name ] = ( args, id ) =>
-				addToolCall( tool.name, args, id );
-			return acc;
-		}, {} );
-	}, [ addToolCall, allTools ] );
 
 	// while threadRun.status is queued or in_progress, poll for thread run status
 	useEffect( () => {
@@ -359,7 +352,7 @@ export default function useChat() {
 	] );
 
 	useEffect( () => {
-		if ( activeAgent ) {
+		if ( activeAgent && toolkitsLoaded ) {
 			// const context = {
 			// 	agents,
 			// 	agent: {
@@ -376,7 +369,7 @@ export default function useChat() {
 					: activeAgent.tools;
 
 			if ( ! newTools ) {
-				// use all tools
+				// use all tools if none specified
 				newTools = allTools;
 			}
 
@@ -419,17 +412,17 @@ export default function useChat() {
 		allTools,
 		agents,
 		context,
+		toolkitsLoaded,
 	] );
 
 	useEffect( () => {
 		console.warn( 'run chat completion', {
-			service,
-			model,
-			assistantEnabled,
-			instructions,
 			enabled,
 			running,
 			error,
+			instructions,
+			additionalInstructions,
+			tools,
 			messages,
 			isAwaitingUserInput,
 			assistantMessage,
@@ -504,32 +497,53 @@ export default function useChat() {
 		tools,
 	] );
 
-	/**
-	 * Call agent.onStart() at the beginning
-	 */
-	useEffect( () => {
-		if (
-			isAvailable &&
-			! isAwaitingUserInput &&
-			! running &&
-			! loading &&
-			! started &&
-			activeAgent &&
-			activeAgent.onStart
-		) {
-			setStarted( true );
-			activeAgent.onStart( invoke );
-		}
-	}, [
-		activeAgent,
-		invoke,
-		isAvailable,
-		isAwaitingUserInput,
-		loading,
-		running,
-		setStarted,
-		started,
-	] );
+	// /**
+	//  * Call agent.onStart() at the beginning
+	//  */
+	// useEffect( () => {
+	// 	if (
+	// 		isAvailable &&
+	// 		toolkitsLoaded &&
+	// 		! isAwaitingUserInput &&
+	// 		! running &&
+	// 		! loading &&
+	// 		! started &&
+	// 		activeAgent &&
+	// 		activeAgent.onStart
+	// 	) {
+	// 		console.warn( '🚀 Starting agent', { invoke } );
+	// 		setStarted( true );
+	// 		activeAgent.onStart( invoke );
+	// 	} else {
+	// 		console.warn( '🚀 Not starting agent', {
+	// 			toolkitsLoaded,
+	// 			isAvailable,
+	// 			isAwaitingUserInput,
+	// 			running,
+	// 			loading,
+	// 			started,
+	// 			activeAgent,
+	// 			assistantEnabled,
+	// 			service,
+	// 			apiKey,
+	// 			error,
+	// 		} );
+	// 	}
+	// }, [
+	// 	activeAgent,
+	// 	apiKey,
+	// 	assistantEnabled,
+	// 	error,
+	// 	invoke,
+	// 	isAvailable,
+	// 	isAwaitingUserInput,
+	// 	loading,
+	// 	running,
+	// 	service,
+	// 	setStarted,
+	// 	started,
+	// 	toolkitsLoaded,
+	// ] );
 
 	return {
 		// running state
@@ -537,7 +551,7 @@ export default function useChat() {
 		setEnabled,
 		loading,
 		running,
-		started,
+		// started,
 		error,
 
 		// auth
@@ -577,11 +591,11 @@ export default function useChat() {
 
 		updateThreadRun: runGetThreadRun, // refresh status of running threads
 		updateThreadRuns: runGetThreadRuns, // refresh status of running threads
+		isAvailable,
 		isThreadRunComplete,
 		isAwaitingUserInput,
 		additionalMessages,
 
 		onReset: reset,
-		invoke,
 	};
 }

@@ -1,5 +1,4 @@
-import { combineReducers, createReduxStore } from '@wordpress/data';
-import { createNamespacedSelectors } from './utils.js';
+import { createReduxStore } from '@wordpress/data';
 
 const initialState = {
 	toolkits: [],
@@ -17,16 +16,19 @@ export const actions = {
 export const reducer = ( state = initialState, action ) => {
 	switch ( action.type ) {
 		case 'REGISTER_TOOLKIT':
+			console.warn( 'register toolkit', state, action );
 			const { toolkit } = action;
 			const existingToolkitIndex = state.toolkits.findIndex(
 				( a ) => a.name === toolkit.name
 			);
 
 			if ( existingToolkitIndex !== -1 ) {
-				// If tool with the same name already exists, replace it with the new tool
-				const updatedAgents = [ ...state.toolkits ];
-				updatedAgents[ existingToolkitIndex ] = toolkit;
-				return { ...state, toolkits: updatedAgents };
+				console.warn( 'a toolkit should only be registered once' );
+				return state;
+				// // If tool with the same name already exists, replace it with the new tool
+				// const updatedAgents = [ ...state.toolkits ];
+				// updatedAgents[ existingToolkitIndex ] = toolkit;
+				// return { ...state, toolkits: updatedAgents };
 			}
 			// If tool with the same ID doesn't exist, add the new tool to the array
 			return { ...state, toolkits: [ ...state.toolkits, toolkit ] };
@@ -43,9 +45,9 @@ export const selectors = {
 
 export function createToolkitsStore( name, defaultValues ) {
 	return createReduxStore( name, {
-		reducer: combineReducers( { toolkits: reducer } ),
+		reducer,
 		actions,
-		selectors: createNamespacedSelectors( selectors, 'toolkits' ),
+		selectors,
 		initialState: { ...initialState, ...defaultValues },
 	} );
 }

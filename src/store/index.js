@@ -1,5 +1,5 @@
 import { combineReducers, createReduxStore, register } from '@wordpress/data';
-import { createNamespacedSelectors } from './utils.js';
+import { createNamespacedActions, createNamespacedSelectors } from './utils.js';
 import {
 	actions as agentsActions,
 	reducer as agentsReducer,
@@ -60,14 +60,14 @@ const store = createReduxStore( 'big-sky-agents', {
 		pageSections: sectionReducer,
 	} ),
 	actions: {
-		...agentsActions,
-		...toolsActions,
-		...toolkitsActions,
-		...chatActions,
-		...siteActions,
-		...designActions,
-		...pageActions,
-		...sectionActions,
+		...createNamespacedActions( 'agents', agentsActions ),
+		...createNamespacedActions( 'tools', toolsActions ),
+		...createNamespacedActions( 'toolkits', toolkitsActions ),
+		...createNamespacedActions( 'chat', chatActions ),
+		...createNamespacedActions( 'site', siteActions ),
+		...createNamespacedActions( 'design', designActions ),
+		...createNamespacedActions( 'pages', pageActions ),
+		...createNamespacedActions( 'pageSections', sectionActions ),
 	},
 	selectors: {
 		...createNamespacedSelectors( 'agents', agentsSelectors ),

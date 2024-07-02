@@ -16,6 +16,7 @@ export const ToolkitsConsumer = Consumer;
 function ToolkitsProvider( { children, ...options } ) {
 	const store = createToolkitsStore( `toolkits-${ uuidv4() }`, options );
 	register( store );
+	console.warn( 'toolkits store', store.name );
 	return <Provider value={ store }>{ children }</Provider>;
 }
 export default ToolkitsProvider;

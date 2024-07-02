@@ -2,7 +2,7 @@ import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
 import { useEffect, useState } from 'react';
 
-const PopUpControls = ( { toolkit, setApiKey } ) => {
+const PopUpControls = ( { setApiKey } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
 
 	// show the debug window when CTRL-D is pressed
@@ -24,7 +24,7 @@ const PopUpControls = ( { toolkit, setApiKey } ) => {
 		<div className="big-sky__agent-debug">
 			{ controlsVisible ? (
 				<>
-					<AgentControls toolkit={ toolkit } />
+					<AgentControls />
 					<ChatModelControls
 						onApiKeyChanged={ ( newApiKey ) => {
 							if ( typeof setApiKey === 'function' ) {

@@ -1,5 +1,4 @@
-import { combineReducers, createReduxStore } from '@wordpress/data';
-import { createNamespacedSelectors } from './utils.js';
+import { createReduxStore } from '@wordpress/data';
 
 const DEFAULT_GOAL = "Find out the user's goal";
 
@@ -8,9 +7,16 @@ const initialState = {
 	activeAgentId: null,
 	agentGoal: DEFAULT_GOAL,
 	agentThought: null,
+	started: false,
 };
 
 export const actions = {
+	setAgentStarted: ( started ) => {
+		return {
+			type: 'SET_AGENT_STARTED',
+			started,
+		};
+	},
 	setActiveAgent: ( agentId ) => {
 		return {
 			type: 'SET_ACTIVE_AGENT',
@@ -57,6 +63,8 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, agentGoal: action.goal };
 		case 'SET_AGENT_THOUGHT':
 			return { ...state, agentThought: action.thought };
+		case 'SET_AGENT_STARTED':
+			return { ...state, started: action.started };
 		default:
 			return state;
 	}
@@ -80,15 +88,20 @@ export const selectors = {
 	getAgentThought: ( state ) => {
 		return state.agentThought;
 	},
+	isAgentStarted: ( state ) => state.started,
 };
 
 export function createAgentsStore( name, defaultValues ) {
+	console.warn( 'creating agents store', {
+		name,
+		defaultValues,
+		initialState,
+	} );
 	return createReduxStore( name, {
-		reducer: combineReducers( {
-			agents: reducer,
-		} ),
+		reducer,
 		actions,
-		selectors: createNamespacedSelectors( selectors, 'agents' ),
+		selectors,
+		// selectors: createNamespacedSelectors( 'agents', selectors ),
 		initialState: {
 			...initialState,
 			...defaultValues,

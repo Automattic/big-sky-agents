@@ -35,7 +35,7 @@ class WapuuAgent extends Agent {
 	}
 
 	tools( context ) {
-		return [ ...super.tools( context ), AnalyzeUrlTool ];
+		return [ ...super.tools( context ), AnalyzeUrlTool.name ];
 	}
 
 	getDefaultQuestion() {
@@ -46,9 +46,8 @@ class WapuuAgent extends Agent {
 		return defaultChoices;
 	}
 
-	onStart( invoke ) {
-		console.log( 'WapuuAgent.onStart' );
-		invoke.askUser( {
+	onStart( { askUser } ) {
+		askUser( {
 			question: defaultQuestion,
 			choices: defaultChoices,
 		} );

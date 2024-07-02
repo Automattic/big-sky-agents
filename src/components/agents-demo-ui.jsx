@@ -13,8 +13,6 @@ import AgentUI from './agent-ui.jsx';
 import PopUpControls from './popup-controls.jsx';
 import ChatHistory from './chat-history.jsx';
 import PageList from './page-list.jsx';
-import useToolkit from '../hooks/use-toolkit.js';
-import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChatSettings from '../hooks/use-chat-settings.js';
@@ -22,6 +20,7 @@ import useAgents from './agents-provider/use-agents.js';
 import { WAPUU_AGENT_ID } from '../ai/agents/wapuu-agent.js';
 import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
 import './agents-demo-ui.scss';
+import { useAgentToolkit } from '../index.js';
 
 /**
  * Renders the Agents Demo UI component.
@@ -42,6 +41,8 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		service: ChatModelService.OPENAI,
 		model: ChatModelType.GPT_4O,
 	} );
+
+	useAgentToolkit();
 
 	const { setActiveAgent } = useAgents();
 

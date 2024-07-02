@@ -11,6 +11,7 @@ import {
 import './agent-controls.scss';
 import useAgents from './agents-provider/use-agents.js';
 import useChat from './chat-provider/use-chat.js';
+import useToolkits from './toolkits-provider/use-toolkits.js';
 
 const RunningIndicator = ( { running, enabled } ) => {
 	return (
@@ -25,7 +26,7 @@ const RunningIndicator = ( { running, enabled } ) => {
 	);
 };
 
-const AgentControls = ( { toolkit } ) => {
+const AgentControls = () => {
 	const { agents, activeAgent, setActiveAgent } = useAgents();
 	const {
 		threadId,
@@ -43,11 +44,11 @@ const AgentControls = ( { toolkit } ) => {
 	} = useChat();
 
 	const {
-		onReset: onResetToolkit,
+		reset: onResetToolkit,
 		context: {
 			agent: { goal: agentGoal },
 		},
-	} = toolkit;
+	} = useToolkits( [ 'agents' ] );
 
 	return (
 		<div className="big-sky__agent-controls">

@@ -45,7 +45,7 @@ export function createToolsStore( name, defaultValues ) {
 	return createReduxStore( name, {
 		reducer: combineReducers( { tools: reducer } ),
 		actions,
-		selectors: createNamespacedSelectors( selectors, 'tools' ),
+		selectors: createNamespacedSelectors( 'tools', selectors ),
 		initialState: { ...initialState, ...defaultValues },
 	} );
 }
