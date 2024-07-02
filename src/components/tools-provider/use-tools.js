@@ -7,7 +7,6 @@ import { useCallback, useContext, useMemo } from '@wordpress/element';
  * Internal dependencies
  */
 import defaultTools from '../../ai/tools/default-tools';
-// import useChat from '../chat-provider/use-chat';
 
 /**
  * Internal dependencies
@@ -28,7 +27,7 @@ export default function useTools() {
 
 	// used to actually call the tool, e.g. callbacks.getWeather( { location: "Boston, MA" } )
 	const callbacks = useMemo( () => {
-		return tools.reduce( ( acc, tool ) => {
+		return tools?.reduce( ( acc, tool ) => {
 			acc[ tool.name ] = tool.callback;
 			return acc;
 		}, {} );

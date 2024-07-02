@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { useCallback, useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 
 /**
  * Internal dependencies

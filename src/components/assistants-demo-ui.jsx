@@ -12,12 +12,16 @@ import PageSpecPreview from './page-spec-preview.jsx';
 import AgentUI from './agent-ui.jsx';
 import ChatHistory from './chat-history.jsx';
 import PageList from './page-list.jsx';
-import useReduxToolkit from '../hooks/use-redux-toolkit.js';
-import useCurrentAgent from '../hooks/use-current-agent.js';
-import useAssistantExecutor from '../hooks/use-assistant-executor.js';
+import useToolkit from '../hooks/use-toolkit.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChat from './chat-provider/use-chat.js';
+import useAgents from './agents-provider/use-agents.js';
+import {
+	AssistantModelService,
+	AssistantModelType,
+} from '../ai/assistant-model.js';
+import { WAPUU_AGENT_ID } from '../ai/agents/wapuu-agent.js';
 import './agents-demo-ui.scss';
 import PopUpControls from './popup-controls.jsx';
 
@@ -33,36 +37,22 @@ import PopUpControls from './popup-controls.jsx';
  *                                         -->
  */
 const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
-	const [ previewVisible, setPreviewVisible ] = useState( false );
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
-	const chat = useChat();
-
-	// if chat.apiKey !== apiKey, set it
-	useEffect( () => {
-		if ( chat.apiKey !== apiKey ) {
-			chat.setApiKey( apiKey );
-		}
-	}, [ apiKey, chat ] );
-
-	// set the feature to big-sky
-	useEffect( () => {
-		if ( chat.feature !== 'big-sky' ) {
-			chat.setFeature( 'big-sky' );
-		}
-	}, [ chat ] );
-
-	const toolkit = useReduxToolkit( {
+	useChat( {
 		apiKey,
-		pageId: selectedPageId,
+		feature: 'big-sky',
+		assistantEnabled: true,
+		service: AssistantModelService.OPENAI,
+		model: AssistantModelType.GPT_4O,
 	} );
 
-	// const agent = useCurrentAgent( {
-	// 	toolkit,
-	// } );
+	const { setActiveAgent } = useAgents();
 
-	// run the agent
-	useAssistantExecutor();
+	// set the initial agent
+	useEffect( () => {
+		setActiveAgent( WAPUU_AGENT_ID );
+	}, [ setActiveAgent ] );
 
 	const { pages } = useSelect( ( select ) => {
 		return {
@@ -78,44 +68,31 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		}
 	}, [] );
 
-	// the first time agentState gets set to "running", we should show the preview
-	useEffect( () => {
-		if ( ! previewVisible && chat.running ) {
-			setPreviewVisible( true );
-		}
-	}, [ chat.running, previewVisible ] );
-
 	return (
 		<>
 			<Flex direction="row" align="stretch" justify="center">
 				<div className="big-sky__agent-column">
-					<AgentUI toolkit={ toolkit } />
+					<AgentUI />
 				</div>
-				{ previewVisible && (
-					<div className="big-sky__current-preview-wrapper">
-						{ selectedPageId ? (
-							<PageSpecPreview
-								disabled={ toolkit.running }
-								pageId={ selectedPageId }
-							/>
-						) : (
-							<SiteSpecPreview disabled={ toolkit.running } />
-						) }
-					</div>
-				) }
+				<div className="big-sky__current-preview-wrapper">
+					{ selectedPageId ? (
+						<PageSpecPreview pageId={ selectedPageId } />
+					) : (
+						<SiteSpecPreview />
+					) }
+				</div>
 
 				{ pages?.length > 0 && (
 					<div className="big-sky__page-list-wrapper">
 						<PageList
 							pages={ pages }
-							disabled={ toolkit.running }
 							onSelectPage={ onSelectPage }
 						/>
 					</div>
 				) }
 			</Flex>
 			<ChatHistory />
-			<PopUpControls toolkit={ toolkit } setApiKey={ onApiKeyChanged } />
+			<PopUpControls setApiKey={ onApiKeyChanged } />
 		</>
 	);
 };

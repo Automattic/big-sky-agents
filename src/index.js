@@ -1,18 +1,4 @@
 /**
- * Run the agent
- */
-export { default as useChatExecutor } from './hooks/use-chat-executor.js';
-
-/**
- * Register agents, tools and toolkits
- */
-import defaultAgentRegistry from './ai/agents/default-agent-registry.js';
-import defaultToolRegistry from './ai/tools/default-tool-registry.js';
-import defaultToolkitRegistry from './ai/toolkits/default-toolkit-registry.js';
-
-export const getAgent = defaultAgentRegistry.getAgent;
-
-/**
  * ChatModel and hooks
  */
 export {
@@ -29,18 +15,11 @@ export {
 export { default as useChatModel } from './hooks/use-chat-model.js';
 
 /**
- * Simple chat, toolkit, and agent toolkit
- */
-export { default as useSimpleChat } from './hooks/use-simple-chat.js';
-export { default as useSimpleToolkit } from './hooks/use-simple-toolkit.js';
-export { default as useSimpleAgentToolkit } from './hooks/use-simple-agent-toolkit.js';
-
-/**
  * Redux chat, toolkit, and agent toolkit
  */
 export { default as useChat } from './components/chat-provider/use-chat.js';
-export { default as useReduxToolkit } from './hooks/use-redux-toolkit.js';
-export { default as useReduxAgentToolkit } from './hooks/use-redux-agent-toolkit.js';
+export { default as useToolkit } from './hooks/use-toolkit.js';
+export { default as useAgentToolkit } from './hooks/use-agent-toolkit.js';
 
 /**
  * Components

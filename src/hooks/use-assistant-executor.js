@@ -2,60 +2,26 @@
 import { useEffect } from 'react';
 import useChat from '../components/chat-provider/use-chat';
 
-const useAssistantExecutor = ( {
-	agent: { tools, instructions, additionalInstructions },
-} ) => {
+const useAssistantExecutor = () => {
 	const {
 		running,
-		history,
-		isThreadRunComplete,
-		isAwaitingUserInput,
-		additionalMessages,
-
-		// threads
+		error,
 		threadId,
 		createThread,
 		createThreadRun,
+		threadRunId,
 	} = useChat();
-	// if there's no threadId, create one
 	useEffect( () => {
-		if ( ! running && ! threadId ) {
+		if ( ! running && ! error && ! threadId ) {
 			createThread();
 		}
-	}, [ createThread, running, threadId ] );
-
-	// TODO: provide some way to create assistants
-	// useEffect( () => {
-	// 	if ( threadId && ! running && agent && ! assistantId ) {
-	// 		console.warn( 'creating assistant' );
-	// 		createAssistant( {
-	// 			instructions: agent.instructions(),
-	// 			tools: agent.tools(),
-	// 		} );
-	// 	}
-	// }, [ createAssistant, assistantId, agent, values, running, threadId ] );
+	}, [ createThread, running, error, threadId ] );
 
 	useEffect( () => {
-		if (
-			! running &&
-			! isAwaitingUserInput &&
-			isThreadRunComplete &&
-			additionalMessages.length === 0 &&
-			history.length > 0
-		) {
-			createThreadRun( tools, instructions, additionalInstructions );
+		if ( ! running && ! error && threadId && ! threadRunId ) {
+			createThreadRun();
 		}
-	}, [
-		additionalInstructions,
-		additionalMessages.length,
-		createThreadRun,
-		history.length,
-		instructions,
-		isAwaitingUserInput,
-		isThreadRunComplete,
-		running,
-		tools,
-	] );
+	}, [ createThreadRun, running, error, threadId, threadRunId ] );
 };
 
 export default useAssistantExecutor;

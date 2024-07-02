@@ -45,12 +45,13 @@ class Agent {
 	 */
 
 	tools( { agents } ) {
-		return [
+		const tools = [
 			AskUserTool,
 			InformUserTool,
 			SetGoalTool,
 			createSetAgentTool( agents ),
 		];
+		return tools;
 	}
 
 	/**

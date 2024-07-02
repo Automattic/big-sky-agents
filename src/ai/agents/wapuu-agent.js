@@ -46,8 +46,9 @@ class WapuuAgent extends Agent {
 		return defaultChoices;
 	}
 
-	onStart( toolkit ) {
-		toolkit.askUser( {
+	onStart( invoke ) {
+		console.log( 'WapuuAgent.onStart' );
+		invoke.askUser( {
 			question: defaultQuestion,
 			choices: defaultChoices,
 		} );

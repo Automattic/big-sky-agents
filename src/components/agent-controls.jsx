@@ -39,9 +39,7 @@ const AgentControls = ( { toolkit } ) => {
 		createThreadRun,
 		updateThreadRun,
 		updateThreadRuns,
-		updateThreadMessages,
 		threadRun,
-		onStart,
 	} = useChat();
 
 	const {
@@ -50,8 +48,6 @@ const AgentControls = ( { toolkit } ) => {
 			agent: { goal: agentGoal },
 		},
 	} = toolkit;
-
-	// const agent = useCurrentAgent( { toolkit } );
 
 	return (
 		<div className="big-sky__agent-controls">
@@ -100,12 +96,6 @@ const AgentControls = ( { toolkit } ) => {
 							<>
 								{ threadId }
 								<br />
-								<button
-									disabled={ running }
-									onClick={ () => updateThreadMessages() }
-								>
-									refresh messages
-								</button>
 								<button
 									disabled={ running }
 									onClick={ () => deleteThread() }
@@ -204,13 +194,6 @@ const AgentControls = ( { toolkit } ) => {
 					} }
 				/>
 				<HStack align="center">
-					<Button
-						style={ { width: '100%' } }
-						variant="primary"
-						onClick={ () => onStart() }
-					>
-						Start
-					</Button>
 					<Button
 						style={ { width: '100%' } }
 						variant="secondary"

@@ -2,7 +2,7 @@
 // ignore no-bitwise error
 
 /* eslint-disable no-bitwise */
-export default function uuidv4() {
+export default function uuidv4( hashKey ) {
 	return '10000000-1000-4000-8000-100000000000'.replace( /[018]/g, ( c ) =>
 		(
 			c ^

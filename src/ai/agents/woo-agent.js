@@ -19,8 +19,8 @@ class WooAgent extends Agent {
 		return [ ...super.tools( context ), AnalyzeUrlTool ];
 	}
 
-	onStart( toolkit ) {
-		toolkit.askUser( {
+	onStart( invoke ) {
+		invoke.askUser( {
 			question: 'What are you looking to do with Woo?',
 			choices: [ 'I want to add a product', 'I want to edit a product' ],
 		} );

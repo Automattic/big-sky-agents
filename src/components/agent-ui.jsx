@@ -13,9 +13,9 @@ import MessageContent from './message-content.jsx';
 import { ASK_USER_TOOL_NAME } from '../ai/tools/ask-user.js';
 import { CONFIRM_TOOL_NAME } from '../ai/tools/confirm.js';
 import useChat from './chat-provider/use-chat.js';
-import useTools from './tools-provider/use-tools.js';
+import useToolkits from './toolkits-provider/use-toolkits.js';
+// import useTools from './tools-provider/use-tools.js';
 import './agent-ui.scss';
-import useCurrentAgent from '../hooks/use-current-agent.js';
 
 const AgentThought = ( { message, ...props } ) => (
 	<div { ...props }>
@@ -64,13 +64,13 @@ const getNextPendingRequest = ( pendingToolCalls, toolName ) => {
 	);
 };
 
-function AgentUI( { toolkit } ) {
+function AgentUI() {
 	const {
-		onReset: onResetTools,
 		context: {
 			agent: { name: agentName, thought: agentThought },
 		},
-	} = toolkit;
+	} = useToolkits();
+
 	const {
 		invoke: { informUser },
 		error,
@@ -84,8 +84,6 @@ function AgentUI( { toolkit } ) {
 		setToolResult,
 		onReset: onResetChat,
 	} = useChat();
-
-	// const { onConfirm } = useCurrentAgent( { toolkit } );
 
 	const { agentQuestion, agentConfirm } = useMemo( () => {
 		return {
@@ -133,7 +131,7 @@ function AgentUI( { toolkit } ) {
 									} }
 									onCancel={ () => {
 										informUser( 'Canceled!' );
-										onResetTools();
+										// onResetTools();
 										onResetChat();
 									} }
 								/>
@@ -145,7 +143,7 @@ function AgentUI( { toolkit } ) {
 							{ ...agentQuestion.function.arguments }
 							onCancel={ () => {
 								setToolResult( agentQuestion.id, '(canceled)' );
-								onResetTools();
+								// onResetTools();
 								onResetChat();
 							} }
 							onAnswer={ ( answer, files ) => {
@@ -167,7 +165,8 @@ function AgentUI( { toolkit } ) {
 										? 'The user confirmed the proposed changes'
 										: 'The user rejected the proposed changes'
 								);
-								onConfirm( confirmed );
+								// TODO:
+								// onConfirm( confirmed );
 							} }
 						/>
 					) }

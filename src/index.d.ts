@@ -12,18 +12,6 @@ export type {
 
 import { ChatModelType, ChatModelService } from './ai/chat-model';
 
-/**
- * Hooks
- */
-
-export declare function useChatExecutor( options: {
-	agent: AgentState;
-} ): void;
-
-export declare function useAssistantExecutor( options: {
-	agent: AgentState;
-} ): void;
-
 export declare function useChatModel( options: {
 	apiKey: string | undefined;
 	service: string;
@@ -41,14 +29,9 @@ interface ChatIconHook {
 }
 
 export declare function useChatIcon(): ChatIconHook;
-export declare function useSimpleChat( options: ChatOptions ): Chat;
-export declare function useSimpleToolkit(): AgentToolkit;
-export declare function useSimpleAgentToolkit( options: {
-	agents: AgentConfig[];
-} ): AgentToolkit;
 export declare function useChat( options: ChatOptions ): Chat;
-export declare function useReduxToolkit(): AgentToolkit;
-export declare function useReduxAgentToolkit( options: {
+export declare function useToolkit(): AgentToolkit;
+export declare function useAgentToolkit( options: {
 	agents: AgentConfig[];
 } ): AgentToolkit;
 
@@ -136,7 +119,7 @@ interface Chat {
 	setEnabled: ( enabled: boolean ) => void;
 	started: boolean;
 	error?: any;
-	history: Message[];
+	messages: Message[];
 	clearMessages: () => void;
 	userSay: ( content: string, image_urls?: string[] ) => void;
 	assistantMessage?: string | MessageContentPart[];

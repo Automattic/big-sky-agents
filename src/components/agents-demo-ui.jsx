@@ -13,11 +13,14 @@ import AgentUI from './agent-ui.jsx';
 import PopUpControls from './popup-controls.jsx';
 import ChatHistory from './chat-history.jsx';
 import PageList from './page-list.jsx';
-import useReduxToolkit from '../hooks/use-redux-toolkit.js';
-import useChatExecutor from '../hooks/use-chat-executor.js';
+import useToolkit from '../hooks/use-toolkit.js';
+import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
-import useChat from './chat-provider/use-chat.js';
+import useChatSettings from '../hooks/use-chat-settings.js';
+import useAgents from './agents-provider/use-agents.js';
+import { WAPUU_AGENT_ID } from '../ai/agents/wapuu-agent.js';
+import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
 import './agents-demo-ui.scss';
 
 /**
@@ -33,15 +36,19 @@ import './agents-demo-ui.scss';
 const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
-	useChat( { apiKey, feature: 'big-sky' } );
-
-	const toolkit = useReduxToolkit( {
+	useChatSettings( {
 		apiKey,
-		pageId: selectedPageId,
+		feature: 'big-sky',
+		service: ChatModelService.OPENAI,
+		model: ChatModelType.GPT_4O,
 	} );
 
-	// run the agent
-	useChatExecutor();
+	const { setActiveAgent } = useAgents();
+
+	// set the initial agent
+	useEffect( () => {
+		setActiveAgent( WAPUU_AGENT_ID );
+	}, [ setActiveAgent ] );
 
 	const { pages } = useSelect( ( select ) => {
 		return {
@@ -61,16 +68,13 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		<>
 			<Flex direction="row" align="stretch" justify="center">
 				<div className="big-sky__agent-column">
-					<AgentUI toolkit={ toolkit } />
+					<AgentUI />
 				</div>
 				<div className="big-sky__current-preview-wrapper">
 					{ selectedPageId ? (
-						<PageSpecPreview
-							disabled={ toolkit.running }
-							pageId={ selectedPageId }
-						/>
+						<PageSpecPreview pageId={ selectedPageId } />
 					) : (
-						<SiteSpecPreview disabled={ toolkit.running } />
+						<SiteSpecPreview />
 					) }
 				</div>
 
@@ -78,14 +82,13 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 					<div className="big-sky__page-list-wrapper">
 						<PageList
 							pages={ pages }
-							disabled={ toolkit.running }
 							onSelectPage={ onSelectPage }
 						/>
 					</div>
 				) }
 			</Flex>
 			<ChatHistory />
-			<PopUpControls toolkit={ toolkit } setApiKey={ onApiKeyChanged } />
+			<PopUpControls setApiKey={ onApiKeyChanged } />
 		</>
 	);
 };

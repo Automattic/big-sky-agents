@@ -6,18 +6,18 @@ import { useCallback, useMemo } from 'react';
 /**
  * Internal dependencies
  */
-import useReduxSiteToolkit from './use-redux-site-toolkit.js';
+import useSiteToolkit from './use-site-toolkit.js';
 import useAnalyzeSiteToolkit from './use-analyze-site-toolkit.js';
-import useReduxAgentToolkit from './use-redux-agent-toolkit.js';
+import useAgentToolkit from './use-agent-toolkit.js';
 
-const useReduxToolkit = ( { pageId, apiKey } ) => {
+const useToolkit = ( { pageId, apiKey } ) => {
 	// set and get site title, description, topic, type, location, colors, pages, page sections
 	const { onReset: onSiteSpecReset, context: siteSpecContext } =
-		useReduxSiteToolkit( { pageId } );
+		useSiteToolkit( { pageId } );
 
 	// set and get current agent, goals, thought
 	const { onReset: onAgentToolkitReset, context: agentContext } =
-		useReduxAgentToolkit();
+		useAgentToolkit();
 
 	// get site analysis
 	useAnalyzeSiteToolkit( { apiKey } );
@@ -42,4 +42,4 @@ const useReduxToolkit = ( { pageId, apiKey } ) => {
 	};
 };
 
-export default useReduxToolkit;
+export default useToolkit;

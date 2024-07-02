@@ -1,5 +1,5 @@
 import { combineReducers, createReduxStore, register } from '@wordpress/data';
-
+import { createNamespacedSelectors } from './utils.js';
 import {
 	actions as agentsActions,
 	reducer as agentsReducer,
@@ -11,6 +11,12 @@ import {
 	reducer as toolsReducer,
 	selectors as toolsSelectors,
 } from './tools.js';
+
+import {
+	actions as toolkitsActions,
+	reducer as toolkitsReducer,
+	selectors as toolkitsSelectors,
+} from './toolkits.js';
 
 import {
 	actions as chatActions,
@@ -42,23 +48,12 @@ import {
 	selectors as sectionSelectors,
 } from './page-sections.js';
 
-// Utility functions for namespacing
-const createNamespacedSelectors = ( namespace, selectors ) => {
-	const namespacedSelectors = {};
-	for ( const key in selectors ) {
-		if ( Object.prototype.hasOwnProperty.call( selectors, key ) ) {
-			namespacedSelectors[ key ] = ( state, ...args ) =>
-				selectors[ key ]( state[ namespace ], ...args );
-		}
-	}
-	return namespacedSelectors;
-};
-
 const store = createReduxStore( 'big-sky-agents', {
 	reducer: combineReducers( {
 		agents: agentsReducer,
 		tools: toolsReducer,
-		messages: chatReducer,
+		toolkits: toolkitsReducer,
+		chat: chatReducer,
 		site: siteReducer,
 		design: designReducer,
 		pages: pageReducer,
@@ -67,6 +62,7 @@ const store = createReduxStore( 'big-sky-agents', {
 	actions: {
 		...agentsActions,
 		...toolsActions,
+		...toolkitsActions,
 		...chatActions,
 		...siteActions,
 		...designActions,
@@ -76,7 +72,8 @@ const store = createReduxStore( 'big-sky-agents', {
 	selectors: {
 		...createNamespacedSelectors( 'agents', agentsSelectors ),
 		...createNamespacedSelectors( 'tools', toolsSelectors ),
-		...createNamespacedSelectors( 'messages', chatSelectors ),
+		...createNamespacedSelectors( 'toolkits', toolkitsSelectors ),
+		...createNamespacedSelectors( 'chat', chatSelectors ),
 		...createNamespacedSelectors( 'site', siteSelectors ),
 		...createNamespacedSelectors( 'design', designSelectors ),
 		...createNamespacedSelectors( 'pages', pageSelectors ),

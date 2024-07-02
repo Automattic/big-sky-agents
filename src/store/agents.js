@@ -1,4 +1,5 @@
-import { createReduxStore } from '@wordpress/data';
+import { combineReducers, createReduxStore } from '@wordpress/data';
+import { createNamespacedSelectors } from './utils.js';
 
 const DEFAULT_GOAL = "Find out the user's goal";
 
@@ -81,12 +82,16 @@ export const selectors = {
 	},
 };
 
-// also export createAgentsStore, which initializes a standalone store for an AgentsContext
 export function createAgentsStore( name, defaultValues ) {
 	return createReduxStore( name, {
-		reducer,
+		reducer: combineReducers( {
+			agents: reducer,
+		} ),
 		actions,
-		selectors,
-		initialState: defaultValues,
+		selectors: createNamespacedSelectors( selectors, 'agents' ),
+		initialState: {
+			...initialState,
+			...defaultValues,
+		},
 	} );
 }

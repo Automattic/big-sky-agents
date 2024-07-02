@@ -24,7 +24,7 @@ import {
 	SetSiteTypeTool,
 } from '../ai/tools/site-tools.js';
 
-const useReduxSiteToolkit = ( { pageId } ) => {
+const useSiteToolkit = ( { pageId } ) => {
 	const {
 		setTextColor,
 		setBackgroundColor,
@@ -109,11 +109,7 @@ const useReduxSiteToolkit = ( { pageId } ) => {
 				setPages( pages );
 				return 'Site pages set';
 			},
-			[ AddSitePageTool.name ]: ( {
-				category,
-				title,
-				description,
-			} ) => {
+			[ AddSitePageTool.name ]: ( { category, title, description } ) => {
 				addPage( { category, title, description } );
 				return 'Adding site page';
 			},
@@ -121,10 +117,7 @@ const useReduxSiteToolkit = ( { pageId } ) => {
 				setPageSections( pageId, sections );
 				return 'Set page sections';
 			},
-			[ AddPageSectionTool.name ]: ( {
-				category,
-				description,
-			} ) => {
+			[ AddPageSectionTool.name ]: ( { category, description } ) => {
 				addPageSection( pageId, { category, description } );
 				return 'Adding page section';
 			},
@@ -198,4 +191,4 @@ const useReduxSiteToolkit = ( { pageId } ) => {
 	};
 };
 
-export default useReduxSiteToolkit;
+export default useSiteToolkit;

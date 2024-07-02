@@ -1,9 +1,8 @@
+import { combineReducers, createReduxStore } from '@wordpress/data';
 import uuidv4 from '../utils/uuid.js';
-import ChatModel, {
-	ChatModelService,
-	ChatModelType,
-} from '../ai/chat-model.js';
+import ChatModel from '../ai/chat-model.js';
 import AssistantModel from '../ai/assistant-model.js';
+import { createNamespacedSelectors } from './utils.js';
 
 export const THREAD_RUN_ACTIVE_STATUSES = [
 	'queued',
@@ -44,11 +43,13 @@ const initialState = {
 	// Global
 	error: null,
 	enabled: true,
+	assistantEnabled: false,
+	started: false,
 	feature: 'unknown',
 
 	// LLM related
-	model: ChatModelType.getDefault(),
-	service: ChatModelService.getDefault(),
+	model: null,
+	service: null,
 	temperature: 0.1,
 	apiKey: null,
 
@@ -196,7 +197,7 @@ function filterChatMessage( message ) {
 const reset =
 	() =>
 	async ( { dispatch, select } ) => {
-		const threadId = select( ( state ) => state.root.messages.threadId );
+		const threadId = select( ( state ) => state.root.chat.threadId );
 		dispatch( clearMessages() );
 		dispatch( clearError() );
 		if ( threadId ) {
@@ -206,8 +207,8 @@ const reset =
 
 const getChatModel = ( select ) => {
 	const { service, apiKey } = select( ( state ) => ( {
-		service: state.root.messages.service,
-		apiKey: state.root.messages.apiKey,
+		service: state.root.chat.service,
+		apiKey: state.root.chat.apiKey,
 	} ) );
 	if ( ! service || ! apiKey ) {
 		throw new Error( 'Service and API key are required' );
@@ -232,18 +233,24 @@ const runChatCompletion =
 	async ( { select, dispatch } ) => {
 		const { model, temperature, messages, feature } = select(
 			( state ) => ( {
-				model: state.root.messages.model,
-				temperature: state.root.messages.temperature,
-				messages: state.root.messages.messages,
-				feature: state.root.messages.feature,
+				model: state.root.chat.model,
+				temperature: state.root.chat.temperature,
+				messages: state.root.chat.messages,
+				feature: state.root.chat.feature,
 			} )
 		);
 
 		// dispatch an error if service or apiKey are missing
 		if ( ! model || ! temperature ) {
+			console.error( 'Model and temperature are required', {
+				model,
+				temperature,
+				messages,
+				feature,
+			} );
 			dispatch( {
 				type: 'CHAT_ERROR',
-				error: 'Service, API key, model and temperature are required',
+				error: 'Model and temperature are required',
 			} );
 			return;
 		}
@@ -271,7 +278,7 @@ const runChatCompletion =
 const runGetThreadRuns =
 	() =>
 	async ( { select, dispatch } ) => {
-		const threadId = select( ( state ) => state.root.messages.threadId );
+		const threadId = select( ( state ) => state.root.chat.threadId );
 		dispatch( { type: 'GET_THREAD_RUNS_BEGIN_REQUEST' } );
 		try {
 			const threadRunsResponse =
@@ -294,8 +301,8 @@ const runGetThreadRun =
 	() =>
 	async ( { select, dispatch } ) => {
 		const { threadId, threadRun } = select( ( state ) => ( {
-			threadId: state.root.messages.threadId,
-			threadRun: getActiveThreadRun( state.root.messages ),
+			threadId: state.root.chat.threadId,
+			threadRun: getActiveThreadRun( state.root.chat.messages ),
 		} ) );
 		dispatch( { type: 'GET_THREAD_RUN_BEGIN_REQUEST' } );
 		try {
@@ -319,7 +326,7 @@ const runGetThreadRun =
 const runGetThreadMessages =
 	() =>
 	async ( { select, dispatch } ) => {
-		const threadId = select( ( state ) => state.root.messages.threadId );
+		const threadId = select( ( state ) => state.root.chat.threadId );
 		dispatch( { type: 'GET_THREAD_MESSAGES_BEGIN_REQUEST' } );
 		try {
 			const threadMessagesResponse =
@@ -337,10 +344,14 @@ const runGetThreadMessages =
 
 const getAssistantModel = ( select ) => {
 	const { service, apiKey } = select( ( state ) => ( {
-		service: state.root.messages.service,
-		apiKey: state.root.messages.apiKey,
+		service: state.root.chat.service,
+		apiKey: state.root.chat.apiKey,
 	} ) );
 	if ( ! service || ! apiKey ) {
+		console.warn( 'Service and API key are required', {
+			service,
+			apiKey,
+		} );
 		throw new Error( 'Service and API key are required' );
 	}
 	return AssistantModel.getInstance( service, apiKey );
@@ -372,7 +383,7 @@ const runCreateThread =
 const runDeleteThread =
 	() =>
 	async ( { select, dispatch } ) => {
-		const threadId = select( ( state ) => state.root.messages.threadId );
+		const threadId = select( ( state ) => state.root.chat.threadId );
 		dispatch( { type: 'DELETE_THREAD_BEGIN_REQUEST' } );
 		try {
 			await getAssistantModel( select ).deleteThread( threadId );
@@ -405,10 +416,10 @@ const runCreateThreadRun =
 	async ( { select, dispatch } ) => {
 		const { threadId, assistantId, model, temperature } = select(
 			( state ) => ( {
-				threadId: state.root.messages.threadId,
-				assistantId: state.root.messages.assistantId,
-				model: state.root.messages.model,
-				temperature: state.root.messages.temperature,
+				threadId: state.root.chat.threadId,
+				assistantId: state.root.chat.assistantId,
+				model: state.root.chat.model,
+				temperature: state.root.chat.temperature,
 			} )
 		);
 		dispatch( { type: 'RUN_THREAD_BEGIN_REQUEST' } );
@@ -451,8 +462,8 @@ const runSubmitToolOutputs =
 	( { toolOutputs } ) =>
 	async ( { select, dispatch } ) => {
 		const { threadId, threadRun } = select( ( state ) => ( {
-			threadId: state.root.messages.threadId,
-			threadRun: getActiveThreadRun( state.root.messages ),
+			threadId: state.root.chat.threadId,
+			threadRun: getActiveThreadRun( state.root.chat.messages ),
 		} ) );
 		try {
 			dispatch( { type: 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST' } );
@@ -508,7 +519,7 @@ const runAddMessageToThread =
 		if ( ! message.id ) {
 			throw new Error( 'Message must have an ID' );
 		}
-		const threadId = select( ( state ) => state.root.messages.threadId );
+		const threadId = select( ( state ) => state.root.chat.threadId );
 		dispatch( { type: 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST' } );
 		try {
 			const newMessage = await getAssistantModel(
@@ -637,6 +648,10 @@ export const reducer = ( state = initialState, action ) => {
 		// LLM-related
 		case 'SET_ENABLED':
 			return { ...state, enabled: action.enabled };
+		case 'SET_ASSISTANT_ENABLED':
+			return { ...state, assistantEnabled: action.assistantEnabled };
+		case 'SET_STARTED':
+			return { ...state, started: action.started };
 		case 'SET_SERVICE':
 			return { ...state, service: action.service };
 		case 'SET_API_KEY':
@@ -729,6 +744,7 @@ export const reducer = ( state = initialState, action ) => {
 			return {
 				...setThreadIdReducer( state, null ),
 				isDeletingThread: false,
+				started: false,
 			};
 		case 'DELETE_THREAD_ERROR':
 			return { ...state, isDeletingThread: false, error: action.error };
@@ -971,15 +987,19 @@ export const selectors = {
 	isEnabled: ( state ) => {
 		return state.enabled;
 	},
+	isAssistantEnabled: ( state ) => {
+		return state.assistantEnabled;
+	},
 	isLoading: ( state ) => {
 		// TODO: check most recent message against when the thread messages were updated
 		const isLoading =
-			state.threadId &&
-			( ! state.threadRunsUpdated || ! state.threadMessagesUpdated );
+			state.assistantEnabled &&
+			( ( state.threadId && ! state.threadRunsUpdated ) ||
+				! state.threadMessagesUpdated );
 		return isLoading;
 	},
 	// if we have at least one message in history, we have started
-	isStarted: ( state ) => state.messages.length > 0,
+	isStarted: ( state ) => state.started || state.messages.length > 0,
 	isRunning: ( state ) =>
 		state.isToolRunning ||
 		state.isFetchingChatCompletion ||
@@ -991,12 +1011,25 @@ export const selectors = {
 		state.isCreatingThreadMessage ||
 		state.isFetchingThreadMessages ||
 		state.isSubmittingToolOutputs,
+	isChatAvailable: ( state ) =>
+		! state.assistantEnabled &&
+		state.service &&
+		state.apiKey &&
+		! state.error,
 	isAssistantAvailable: ( state ) =>
-		state.service && state.apiKey && state.assistantId && ! state.error,
+		state.assistantEnabled &&
+		state.service &&
+		state.apiKey &&
+		state.assistantId &&
+		! state.error,
+	isAvailable: ( state ) =>
+		selectors.isChatAvailable( state ) ||
+		selectors.isAssistantAvailable( state ),
 	isThreadDataLoaded: ( state ) =>
-		state.threadId &&
-		state.threadRunsUpdated &&
-		state.threadMessagesUpdated,
+		! state.assistantEnabled ||
+		( state.threadId &&
+			state.threadRunsUpdated &&
+			state.threadMessagesUpdated ),
 	isThreadRunInProgress: ( state ) => {
 		return (
 			state.threadId &&
@@ -1013,6 +1046,8 @@ export const selectors = {
 			! threadRunStatus
 		);
 	},
+	getService: ( state ) => state.service,
+	getModel: ( state ) => state.model,
 	getFeature: ( state ) => state.feature,
 	getApiKey: ( state ) => state.apiKey,
 	getError: ( state ) => state.error,
@@ -1119,6 +1154,18 @@ export const actions = {
 			enabled,
 		};
 	},
+	setAssistantEnabled: ( enabled ) => {
+		return {
+			type: 'SET_ASSISTANT_ENABLED',
+			enabled,
+		};
+	},
+	setStarted: ( started ) => {
+		return {
+			type: 'SET_STARTED',
+			started,
+		};
+	},
 	setThreadId: ( threadId ) => ( {
 		type: 'SET_THREAD_ID',
 		threadId,
@@ -1194,3 +1241,15 @@ export const actions = {
 		},
 	} ),
 };
+
+export function createChatStore( name, defaultValues ) {
+	console.warn( 'createChatStore', name, defaultValues );
+	return createReduxStore( name, {
+		reducer: combineReducers( {
+			chat: reducer,
+		} ),
+		actions,
+		selectors: createNamespacedSelectors( selectors, 'chat' ),
+		initialState: { ...initialState, ...defaultValues },
+	} );
+}

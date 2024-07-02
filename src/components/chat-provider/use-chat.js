@@ -1,13 +1,7 @@
 /**
  * WordPress dependencies
  */
-import {
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useState,
-} from '@wordpress/element';
+import { useContext, useEffect, useMemo, useState } from '@wordpress/element';
 import { useDispatch, useSelect } from '@wordpress/data';
 
 /**
@@ -15,8 +9,8 @@ import { useDispatch, useSelect } from '@wordpress/data';
  */
 import { Context } from './context';
 import useTools from '../tools-provider/use-tools';
+import useToolkits from '../toolkits-provider/use-toolkits';
 import useAgents from '../agents-provider/use-agents';
-// import useCurrentAgent from '../../hooks/use-current-agent';
 
 const toOpenAITool = ( tool ) => ( {
 	type: 'function',
@@ -42,7 +36,7 @@ const toOpenAITool = ( tool ) => ( {
  *   ChatProvider,
  *   createChat,
  *   useChat,
- * } from '@automattic/big-sky-agents';
+ * } from '@automattic/big-sky-';
  *
  * const chat = createChat();
  *
@@ -62,10 +56,10 @@ const toOpenAITool = ( tool ) => ( {
  * @return {Function}  A custom react hook exposing the chat context value.
  */
 
-export default function useChat( options ) {
+export default function useChat() {
 	const agentStore = useContext( Context );
-	const { callbacks, tools: allTools } = useTools();
-	const { activeAgent, agents, activeAgentId } = useAgents();
+	const { context, callbacks, tools: allTools } = useToolkits();
+	const { activeAgent, agents } = useAgents();
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =
@@ -74,6 +68,7 @@ export default function useChat( options ) {
 	const {
 		reset,
 		setEnabled,
+		setStarted,
 		addToolCall,
 		addUserMessage,
 		clearMessages,
@@ -96,6 +91,7 @@ export default function useChat( options ) {
 	} = useDispatch( agentStore );
 
 	const {
+		assistantEnabled,
 		apiKey,
 		service,
 		model,
@@ -105,7 +101,7 @@ export default function useChat( options ) {
 		enabled,
 		started,
 		running,
-		history,
+		messages,
 		assistantMessage,
 		pendingToolCalls,
 		additionalMessages,
@@ -116,43 +112,43 @@ export default function useChat( options ) {
 		threadRun,
 		threadRunsUpdated,
 		threadMessagesUpdated,
+		isAvailable,
+		isChatAvailable,
 		isAssistantAvailable,
 		isThreadRunInProgress,
 		isThreadDataLoaded,
 		feature,
 	} = useSelect( ( select ) => {
+		const store = select( agentStore );
 		return {
-			apiKey: select( agentStore ).getApiKey(),
-			error: select( agentStore ).getError(),
-			loading: select( agentStore ).isLoading(),
-			started: select( agentStore ).isStarted(),
-			running: select( agentStore ).isRunning(),
-			enabled: select( agentStore ).isEnabled(),
-			history: select( agentStore ).getMessages(),
-			assistantMessage: select( agentStore ).getAssistantMessage(),
-			pendingToolCalls: select( agentStore ).getPendingToolCalls(),
-			additionalMessages: select( agentStore ).getAdditionalMessages(),
-			requiredToolOutputs: select( agentStore ).getRequiredToolOutputs(),
-			toolOutputs: select( agentStore ).getToolOutputs(),
-			threadId: select( agentStore ).getThreadId(),
-			assistantId: select( agentStore ).getAssistantId(),
-			threadRun: select( agentStore ).getActiveThreadRun(),
-			threadRunsUpdated: select( agentStore ).getThreadRunsUpdated(),
-			threadMessagesUpdated:
-				select( agentStore ).getThreadMessagesUpdated(),
-			isAssistantAvailable: select( agentStore ).isAssistantAvailable(),
-			isThreadRunInProgress: select( agentStore ).isThreadRunInProgress(),
-			isThreadDataLoaded: select( agentStore ).isThreadDataLoaded(),
-			feature: select( agentStore ).getFeature(),
+			assistantEnabled: store.isAssistantEnabled(),
+			service: store.getService(),
+			apiKey: store.getApiKey(),
+			error: store.getError(),
+			model: store.getModel(),
+			loading: store.isLoading(),
+			started: store.isStarted(),
+			running: store.isRunning(),
+			enabled: store.isEnabled(),
+			messages: store.getMessages(),
+			assistantMessage: store.getAssistantMessage(),
+			pendingToolCalls: store.getPendingToolCalls(),
+			additionalMessages: store.getAdditionalMessages(),
+			requiredToolOutputs: store.getRequiredToolOutputs(),
+			toolOutputs: store.getToolOutputs(),
+			threadId: store.getThreadId(),
+			assistantId: store.getAssistantId(),
+			threadRun: store.getActiveThreadRun(),
+			threadRunsUpdated: store.getThreadRunsUpdated(),
+			threadMessagesUpdated: store.getThreadMessagesUpdated(),
+			isAvailable: store.isAvailable(),
+			isChatAvailable: store.isChatAvailable(),
+			isAssistantAvailable: store.isAssistantAvailable(),
+			isThreadRunInProgress: store.isThreadRunInProgress(),
+			isThreadDataLoaded: store.isThreadDataLoaded(),
+			feature: store.getFeature(),
 		};
 	} );
-
-	// if chat.apiKey !== apiKey, set it
-	useEffect( () => {
-		if ( options?.apiKey !== apiKey ) {
-			setApiKey( apiKey );
-		}
-	}, [ apiKey, options?.apiKey, setApiKey ] );
 
 	const isThreadRunComplete = useMemo( () => {
 		return (
@@ -207,11 +203,14 @@ export default function useChat( options ) {
 			runGetThreadMessages();
 		}
 	}, [
+		apiKey,
 		isAssistantAvailable,
 		runGetThreadMessages,
 		running,
+		service,
 		threadId,
 		threadMessagesUpdated,
+		threadRun,
 		threadRun?.created_at,
 	] );
 
@@ -256,7 +255,12 @@ export default function useChat( options ) {
 		// process tool calls for any tools with callbacks
 		// note that tools without callbacks will be processed outside this loop,
 		// and will need responses before the ChatModel can run again
-		if ( ! error && ! running && pendingToolCalls.length > 0 ) {
+		if (
+			! running &&
+			! error &&
+			isAvailable &&
+			pendingToolCalls.length > 0
+		) {
 			pendingToolCalls.forEach( ( tool_call ) => {
 				if ( tool_call.inProgress ) {
 					return;
@@ -307,7 +311,13 @@ export default function useChat( options ) {
 				}
 			} );
 		}
-	}, [ error, callbacks, pendingToolCalls, running, setToolCallResult ] );
+	}, [
+		callbacks,
+		isAvailable,
+		pendingToolCalls,
+		running,
+		setToolCallResult,
+	] );
 
 	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
 	const invoke = useMemo( () => {
@@ -331,6 +341,7 @@ export default function useChat( options ) {
 	// if there are pendingThreadMessages, send them using runAddMessageToThread
 	useEffect( () => {
 		if (
+			isAssistantAvailable &&
 			! running &&
 			isThreadRunComplete &&
 			additionalMessages.length > 0
@@ -344,16 +355,17 @@ export default function useChat( options ) {
 		additionalMessages,
 		isThreadRunComplete,
 		runAddMessageToThread,
+		isAssistantAvailable,
 	] );
 
 	useEffect( () => {
 		if ( activeAgent ) {
-			const context = {
-				agents,
-				agent: {
-					goal: 'test',
-				},
-			}; // for now, we don't need any context
+			// const context = {
+			// 	agents,
+			// 	agent: {
+			// 		goal: 'test',
+			// 	},
+			// }; // for now, we don't need any context
 			/**
 			 * Compute new state
 			 */
@@ -367,6 +379,9 @@ export default function useChat( options ) {
 				// use all tools
 				newTools = allTools;
 			}
+
+			// remap using toOpenAITool
+			newTools = newTools.map( toOpenAITool );
 
 			const newInstructions =
 				typeof activeAgent.instructions === 'function'
@@ -383,21 +398,15 @@ export default function useChat( options ) {
 			}
 
 			if ( newInstructions && newInstructions !== instructions ) {
-				console.warn( '🧠 System prompt', newInstructions );
 				setInstructions( newInstructions );
 			}
 
 			if ( newAdditionalInstructions !== additionalInstructions ) {
-				console.warn(
-					'🧠 Next step prompt',
-					newAdditionalInstructions
-				);
 				setAdditionalInstructions( newAdditionalInstructions );
 			}
 
 			if ( JSON.stringify( newTools ) !== JSON.stringify( tools ) ) {
-				console.warn( '🧠 Tools', newTools );
-				setTools( newTools.map( toOpenAITool ) );
+				setTools( newTools );
 			}
 		}
 	}, [
@@ -409,15 +418,30 @@ export default function useChat( options ) {
 		tools,
 		allTools,
 		agents,
+		context,
 	] );
 
-	const runChat = useCallback( () => {
+	useEffect( () => {
+		console.warn( 'run chat completion', {
+			service,
+			model,
+			assistantEnabled,
+			instructions,
+			enabled,
+			running,
+			error,
+			messages,
+			isAwaitingUserInput,
+			assistantMessage,
+			pendingToolCalls,
+		} );
 		if (
+			! isChatAvailable ||
 			! instructions ||
 			! enabled || // disabled
 			running || // already running
 			error || // there's an error
-			! history.length > 0 || // nothing to process
+			! messages.length > 0 || // nothing to process
 			isAwaitingUserInput
 		) {
 			return;
@@ -428,38 +452,51 @@ export default function useChat( options ) {
 			additionalInstructions,
 		} );
 	}, [
-		instructions,
-		enabled,
-		running,
-		error,
-		history.length,
-		isAwaitingUserInput,
-		runChatCompletion,
-		tools,
 		additionalInstructions,
+		assistantEnabled,
+		assistantMessage,
+		enabled,
+		error,
+		messages,
+		instructions,
+		isAwaitingUserInput,
+		isChatAvailable,
+		model,
+		pendingToolCalls,
+		runChatCompletion,
+		running,
+		service,
+		tools,
 	] );
 
-	const createThreadRun = useCallback( () => {
-		if (
-			! isThreadRunComplete ||
-			isAwaitingUserInput ||
-			additionalMessages.length > 0 ||
-			history.length === 0
-		) {
-			return;
+	useEffect( () => {
+		if ( isAssistantAvailable && ! running && ! error && ! threadId ) {
+			runCreateThread();
 		}
+	}, [ error, isAssistantAvailable, runCreateThread, running, threadId ] );
 
-		runCreateThreadRun( {
-			tools,
-			instructions,
-			additionalInstructions,
-			// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
-			additionalMessages,
-		} );
+	useEffect( () => {
+		if (
+			instructions &&
+			isAssistantAvailable &&
+			isThreadRunComplete &&
+			! isAwaitingUserInput &&
+			additionalMessages.length === 0 &&
+			messages.length > 0
+		) {
+			runCreateThreadRun( {
+				tools,
+				instructions,
+				additionalInstructions,
+				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
+				additionalMessages,
+			} );
+		}
 	}, [
+		isAssistantAvailable,
 		additionalInstructions,
 		additionalMessages,
-		history.length,
+		messages.length,
 		instructions,
 		isAwaitingUserInput,
 		isThreadRunComplete,
@@ -467,21 +504,32 @@ export default function useChat( options ) {
 		tools,
 	] );
 
-	// /**
-	//  * Call agent.onStart() at the beginning
-	//  */
-	// useEffect( () => {
-	// 	if ( onStart && ! running && ! loading && ! started ) {
-	// 		onStart();
-	// 	}
-	// }, [ running, started, loading, onStart ] );
-
-	const onStart = useCallback( () => {
-		console.log( 'onStart', agents, activeAgent, activeAgentId );
-		if ( activeAgent ) {
+	/**
+	 * Call agent.onStart() at the beginning
+	 */
+	useEffect( () => {
+		if (
+			isAvailable &&
+			! isAwaitingUserInput &&
+			! running &&
+			! loading &&
+			! started &&
+			activeAgent &&
+			activeAgent.onStart
+		) {
+			setStarted( true );
 			activeAgent.onStart( invoke );
 		}
-	}, [ activeAgent, invoke, activeAgentId ] );
+	}, [
+		activeAgent,
+		invoke,
+		isAvailable,
+		isAwaitingUserInput,
+		loading,
+		running,
+		setStarted,
+		started,
+	] );
 
 	return {
 		// running state
@@ -509,7 +557,7 @@ export default function useChat( options ) {
 		setTemperature,
 
 		// messages
-		history,
+		messages,
 		clearMessages,
 		userSay: addUserMessage,
 		assistantMessage,
@@ -519,26 +567,21 @@ export default function useChat( options ) {
 		setToolResult: setToolCallResult,
 		pendingToolCalls,
 		toolOutputs,
-		runChat, // run a chat completion with messages, tools, instructions and additionalInstructions
 
 		// assistants
 		threadId,
-		createThread: runCreateThread,
 		deleteThread: runDeleteThread,
 		assistantId,
 		threadRun,
 		setAssistantId,
 
-		createThreadRun, // run a thread
 		updateThreadRun: runGetThreadRun, // refresh status of running threads
 		updateThreadRuns: runGetThreadRuns, // refresh status of running threads
-		updateThreadMessages: runGetThreadMessages,
 		isThreadRunComplete,
 		isAwaitingUserInput,
 		additionalMessages,
 
 		onReset: reset,
-		onStart,
 		invoke,
 	};
 }

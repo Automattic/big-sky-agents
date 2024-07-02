@@ -80,25 +80,25 @@ class SiteSpecAgent extends BuilderAgent {
 		return defaultChoices;
 	}
 
-	onStart( toolkit ) {
-		toolkit.askUser( {
+	onStart( invoke ) {
+		invoke.askUser( {
 			question: defaultQuestion,
 			choices: defaultChoices,
 		} );
 	}
 
-	onConfirm( confirmed, toolkit ) {
+	onConfirm( confirmed, invoke ) {
 		if ( confirmed ) {
-			toolkit.setGoal( 'Find out what the user wants to do next' );
-			toolkit.informUser( 'Got it!' );
-			toolkit.askUser( {
+			invoke.setGoal( 'Find out what the user wants to do next' );
+			invoke.informUser( 'Got it!' );
+			invoke.askUser( {
 				question: 'What would you like to do next?',
 				choices: defaultChoices,
 			} );
 		} else {
-			toolkit.userSay( 'I would like to make some changes' );
-			toolkit.informUser( 'Looks like you requested some changes' );
-			toolkit.askUser( {
+			invoke.userSay( 'I would like to make some changes' );
+			invoke.informUser( 'Looks like you requested some changes' );
+			invoke.askUser( {
 				question: 'What would you like to change?',
 				choices: [
 					'Change the title',

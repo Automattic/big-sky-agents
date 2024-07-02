@@ -107,15 +107,15 @@ export const ChatModelType = {
 	},
 };
 
-// reformat the history based on what the model supports
-const formatHistory = ( history, model ) => {
+// reformat the message history based on what the model supports
+const formatMessagesForModel = ( messages, model ) => {
 	const maxImageURLLength = 200; // typically they are base64-encoded so very large
 	const isMultimodal = ChatModelType.isMultimodal( model );
 	const supportsToolMessages = ChatModelType.supportsToolMessages( model );
 
 	// if it's not multimodal, convert any multipart "content" properties to a simple string containing a list of image URLs.
 	if ( ! isMultimodal ) {
-		history = history.map( ( message ) => {
+		messages = messages.map( ( message ) => {
 			if ( message.content && Array.isArray( message.content ) ) {
 				const text = message.content
 					.filter( ( content ) => content.type === 'text' )
@@ -134,8 +134,8 @@ const formatHistory = ( history, model ) => {
 	}
 
 	if ( ! supportsToolMessages ) {
-		console.warn( 'remapping history', history );
-		history = history.map( ( message ) => {
+		console.warn( 'remapping history', messages );
+		messages = messages.map( ( message ) => {
 			if ( message.role === 'tool' ) {
 				return {
 					...message,
@@ -144,11 +144,11 @@ const formatHistory = ( history, model ) => {
 			}
 			return message;
 		} );
-		console.warn( 'remapped history', history );
+		console.warn( 'remapped history', messages );
 	}
 
 	// JSON-serialize any tool call arguments in messages[X].tool_calls[Y].function.arguments
-	history = history.map( ( message ) => {
+	messages = messages.map( ( message ) => {
 		if ( message.tool_calls ) {
 			return {
 				...message,
@@ -165,7 +165,7 @@ const formatHistory = ( history, model ) => {
 		return message;
 	} );
 
-	return history;
+	return messages;
 };
 
 const DEFAULT_SYSTEM_PROMPT = 'You are a helpful AI assistant.';
@@ -192,7 +192,7 @@ function formatMessages(
 			role: 'system',
 			content: instructions,
 		},
-		...formatHistory( trimmedMessages, model ),
+		...formatMessagesForModel( trimmedMessages, model ),
 	];
 
 	if ( additionalInstructions ) {
