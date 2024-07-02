@@ -22,7 +22,10 @@ export const createNamespacedActions = ( namespace, actions ) => {
 						return action( {
 							select: ( callback ) => {
 								return select( ( state ) => {
-									return callback( state.root[ namespace ] );
+									return callback( {
+										root: state.root[ namespace ],
+										metadata: state.metadata,
+									} );
 								} );
 							},
 							...thunkArgs,

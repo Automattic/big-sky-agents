@@ -22,6 +22,8 @@ import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
 import './agents-demo-ui.scss';
 import useAgentToolkit from '../hooks/use-agent-toolkit.js';
 import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
+import useAgentExecutor from '../hooks/use-agent-executor.js';
+import useSiteToolkit from '../hooks/use-site-toolkit.js';
 
 /**
  * Renders the Agents Demo UI component.
@@ -44,7 +46,9 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	} );
 
 	useAgentToolkit();
+	useSiteToolkit( { pageId: selectedPageId } );
 	useAnalyzeSiteToolkit( { apiKey } );
+	useAgentExecutor();
 
 	const { setActiveAgent } = useAgents();
 

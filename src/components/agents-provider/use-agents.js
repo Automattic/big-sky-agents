@@ -13,10 +13,11 @@ function useAgents() {
 		setAgentThought,
 		setAgentStarted,
 	} = useDispatch( agentStore );
-	const { agents, activeAgentId, activeAgent, goal, thought, started } =
+	const { agents, activeAgentId, activeAgent, name, goal, thought, started } =
 		useSelect( ( select ) => {
 			const store = select( agentStore );
 			return {
+				name: store.getActiveAgentName(),
 				agents: store.getAgents(),
 				activeAgent: store.getActiveAgent(),
 				activeAgentId: store.getActiveAgentId(),
@@ -34,6 +35,7 @@ function useAgents() {
 
 	return {
 		agents,
+		name,
 		goal,
 		thought,
 		started,

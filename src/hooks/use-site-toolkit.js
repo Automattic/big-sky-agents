@@ -2,7 +2,7 @@
  * WordPress dependencies
  */
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -23,8 +23,11 @@ import {
 	SetSiteTopicTool,
 	SetSiteTypeTool,
 } from '../ai/tools/site-tools.js';
+import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 
 const useSiteToolkit = ( { pageId } ) => {
+	const { registerToolkit } = useToolkits();
+
 	const {
 		setTextColor,
 		setBackgroundColor,
@@ -44,7 +47,7 @@ const useSiteToolkit = ( { pageId } ) => {
 	} = useDispatch( agentStore );
 
 	// these are fed to the templating engine on each render of the system/after-call prompt
-	const values = useSelect(
+	const context = useSelect(
 		( select ) => ( {
 			site: {
 				title: select( agentStore ).getSiteTitle(),
@@ -153,42 +156,34 @@ const useSiteToolkit = ( { pageId } ) => {
 		setPageTitle,
 	] );
 
-	const tools = useMemo( () => {
-		return [
-			// site
-			SetSiteTitleTool,
-			SetSiteDescriptionTool,
-			SetSiteTopicTool,
-			SetSiteLocationTool,
-			SetSiteTypeTool,
+	useEffect( () => {
+		registerToolkit( {
+			name: 'siteSpec',
+			tools: [
+				// site
+				SetSiteTitleTool,
+				SetSiteDescriptionTool,
+				SetSiteTopicTool,
+				SetSiteLocationTool,
+				SetSiteTypeTool,
 
-			// design
-			SetSiteColorsTool,
+				// design
+				SetSiteColorsTool,
 
-			// pages
-			SetSitePagesTool,
-			AddSitePageTool,
-			SetPageCategoryTool,
-			SetPageDescriptionTool,
+				// pages
+				SetSitePagesTool,
+				AddSitePageTool,
+				SetPageCategoryTool,
+				SetPageDescriptionTool,
 
-			// page section
-			SetPageSectionsTool,
-			AddPageSectionTool,
-		];
-	}, [] );
-
-	const onReset = useMemo( () => {
-		return () => {
-			// TODO
-		};
-	}, [] );
-
-	return {
-		onReset,
-		tools,
-		values,
-		callbacks,
-	};
+				// page section
+				SetPageSectionsTool,
+				AddPageSectionTool,
+			],
+			callbacks,
+			context,
+		} );
+	}, [ callbacks, context, registerToolkit ] );
 };
 
 export default useSiteToolkit;

@@ -80,6 +80,10 @@ export const selectors = {
 			( agent ) => agent.id === state.activeAgentId
 		);
 	},
+	getActiveAgentName: ( state ) => {
+		const activeAgent = selectors.getActiveAgent( state );
+		return activeAgent?.name;
+	},
 	getAgents: ( state ) => {
 		return state.agents;
 	},

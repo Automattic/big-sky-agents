@@ -25,26 +25,12 @@ const useAgentToolkit = () => {
 		setAgentThought,
 		goal,
 		setAgentGoal,
-		started,
-		setAgentStarted,
 	} = useAgents();
-	const { call, loading, running, isAvailable, isAwaitingUserInput } =
-		useChat();
 
-	const {
-		tools: allTools,
-		loaded,
-		registerToolkit,
-	} = useToolkits( activeAgent?.toolkits );
+	const { call } = useChat();
 
-	const tools = useMemo(
-		() => [
-			AskUserTool,
-			SetGoalTool,
-			InformTool,
-			createSetAgentTool( agents ),
-		],
-		[ agents ]
+	const { tools: allTools, registerToolkit } = useToolkits(
+		activeAgent?.toolkits
 	);
 
 	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
@@ -55,55 +41,20 @@ const useAgentToolkit = () => {
 		}, {} );
 	}, [ call, allTools ] );
 
-	const onReset = useCallback( () => {
+	const reset = useCallback( () => {
 		setAgentGoal( null );
 		setAgentThought( null );
 	}, [ setAgentGoal, setAgentThought ] );
 
-	/**
-	 * Call agent.onStart() at the beginning
-	 */
-	useEffect( () => {
-		if (
-			isAvailable &&
-			loaded &&
-			! isAwaitingUserInput &&
-			! running &&
-			! loading &&
-			! started &&
-			activeAgent &&
-			activeAgent.onStart
-		) {
-			console.warn( '🚀 Starting agent', { invoke } );
-			setAgentStarted( true );
-			activeAgent.onStart( invoke );
-		} else {
-			console.warn( '🚀 Not starting agent', {
-				loaded,
-				isAvailable,
-				isAwaitingUserInput,
-				running,
-				loading,
-				started,
-				activeAgent,
-			} );
-		}
-	}, [
-		activeAgent,
-		invoke,
-		isAvailable,
-		isAwaitingUserInput,
-		loaded,
-		loading,
-		running,
-		setAgentStarted,
-		started,
-	] );
-
 	useEffect( () => {
 		registerToolkit( {
 			name: 'agents',
-			tools,
+			tools: [
+				AskUserTool,
+				SetGoalTool,
+				InformTool,
+				createSetAgentTool( agents ),
+			],
 			callbacks: {
 				[ InformTool.name ]: ( { message } ) => {
 					setAgentThought( message );
@@ -130,7 +81,7 @@ const useAgentToolkit = () => {
 					thought,
 				},
 			},
-			reset: onReset,
+			reset,
 		} );
 	}, [
 		agents,
@@ -138,12 +89,11 @@ const useAgentToolkit = () => {
 		goal,
 		thought,
 		registerToolkit,
-		tools,
 		invoke,
 		setAgentThought,
 		setAgentGoal,
 		setActiveAgent,
-		onReset,
+		reset,
 	] );
 };
 

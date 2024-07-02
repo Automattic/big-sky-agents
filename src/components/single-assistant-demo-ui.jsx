@@ -18,10 +18,12 @@ import { ToolkitsProvider } from './toolkits-provider';
 // Toolkits allows us to register tools and state that use redux stores and can integrate with core Gutenberg libraries
 // the Agent Toolkit supports core functionality like determining the current agent and switching agents
 import useAgentToolkit from '../hooks/use-agent-toolkit.js';
+import useAgentExecutor from '../hooks/use-agent-executor.js';
 import PopUpControls from './popup-controls.jsx';
 
 const SingleAssistantDemoUI = () => {
 	useAgentToolkit();
+	useAgentExecutor();
 
 	return (
 		<>

@@ -1,5 +1,4 @@
-import { combineReducers, createReduxStore } from '@wordpress/data';
-import { createNamespacedActions, createNamespacedSelectors } from './utils';
+import { createReduxStore } from '@wordpress/data';
 
 const initialState = {
 	toolkits: [],
@@ -17,7 +16,6 @@ export const actions = {
 export const reducer = ( state = initialState, action ) => {
 	switch ( action.type ) {
 		case 'REGISTER_TOOLKIT':
-			console.warn( 'register toolkit', state, action );
 			const { toolkit } = action;
 			const existingToolkitIndex = state.toolkits.findIndex(
 				( a ) => a.name === toolkit.name

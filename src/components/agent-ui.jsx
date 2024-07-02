@@ -13,8 +13,9 @@ import MessageContent from './message-content.jsx';
 import { ASK_USER_TOOL_NAME } from '../ai/tools/ask-user.js';
 import { CONFIRM_TOOL_NAME } from '../ai/tools/confirm.js';
 import useChat from './chat-provider/use-chat.js';
-import useToolkits from './toolkits-provider/use-toolkits.js';
+// import useToolkits from './toolkits-provider/use-toolkits.js';
 // import useTools from './tools-provider/use-tools.js';
+import useAgents from './agents-provider/use-agents.js';
 import './agent-ui.scss';
 
 const AgentThought = ( { message, ...props } ) => (
@@ -65,14 +66,20 @@ const getNextPendingRequest = ( pendingToolCalls, toolName ) => {
 };
 
 function AgentUI() {
+	const {
+		name: agentName,
+		// goal: agentGoal,
+		thought: agentThought,
+	} = useAgents();
+	// console.warn( 'agents', agents );
 	// useAgentToolkit();
 	// const {
 	// 	context: {
 	// 		agent: { name: agentName, thought: agentThought },
 	// 	},
 	// } = useToolkits( [ 'agents' ] );
-	const agentName = 'Agent';
-	const agentThought = 'Help the user find out about the weather';
+	// const agentName = 'Agent';
+	// const agentThought = 'Help the user find out about the weather';
 
 	// const toolkits = useToolkits( [ 'agents' ] );
 	// console.warn( 'toolkits', toolkits );

@@ -25,6 +25,8 @@ import './agents-demo-ui.scss';
 import PopUpControls from './popup-controls.jsx';
 import useAgentToolkit from '../hooks/use-agent-toolkit.js';
 import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
+import useAgentExecutor from '../hooks/use-agent-executor.js';
+import useSiteToolkit from '../hooks/use-site-toolkit.js';
 
 /**
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
@@ -50,6 +52,8 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 
 	useAgentToolkit();
 	useAnalyzeSiteToolkit( { apiKey } );
+	useSiteToolkit( { pageId: selectedPageId } );
+	useAgentExecutor();
 
 	const { setActiveAgent } = useAgents();
 
