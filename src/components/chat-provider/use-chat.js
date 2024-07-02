@@ -7,7 +7,7 @@ import { useDispatch, useSelect } from '@wordpress/data';
 /**
  * Internal dependencies
  */
-import { Context } from './context';
+import { Context } from './context.jsx';
 
 /**
  * A custom react hook exposing the chat context for use.
