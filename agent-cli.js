@@ -3,15 +3,15 @@ import minimist from 'minimist';
 import ChatModel, {
 	ChatModelService,
 	ChatModelType,
-} from './src/agents/chat-model.js';
-import BaseAgentToolkit from './src/agents/toolkits/base-agent.js';
-import CombinedToolkit from './src/agents/toolkits/combined.js';
+} from './src/ai/chat-model.js';
+import BaseAgentToolkit from './src/ai/toolkits/base-agent.js';
+import CombinedToolkit from './src/ai/toolkits/combined.js';
 import promptSync from 'prompt-sync';
-import AssistantModel from './src/agents/assistant-model.js';
+import AssistantModel from './src/ai/assistant-model.js';
 
-import agents, { WAPUU_AGENT_ID } from './src/agents/default-agents.js';
-import { ASK_USER_TOOL_NAME } from './src/agents/tools/ask-user.js';
-import { CONFIRM_TOOL_NAME } from './src/agents/tools/confirm.js';
+import agents from './src/ai/agents/default-agents.js';
+import { ASK_USER_TOOL_NAME } from './src/ai/tools/ask-user.js';
+import { CONFIRM_TOOL_NAME } from './src/ai/tools/confirm.js';
 
 dotenv.config();
 const args = minimist( process.argv.slice( 2 ) );
@@ -64,9 +64,9 @@ class CLIChat {
 		const request = {
 			model: ChatModelType.GPT_4O,
 			messages: this.messages,
-			tools: this.agent.getTools(),
-			instructions: this.agent.getInstructions(),
-			additionalInstructions: this.agent.getAdditionalInstructions(),
+			tools: this.agent.tools(),
+			instructions: this.agent.instructions(),
+			additionalInstructions: this.agent.additionalInstructions(),
 			temperature: 0,
 		};
 		logVerbose( '📡 Request:', request );
@@ -125,7 +125,7 @@ class CLIChat {
 					await callback( resultArgs )
 				);
 				const agentId = this.agent.toolkit.values.agent.id;
-				if ( agentId && agentId !== this.agent.getId() ) {
+				if ( agentId && agentId !== this.agent.id ) {
 					logVerbose( `🔄 Switching to new agent ${ agentId }` );
 					const newAgent = agents.find( ( ag ) => ag.id === agentId );
 					if ( newAgent ) {

@@ -2,8 +2,10 @@
  * Internal dependencies
  */
 import MessageContent from './message-content.jsx';
+import useChat from './chat-provider/use-chat.js';
 
-function ChatHistory( { history, toolOutputs } ) {
+function ChatHistory() {
+	const { history, toolOutputs } = useChat();
 	return (
 		<div className="big-sky__chat-history">
 			{ history
@@ -24,12 +26,6 @@ function ChatHistory( { history, toolOutputs } ) {
 								const toolCallResult = toolOutputs.find(
 									( toolOutput ) =>
 										toolOutput.tool_call_id === tool_call.id
-								);
-								console.warn(
-									'tool_call',
-									tool_call,
-									toolOutputs,
-									toolCallResult
 								);
 								return (
 									<div

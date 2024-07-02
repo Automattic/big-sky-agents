@@ -1,14 +1,13 @@
 /**
  * WordPress dependencies
  */
-import { useContext } from '@wordpress/element';
+import { useContext, useMemo } from '@wordpress/element';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useCallback, useEffect, useMemo } from 'react';
 
 /**
  * Internal dependencies
  */
-import { Context } from './context';
+import { Context } from './context.jsx';
 
 /**
  * A custom react hook exposing the chat context for use.
@@ -25,7 +24,7 @@ import { Context } from './context';
  *   ChatProvider,
  *   createChat,
  *   useChat,
- * } from '@automattic/big-sky-agents';
+ * } from '@automattic/big-sky-';
  *
  * const chat = createChat();
  *
@@ -70,9 +69,11 @@ export default function useChat() {
 		setTemperature,
 		setApiKey,
 		setFeature,
+		setAssistantEnabled,
 	} = useDispatch( agentStore );
 
 	const {
+		assistantEnabled,
 		apiKey,
 		service,
 		model,
@@ -80,9 +81,8 @@ export default function useChat() {
 		error,
 		loading,
 		enabled,
-		started,
 		running,
-		history,
+		messages,
 		assistantMessage,
 		pendingToolCalls,
 		additionalMessages,
@@ -93,225 +93,59 @@ export default function useChat() {
 		threadRun,
 		threadRunsUpdated,
 		threadMessagesUpdated,
+		isAvailable,
+		isChatAvailable,
 		isAssistantAvailable,
 		isThreadRunInProgress,
 		isThreadDataLoaded,
+		isThreadRunComplete,
+		isAwaitingUserInput,
+		isThreadRunAwaitingToolOutputs,
 		feature,
 	} = useSelect( ( select ) => {
+		const store = select( agentStore );
 		return {
-			apiKey: select( agentStore ).getApiKey(),
-			error: select( agentStore ).getError(),
-			loading: select( agentStore ).isLoading(),
-			started: select( agentStore ).isStarted(),
-			running: select( agentStore ).isRunning(),
-			enabled: select( agentStore ).isEnabled(),
-			history: select( agentStore ).getMessages(),
-			assistantMessage: select( agentStore ).getAssistantMessage(),
-			pendingToolCalls: select( agentStore ).getPendingToolCalls(),
-			additionalMessages: select( agentStore ).getAdditionalMessages(),
-			requiredToolOutputs: select( agentStore ).getRequiredToolOutputs(),
-			toolOutputs: select( agentStore ).getToolOutputs(),
-			threadId: select( agentStore ).getThreadId(),
-			assistantId: select( agentStore ).getAssistantId(),
-			threadRun: select( agentStore ).getActiveThreadRun(),
-			threadRunsUpdated: select( agentStore ).getThreadRunsUpdated(),
-			threadMessagesUpdated:
-				select( agentStore ).getThreadMessagesUpdated(),
-			isAssistantAvailable: select( agentStore ).isAssistantAvailable(),
-			isThreadRunInProgress: select( agentStore ).isThreadRunInProgress(),
-			isThreadDataLoaded: select( agentStore ).isThreadDataLoaded(),
-			feature: select( agentStore ).getFeature(),
+			assistantEnabled: store.isAssistantEnabled(),
+			service: store.getService(),
+			apiKey: store.getApiKey(),
+			error: store.getError(),
+			model: store.getModel(),
+			loading: store.isLoading(),
+			running: store.isRunning(),
+			enabled: store.isEnabled(),
+			messages: store.getMessages(),
+			assistantMessage: store.getAssistantMessage(),
+			pendingToolCalls: store.getPendingToolCalls(),
+			additionalMessages: store.getAdditionalMessages(),
+			requiredToolOutputs: store.getRequiredToolOutputs(),
+			toolOutputs: store.getToolOutputs(),
+			threadId: store.getThreadId(),
+			assistantId: store.getAssistantId(),
+			threadRun: store.getActiveThreadRun(),
+			threadRunsUpdated: store.getThreadRunsUpdated(),
+			threadMessagesUpdated: store.getThreadMessagesUpdated(),
+			isAvailable: store.isAvailable(),
+			isChatAvailable: store.isChatAvailable(),
+			isAssistantAvailable: store.isAssistantAvailable(),
+			isThreadRunInProgress: store.isThreadRunInProgress(),
+			isThreadDataLoaded: store.isThreadDataLoaded(),
+			isThreadRunComplete: store.isThreadRunComplete(),
+			isAwaitingUserInput: store.isAwaitingUserInput(),
+			isThreadRunAwaitingToolOutputs:
+				store.isThreadRunAwaitingToolOutputs(),
+			feature: store.getFeature(),
 		};
 	} );
-
-	const isThreadRunComplete = useMemo( () => {
-		return (
-			isThreadDataLoaded &&
-			! running &&
-			( ! threadRun || threadRun?.status === 'completed' )
-		);
-	}, [ isThreadDataLoaded, running, threadRun ] );
-
-	const isAwaitingUserInput = useMemo( () => {
-		return pendingToolCalls.length > 0 || assistantMessage;
-	}, [ assistantMessage, pendingToolCalls ] );
-
-	const isThreadRunAwaitingToolOutputs = useMemo( () => {
-		return (
-			isThreadDataLoaded &&
-			! running &&
-			threadRun &&
-			threadRun.status === 'requires_action' &&
-			threadRun.required_action.type === 'submit_tool_outputs' &&
-			requiredToolOutputs.length > 0
-		);
-	}, [ isThreadDataLoaded, requiredToolOutputs.length, running, threadRun ] );
-
-	// update thread runs if they haven't been updated
-	useEffect( () => {
-		if (
-			isAssistantAvailable &&
-			! running &&
-			threadId &&
-			threadRunsUpdated === null
-		) {
-			runGetThreadRuns();
-		}
-	}, [
-		isAssistantAvailable,
-		runGetThreadRuns,
-		running,
-		threadId,
-		threadRunsUpdated,
-	] );
-
-	// update messages if they haven't been updated
-	useEffect( () => {
-		if (
-			isAssistantAvailable &&
-			! running &&
-			threadId &&
-			( ! threadMessagesUpdated ||
-				threadMessagesUpdated / 1000 < threadRun?.created_at )
-		) {
-			runGetThreadMessages();
-		}
-	}, [
-		isAssistantAvailable,
-		runGetThreadMessages,
-		running,
-		threadId,
-		threadMessagesUpdated,
-		threadRun?.created_at,
-	] );
-
-	// if there are required tool outputs, run the agent
-	// toolOutputs looks like this:
-	// [
-	// 	{
-	// 		tool_call_id: toolCallId,
-	// 		output,
-	// 	},
-	// ]
-	useEffect( () => {
-		if ( isThreadRunAwaitingToolOutputs && toolOutputs.length > 0 ) {
-			// requiredToolOutputs is a list of toolcalls with an ID
-			// toolOutputs is a list of { tool_call_id: $id, output: $json_blob }
-			// we need to submit toolOutputs with matching ids
-
-			const filteredToolOutputs = toolOutputs.filter( ( toolOutput ) => {
-				return requiredToolOutputs.some(
-					( requiredToolOutput ) =>
-						requiredToolOutput.id === toolOutput.tool_call_id
-				);
-			} );
-
-			if ( filteredToolOutputs.length === 0 ) {
-				return;
-			}
-
-			runSubmitToolOutputs( {
-				toolOutputs: filteredToolOutputs,
-			} );
-		}
-	}, [
-		isThreadRunAwaitingToolOutputs,
-		requiredToolOutputs,
-		runSubmitToolOutputs,
-		toolOutputs,
-	] );
-
-	// while threadRun.status is queued or in_progress, poll for thread run status
-	useEffect( () => {
-		if ( ! running && isThreadRunInProgress ) {
-			const interval = setInterval( () => {
-				runGetThreadRun();
-			}, 1000 );
-			return () => clearInterval( interval );
-		}
-	}, [ runGetThreadRun, isThreadRunInProgress, running ] );
-
-	// if there are pendingThreadMessages, send them using runAddMessageToThread
-	useEffect( () => {
-		if (
-			! running &&
-			isThreadRunComplete &&
-			additionalMessages.length > 0
-		) {
-			runAddMessageToThread( {
-				message: additionalMessages[ 0 ],
-			} );
-		}
-	}, [
-		running,
-		additionalMessages,
-		isThreadRunComplete,
-		runAddMessageToThread,
-	] );
-
-	const runChat = useCallback(
-		( tools, instructions, additionalInstructions ) => {
-			if (
-				! instructions ||
-				! enabled || // disabled
-				running || // already running
-				error || // there's an error
-				! history.length > 0 || // nothing to process
-				isAwaitingUserInput
-			) {
-				return;
-			}
-			runChatCompletion( {
-				tools,
-				instructions,
-				additionalInstructions,
-			} );
-		},
-		[
-			enabled,
-			running,
-			error,
-			history,
-			isAwaitingUserInput,
-			runChatCompletion,
-		]
-	);
-
-	const createThreadRun = useCallback(
-		( tools, instructions, additionalInstructions ) => {
-			if (
-				! isThreadRunComplete ||
-				isAwaitingUserInput ||
-				additionalMessages.length > 0 ||
-				history.length === 0
-			) {
-				return;
-			}
-
-			runCreateThreadRun( {
-				tools,
-				instructions,
-				additionalInstructions,
-				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
-				additionalMessages,
-			} );
-		},
-		[
-			additionalMessages,
-			history,
-			isAwaitingUserInput,
-			isThreadRunComplete,
-			runCreateThreadRun,
-		]
-	);
 
 	return {
 		// running state
 		enabled,
 		setEnabled,
+		assistantEnabled,
+		setAssistantEnabled,
 		loading,
 		running,
-		started,
+		// started,
 		error,
 
 		// auth
@@ -331,7 +165,7 @@ export default function useChat() {
 		setTemperature,
 
 		// messages
-		history,
+		messages,
 		clearMessages,
 		userSay: addUserMessage,
 		assistantMessage,
@@ -341,21 +175,33 @@ export default function useChat() {
 		setToolResult: setToolCallResult,
 		pendingToolCalls,
 		toolOutputs,
-		runChat, // run a chat completion with messages, tools, instructions and additionalInstructions
+		requiredToolOutputs,
+
+		// chat
+		isChatAvailable,
+		runChatCompletion,
 
 		// assistants
+		isAssistantAvailable,
 		threadId,
-		createThread: runCreateThread,
 		deleteThread: runDeleteThread,
 		assistantId,
 		threadRun,
+		threadRunsUpdated,
+		threadMessagesUpdated,
 		setAssistantId,
 
-		createThreadRun, // run a thread
+		createThread: runCreateThread,
+		createThreadRun: runCreateThreadRun,
 		updateThreadRun: runGetThreadRun, // refresh status of running threads
 		updateThreadRuns: runGetThreadRuns, // refresh status of running threads
-		updateThreadMessages: runGetThreadMessages,
+		updateThreadMessages: runGetThreadMessages, // refresh status of running threads
+		submitToolOutputs: runSubmitToolOutputs,
+		addMessageToThread: runAddMessageToThread,
+		isAvailable,
 		isThreadRunComplete,
+		isThreadRunAwaitingToolOutputs,
+		isThreadRunInProgress,
 		isAwaitingUserInput,
 		additionalMessages,
 

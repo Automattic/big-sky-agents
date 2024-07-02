@@ -1,9 +1,4 @@
 /**
- * Run the agent
- */
-export { default as useChatExecutor } from './hooks/use-chat-executor.js';
-
-/**
  * ChatModel and hooks
  */
 export {
@@ -16,22 +11,15 @@ export {
 	LocalAIChatModel,
 	WPCOMJetpackAIChatModel,
 	WPCOMOpenAIChatModel,
-} from './agents/chat-model.js';
+} from './ai/chat-model.js';
 export { default as useChatModel } from './hooks/use-chat-model.js';
-
-/**
- * Simple chat, toolkit, and agent toolkit
- */
-export { default as useSimpleChat } from './hooks/use-simple-chat.js';
-export { default as useSimpleToolkit } from './hooks/use-simple-toolkit.js';
-export { default as useSimpleAgentToolkit } from './hooks/use-simple-agent-toolkit.js';
 
 /**
  * Redux chat, toolkit, and agent toolkit
  */
 export { default as useChat } from './components/chat-provider/use-chat.js';
-export { default as useReduxToolkit } from './hooks/use-redux-toolkit.js';
-export { default as useReduxAgentToolkit } from './hooks/use-redux-agent-toolkit.js';
+export { default as useToolkit } from './hooks/use-toolkit.js';
+export { default as useAgentToolkit } from './hooks/use-agent-toolkit.js';
 
 /**
  * Components
@@ -49,7 +37,7 @@ export { default as useChatIcon } from './hooks/use-chat-icon.js';
 /**
  * Core Classes
  */
-export { default as Agent } from './agents/agent.js';
+export { default as Agent } from './ai/agents/agent.js';
 
 /**
  * Prompt Templates
@@ -59,4 +47,4 @@ export {
 	StringPromptTemplate,
 	DotPromptTemplate,
 	FStringPromptTemplate,
-} from './agents/prompt-template.js';
+} from './ai/prompt-template.js';

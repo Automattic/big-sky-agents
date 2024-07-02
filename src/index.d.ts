@@ -8,21 +8,9 @@ export type {
 	LocalAIChatModel,
 	WPCOMJetpackAIChatModel,
 	WPCOMOpenAIChatModel,
-} from './agents/chat-model';
+} from './ai/chat-model';
 
-import { ChatModelType, ChatModelService } from './agents/chat-model';
-
-/**
- * Hooks
- */
-
-export declare function useChatExecutor( options: {
-	agent: AgentState;
-} ): void;
-
-export declare function useAssistantExecutor( options: {
-	agent: AgentState;
-} ): void;
+import { ChatModelType, ChatModelService } from './ai/chat-model';
 
 export declare function useChatModel( options: {
 	apiKey: string | undefined;
@@ -41,14 +29,9 @@ interface ChatIconHook {
 }
 
 export declare function useChatIcon(): ChatIconHook;
-export declare function useSimpleChat( options: ChatOptions ): Chat;
-export declare function useSimpleToolkit(): AgentToolkit;
-export declare function useSimpleAgentToolkit( options: {
-	agents: AgentConfig[];
-} ): AgentToolkit;
 export declare function useChat( options: ChatOptions ): Chat;
-export declare function useReduxToolkit(): AgentToolkit;
-export declare function useReduxAgentToolkit( options: {
+export declare function useToolkit(): AgentToolkit;
+export declare function useAgentToolkit( options: {
 	agents: AgentConfig[];
 } ): AgentToolkit;
 
@@ -136,7 +119,7 @@ interface Chat {
 	setEnabled: ( enabled: boolean ) => void;
 	started: boolean;
 	error?: any;
-	history: Message[];
+	messages: Message[];
 	clearMessages: () => void;
 	userSay: ( content: string, image_urls?: string[] ) => void;
 	assistantMessage?: string | MessageContentPart[];
@@ -191,15 +174,14 @@ export declare class DotPromptTemplate extends StringPromptTemplate {
  */
 
 declare class Agent {
-	constructor( chat: Chat, toolkit: AgentToolkit );
-	getId(): string;
-	call( toolName: string, args: any ): string;
-	userSay( message: string, file_urls?: string[] ): void;
-	getTools(): Tool[];
-	findTools( ...toolNames: string[] ): Tool[];
-	getInstructions(): string;
-	getAdditionalInstructions(): string;
-	onStart(): void;
+	constructor();
+	get id(): string;
+	get description(): string;
+	get assistantId(): string;
+	tools( context: any ): Tool[];
+	instructions( context: any ): string;
+	additionalInstructions( context: any ): string;
+	onStart( chat: any, context: any ): void;
 }
 
 interface AgentState {

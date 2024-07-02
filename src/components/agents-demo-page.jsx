@@ -1,4 +1,4 @@
-import AgentsDemoUI from './agents-demo-ui.jsx';
+import AgentsDemoUI from './chat-demo-ui.jsx';
 import './agents-demo-page.scss';
 
 const AgentsDemoPage = ( { apiKey } ) => {

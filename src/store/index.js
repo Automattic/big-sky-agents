@@ -1,10 +1,22 @@
 import { combineReducers, createReduxStore, register } from '@wordpress/data';
-
+import { createNamespacedActions, createNamespacedSelectors } from './utils.js';
 import {
 	actions as agentsActions,
 	reducer as agentsReducer,
 	selectors as agentsSelectors,
 } from './agents.js';
+
+import {
+	actions as toolsActions,
+	reducer as toolsReducer,
+	selectors as toolsSelectors,
+} from './tools.js';
+
+import {
+	actions as toolkitsActions,
+	reducer as toolkitsReducer,
+	selectors as toolkitsSelectors,
+} from './toolkits.js';
 
 import {
 	actions as chatActions,
@@ -36,38 +48,32 @@ import {
 	selectors as sectionSelectors,
 } from './page-sections.js';
 
-// Utility functions for namespacing
-const createNamespacedSelectors = ( namespace, selectors ) => {
-	const namespacedSelectors = {};
-	for ( const key in selectors ) {
-		if ( Object.prototype.hasOwnProperty.call( selectors, key ) ) {
-			namespacedSelectors[ key ] = ( state, ...args ) =>
-				selectors[ key ]( state[ namespace ], ...args );
-		}
-	}
-	return namespacedSelectors;
-};
-
-const store = createReduxStore( 'big-sky-agent', {
+const store = createReduxStore( 'big-sky-agents', {
 	reducer: combineReducers( {
 		agents: agentsReducer,
-		messages: chatReducer,
+		tools: toolsReducer,
+		toolkits: toolkitsReducer,
+		chat: chatReducer,
 		site: siteReducer,
 		design: designReducer,
 		pages: pageReducer,
 		pageSections: sectionReducer,
 	} ),
 	actions: {
-		...agentsActions,
-		...chatActions,
-		...siteActions,
-		...designActions,
-		...pageActions,
-		...sectionActions,
+		...createNamespacedActions( 'agents', agentsActions ),
+		...createNamespacedActions( 'tools', toolsActions ),
+		...createNamespacedActions( 'toolkits', toolkitsActions ),
+		...createNamespacedActions( 'chat', chatActions ),
+		...createNamespacedActions( 'site', siteActions ),
+		...createNamespacedActions( 'design', designActions ),
+		...createNamespacedActions( 'pages', pageActions ),
+		...createNamespacedActions( 'pageSections', sectionActions ),
 	},
 	selectors: {
 		...createNamespacedSelectors( 'agents', agentsSelectors ),
-		...createNamespacedSelectors( 'messages', chatSelectors ),
+		...createNamespacedSelectors( 'tools', toolsSelectors ),
+		...createNamespacedSelectors( 'toolkits', toolkitsSelectors ),
+		...createNamespacedSelectors( 'chat', chatSelectors ),
 		...createNamespacedSelectors( 'site', siteSelectors ),
 		...createNamespacedSelectors( 'design', designSelectors ),
 		...createNamespacedSelectors( 'pages', pageSelectors ),

@@ -1,36 +1,41 @@
 /**
  * WordPress dependencies
  */
-import { useMemo } from 'react';
+import { useEffect } from 'react';
 
 /**
  * Internal dependencies
  */
 import AnalyzeUrlTool, {
-	ANALYZE_URL_TOOL_NAME,
 	makeAnalyzeUrlRequest,
-} from '../agents/tools/analyze-url.js';
+} from '../ai/tools/analyze-url.js';
 
-const values = {};
+import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 
 const useAnalyzeSiteToolkit = ( { apiKey } ) => {
-	const callbacks = useMemo( () => {
-		return {
-			[ ANALYZE_URL_TOOL_NAME ]: ( { url } ) => {
-				return makeAnalyzeUrlRequest( { url, apiKey } );
+	// const { registerTool } = useTools();
+	const { registerToolkit } = useToolkits();
+	// register the tools
+	// useEffect( () => {
+	// 	registerTool( {
+	// 		...AnalyzeUrlTool,
+	// 		callback: ( { url } ) => {
+	// 			return makeAnalyzeUrlRequest( { url, apiKey } );
+	// 		},
+	// 	} );
+	// }, [ apiKey, registerTool ] );
+
+	useEffect( () => {
+		registerToolkit( {
+			name: 'analyzeSite',
+			tools: [ AnalyzeUrlTool ],
+			callbacks: {
+				[ AnalyzeUrlTool.name ]: ( { url } ) => {
+					return makeAnalyzeUrlRequest( { url, apiKey } );
+				},
 			},
-		};
-	}, [ apiKey ] );
-
-	const tools = useMemo( () => {
-		return [ AnalyzeUrlTool ];
-	}, [] );
-
-	return {
-		tools,
-		values,
-		callbacks,
-	};
+		} );
+	}, [ apiKey, registerToolkit ] );
 };
 
 export default useAnalyzeSiteToolkit;
