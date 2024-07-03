@@ -14,8 +14,8 @@ class StatsAgent extends Agent {
 		return instructions.format( context );
 	}
 
-	onStart( invoke ) {
-		invoke.askUser( {
+	onStart( { askUser } ) {
+		askUser( {
 			question: 'What are you looking to do today?',
 			choices: [
 				'I want to increase search engine traffic',

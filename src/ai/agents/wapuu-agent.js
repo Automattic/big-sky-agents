@@ -1,6 +1,7 @@
 import Agent from './agent.js';
 import AnalyzeUrlTool from '../tools/analyze-url.js';
 import { DotPromptTemplate } from '../prompt-template.js';
+import { ANALYZE_SITE_TOOLKIT_ID } from '../../hooks/use-analyze-site-toolkit.js';
 
 export const WAPUU_AGENT_ID = 'Wapuu';
 export const WAPUU_ASSISTANT_ID = 'asst_lk7tPSgLWShOx6N0LJuxQGVe';
@@ -30,7 +31,9 @@ class WapuuAgent extends Agent {
 	description =
 		'Here to understand your goal and choose the best agent to help you.';
 
-	toolkits = [ 'agents', 'analyzeSite' ];
+	get toolkits() {
+		return [ ...super.toolkits, ANALYZE_SITE_TOOLKIT_ID ];
+	}
 
 	instructions( context ) {
 		return instructions.format( context );

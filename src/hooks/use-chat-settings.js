@@ -61,10 +61,7 @@ const useChatSettings = ( options ) => {
 	}, [ assistantEnabled, options.assistantEnabled, setAssistantEnabled ] );
 
 	useEffect( () => {
-		if (
-			options.initialAgentId &&
-			options.initialAgentId !== activeAgentId
-		) {
+		if ( options.initialAgentId && ! activeAgentId ) {
 			setActiveAgent( options.initialAgentId );
 		}
 	}, [ activeAgentId, options.initialAgentId, setActiveAgent ] );

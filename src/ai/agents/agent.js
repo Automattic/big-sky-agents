@@ -3,6 +3,7 @@ import { DotPromptTemplate } from '../prompt-template.js';
 import InformUserTool from '../tools/inform-user.js';
 import SetGoalTool from '../tools/set-goal.js';
 import { SET_AGENT_TOOL_NAME } from '../tools/set-agent.js';
+import { AGENTS_TOOLKIT_ID } from '../../hooks/use-agent-toolkit.js';
 
 const instructions = DotPromptTemplate.fromString(
 	`You are a helpful assistant.`
@@ -13,10 +14,8 @@ const additionalInstructions = DotPromptTemplate.fromString(
 	[ 'agent' ]
 );
 
-const STANDARD_TOOLKIT = 'agents';
-
 class Agent {
-	toolkits = [ STANDARD_TOOLKIT ];
+	toolkits = [ AGENTS_TOOLKIT_ID ];
 
 	get id() {
 		throw new Error( 'Agent must implement id' );

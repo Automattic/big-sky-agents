@@ -343,21 +343,11 @@ const runGetThreadMessages =
 	};
 
 const getAssistantModel = ( select ) => {
-	const { service, apiKey, assistantId, defaultAssistantId } = select(
-		( state ) => ( {
-			service: state.root.service,
-			apiKey: state.root.apiKey,
-			assistantId: state.root.assistantId,
-			defaultAssistantId: state.root.defaultAssistantId,
-		} )
-	);
-
-	console.warn( 'getAssistantModel', {
-		service,
-		apiKey,
-		assistantId,
-		defaultAssistantId,
-	} );
+	const { service, apiKey, assistantId } = select( ( state ) => ( {
+		service: state.root.service,
+		apiKey: state.root.apiKey,
+		assistantId: selectors.getAssistantId( state.root ),
+	} ) );
 	if ( ! service || ! apiKey || ! assistantId ) {
 		console.warn( 'Service, API key and assistant ID are required', {
 			service,
@@ -430,7 +420,7 @@ const runCreateThreadRun =
 		const { threadId, assistantId, model, temperature } = select(
 			( state ) => ( {
 				threadId: state.root.threadId,
-				assistantId: state.root.assistantId,
+				assistantId: selectors.getAssistantId( state.root ),
 				model: state.root.model,
 				temperature: state.root.temperature,
 			} )

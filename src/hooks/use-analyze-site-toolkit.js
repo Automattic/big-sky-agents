@@ -12,6 +12,8 @@ import AnalyzeUrlTool, {
 
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 
+export const ANALYZE_SITE_TOOLKIT_ID = 'analyzeSite';
+
 const useAnalyzeSiteToolkit = ( { apiKey } ) => {
 	// const { registerTool } = useTools();
 	const { registerToolkit } = useToolkits();
@@ -27,7 +29,7 @@ const useAnalyzeSiteToolkit = ( { apiKey } ) => {
 
 	useEffect( () => {
 		registerToolkit( {
-			name: 'analyzeSite',
+			name: ANALYZE_SITE_TOOLKIT_ID,
 			tools: [ AnalyzeUrlTool ],
 			callbacks: {
 				[ AnalyzeUrlTool.name ]: ( { url } ) => {
