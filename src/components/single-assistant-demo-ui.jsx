@@ -98,7 +98,6 @@ const DemoWithSingleAgent = ( { apiKey } ) => {
 					model={ ChatModelType.GPT_4O }
 					apiKey={ apiKey }
 					feature={ 'big-sky' }
-					assistantEnabled={ false }
 				>
 					<SingleAssistantDemoUI />
 				</ChatProvider>

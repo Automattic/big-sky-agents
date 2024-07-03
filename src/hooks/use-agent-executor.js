@@ -342,7 +342,7 @@ const useAgentExecutor = () => {
 				instructions,
 				additionalInstructions,
 				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
-				additionalMessages,
+				// additionalMessages,
 			} );
 		}
 	}, [
@@ -355,6 +355,7 @@ const useAgentExecutor = () => {
 		isThreadRunComplete,
 		createThreadRun,
 		tools,
+		isThreadDataLoaded,
 	] );
 
 	/**

@@ -986,14 +986,8 @@ export const selectors = {
 	isAssistantEnabled: ( state ) => {
 		return state.assistantEnabled;
 	},
-	isLoading: ( state ) => {
-		// TODO: check most recent message against when the thread messages were updated
-		const isLoading =
-			state.assistantEnabled &&
-			( ( state.threadId && ! state.threadRunsUpdated ) ||
-				! state.threadMessagesUpdated );
-		return isLoading;
-	},
+	isLoading: ( state ) =>
+		state.assistantEnabled && ! selectors.isThreadDataLoaded( state ),
 	isRunning: ( state ) =>
 		state.isToolRunning ||
 		state.isFetchingChatCompletion ||
