@@ -68,24 +68,9 @@ const getNextPendingRequest = ( pendingToolCalls, toolName ) => {
 function AgentUI() {
 	const {
 		name: agentName,
-		// goal: agentGoal,
 		thought: agentThought,
+		setAgentThought: informUser,
 	} = useAgents();
-	// console.warn( 'agents', agents );
-	// useAgentToolkit();
-	// const {
-	// 	context: {
-	// 		agent: { name: agentName, thought: agentThought },
-	// 	},
-	// } = useToolkits( [ 'agents' ] );
-	// const agentName = 'Agent';
-	// const agentThought = 'Help the user find out about the weather';
-
-	// const toolkits = useToolkits( [ 'agents' ] );
-	// console.warn( 'toolkits', toolkits );
-	const informUser = ( message ) => {
-		console.warn( '🚀 Informing user', message );
-	};
 
 	const {
 		error,
@@ -163,7 +148,7 @@ function AgentUI() {
 							} }
 							onAnswer={ ( answer, files ) => {
 								// clear the current thought
-								informUser( {} );
+								informUser( '' );
 								setToolResult( agentQuestion.id, answer );
 								userSay( answer, files );
 							} }
@@ -173,7 +158,7 @@ function AgentUI() {
 						<Confirm
 							{ ...agentConfirm.function.arguments }
 							onConfirm={ ( confirmed ) => {
-								informUser( {} );
+								informUser( '' );
 								setToolResult(
 									agentConfirm.id,
 									confirmed

@@ -725,7 +725,7 @@ export const reducer = ( state = initialState, action ) => {
 		case 'SET_DEFAULT_ASSISTANT_ID':
 			return {
 				...state,
-				defaultAssistantId: action.defaultAssistantId,
+				defaultAssistantId: action.assistantId,
 			};
 
 		// Set Thread
@@ -1016,7 +1016,7 @@ export const selectors = {
 	isAssistantAvailable: ( state ) =>
 		selectors.isServiceAvailable( state ) &&
 		state.assistantEnabled &&
-		state.assistantId,
+		selectors.getAssistantId( state ),
 	isAvailable: ( state ) =>
 		selectors.isChatAvailable( state ) ||
 		selectors.isAssistantAvailable( state ),
