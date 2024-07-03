@@ -206,14 +206,15 @@ const reset =
 	};
 
 const getChatModel = ( select ) => {
-	const { service, apiKey } = select( ( state ) => ( {
+	const { service, apiKey, feature } = select( ( state ) => ( {
 		service: state.root.service,
 		apiKey: state.root.apiKey,
+		feature: state.root.feature,
 	} ) );
 	if ( ! service || ! apiKey ) {
 		throw new Error( 'Service and API key are required' );
 	}
-	return ChatModel.getInstance( service, apiKey );
+	return ChatModel.getInstance( service, apiKey, feature );
 };
 
 /**
@@ -347,10 +348,11 @@ const updateThreadMessages =
 	};
 
 const getAssistantModel = ( select ) => {
-	const { service, apiKey, assistantId } = select( ( state ) => ( {
+	const { service, apiKey, assistantId, feature } = select( ( state ) => ( {
 		service: state.root.service,
 		apiKey: state.root.apiKey,
 		assistantId: selectors.getAssistantId( state.root ),
+		feature: state.root.feature,
 	} ) );
 	if ( ! service || ! apiKey || ! assistantId ) {
 		console.warn( 'Service, API key and assistant ID are required', {
@@ -360,7 +362,7 @@ const getAssistantModel = ( select ) => {
 		} );
 		throw new Error( 'Service, API key and assistant ID are required' );
 	}
-	return AssistantModel.getInstance( service, apiKey );
+	return AssistantModel.getInstance( service, apiKey, feature );
 };
 
 /**
