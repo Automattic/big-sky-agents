@@ -1,9 +1,6 @@
 import dotenv from 'dotenv';
 import minimist from 'minimist';
-import ChatModel, {
-	ChatModelService,
-	ChatModelType,
-} from './src/ai/chat-model.js';
+import ChatModel, { ChatModelService } from './src/ai/chat-model.js';
 import { WAPUU_AGENT_ID } from './src/ai/agents/wapuu-agent.js';
 import promptSync from 'prompt-sync';
 
@@ -30,15 +27,38 @@ import {
 import { store } from './src/store/index.js';
 
 dotenv.config();
+const defaultModel = ChatModelService.OPENAI;
 const args = minimist( process.argv.slice( 2 ) );
+
+if ( args.help ) {
+	console.log( `
+Usage: node ./agent-cli.js [options]
+
+Options:
+  --help              Show this help message and exit
+  --model-service     The model to use (default: ${ defaultModel }).
+                      Options: ${ ChatModelService.getAvailable().join( ', ' ) }
+  --verbose           Enable verbose logging mode
+  ` );
+	process.exit( 0 );
+}
 
 let assistantMessage = '';
 let assistantChoices = null;
 const messages = [];
 const prompt = promptSync();
+const modelService = args[ 'model-service' ] || defaultModel;
+const apiKey = ChatModelService.getDefaultApiKey( modelService );
+if ( apiKey === undefined ) {
+	console.error(
+		`No API key found for model service "${ modelService }". Add the appropriate key to the .env file.`
+	);
+	process.exit( 1 );
+}
+
 const model = ChatModel.getInstance(
-	ChatModelService.OPENAI,
-	process.env.OPENAI_API_KEY
+	modelService,
+	ChatModelService.getDefaultApiKey( modelService )
 );
 
 function logVerbose( ...stuffToLog ) {
@@ -158,7 +178,7 @@ async function runCompletion() {
 		} ) );
 
 	const request = {
-		model: ChatModelType.GPT_4O,
+		model: model.getDefaultModel(),
 		messages,
 		tools,
 		instructions: agent.instructions( context ),
