@@ -1,8 +1,5 @@
-import { createTool } from './tool.js';
-
 export const INFORM_TOOL_NAME = 'informUser';
-
-export default createTool( {
+export default {
 	name: INFORM_TOOL_NAME,
 	description: "Tell the user what you're doing.",
 	parameters: {
@@ -15,4 +12,4 @@ export default createTool( {
 		},
 		required: [ 'message' ],
 	},
-} );
+};

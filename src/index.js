@@ -48,6 +48,7 @@ export { default as useSiteToolkit } from './hooks/use-site-toolkit.js';
  * Core Classes
  */
 export { default as Agent } from './ai/agents/agent.js';
+export { default as BuilderAgent } from './ai/agents/builder-agent.js';
 
 /**
  * Prompt Templates

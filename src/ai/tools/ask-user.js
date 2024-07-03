@@ -2,7 +2,7 @@ import { createTool } from './tool.js';
 
 export const ASK_USER_TOOL_NAME = 'askUser';
 
-export default createTool( {
+export default {
 	name: ASK_USER_TOOL_NAME,
 	description:
 		'Ask the user a question. Always provide a list of choices if possible, to help the user decide.',
@@ -32,4 +32,4 @@ export default createTool( {
 		},
 		required: [ 'question' ],
 	},
-} );
+};
