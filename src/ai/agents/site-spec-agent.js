@@ -8,7 +8,6 @@ import {
 	SetSiteTypeTool,
 } from '../tools/site-tools.js';
 import { DotPromptTemplate } from '../prompt-template.js';
-import { AGENTS_TOOLKIT_ID } from '../../hooks/use-agent-toolkit.js';
 import { SITE_TOOLKIT_ID } from '../../hooks/use-site-toolkit.js';
 import { ANALYZE_SITE_TOOLKIT_ID } from '../../hooks/use-analyze-site-toolkit.js';
 

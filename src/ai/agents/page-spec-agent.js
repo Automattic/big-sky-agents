@@ -47,8 +47,6 @@ Format all content in Markdown. The current state of the Page is:
 	},
 } );
 
-
-
 class PageSpecAgent extends BuilderAgent {
 	id = 'WPPageSpec';
 	name = 'Page Building Assistant';
