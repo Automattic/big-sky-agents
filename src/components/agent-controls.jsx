@@ -10,7 +10,7 @@ import {
 	SelectControl,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { trash, create, update } from '@wordpress/icons';
+import { create, trash, update } from '@wordpress/icons';
 import './agent-controls.scss';
 import useAgents from './agents-provider/use-agents.js';
 import useChat from './chat-provider/use-chat.js';
@@ -77,7 +77,7 @@ const AssistantAgentControls = () => {
 			</BaseControl>
 			<BaseControl
 				id={ 'assistant-run-control' }
-				label="Assistant Run"
+				label="Thread Run"
 				labelPosition="side"
 			>
 				<span className="big-sky__assistant-run-indicator">
@@ -88,7 +88,7 @@ const AssistantAgentControls = () => {
 					) }{ ' ' }
 					<Button
 						icon={ <Icon icon={ update } /> }
-						disabled={ running }
+						disabled={ running || ! threadId }
 						onClick={ () => updateThreadRuns() }
 					/>
 				</span>

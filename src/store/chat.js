@@ -2,6 +2,7 @@ import { createReduxStore } from '@wordpress/data';
 import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../ai/chat-model.js';
 import AssistantModel from '../ai/assistant-model.js';
+import { actions as agentsActions } from './agents.js';
 
 export const THREAD_RUN_ACTIVE_STATUSES = [
 	'queued',
@@ -58,6 +59,7 @@ const initialState = {
 
 	// Assistants-API-related
 	assistantId: null, // The assistant ID
+	defaultAssistantId: null, // The default assistant ID
 	threadId: localStorage.getItem( 'threadId' ) || null, // The assistant thread ID
 	threadRuns: [], // The Assistant thread runs
 	threadRunsUpdated: null, // The last time the thread runs were updated
@@ -300,7 +302,7 @@ const runGetThreadRun =
 	async ( { select, dispatch } ) => {
 		const { threadId, threadRun } = select( ( state ) => ( {
 			threadId: state.root.threadId,
-			threadRun: getActiveThreadRun( state.root.messages ),
+			threadRun: getActiveThreadRun( state.root ),
 		} ) );
 		dispatch( { type: 'GET_THREAD_RUN_BEGIN_REQUEST' } );
 		try {
@@ -341,16 +343,28 @@ const runGetThreadMessages =
 	};
 
 const getAssistantModel = ( select ) => {
-	const { service, apiKey } = select( ( state ) => ( {
-		service: state.root.service,
-		apiKey: state.root.apiKey,
-	} ) );
-	if ( ! service || ! apiKey ) {
-		console.warn( 'Service and API key are required', {
+	const { service, apiKey, assistantId, defaultAssistantId } = select(
+		( state ) => ( {
+			service: state.root.service,
+			apiKey: state.root.apiKey,
+			assistantId: state.root.assistantId,
+			defaultAssistantId: state.root.defaultAssistantId,
+		} )
+	);
+
+	console.warn( 'getAssistantModel', {
+		service,
+		apiKey,
+		assistantId,
+		defaultAssistantId,
+	} );
+	if ( ! service || ! apiKey || ! assistantId ) {
+		console.warn( 'Service, API key and assistant ID are required', {
 			service,
 			apiKey,
+			assistantId,
 		} );
-		throw new Error( 'Service and API key are required' );
+		throw new Error( 'Service, API key and assistant ID are required' );
 	}
 	return AssistantModel.getInstance( service, apiKey );
 };
@@ -386,6 +400,7 @@ const runDeleteThread =
 		try {
 			await getAssistantModel( select ).deleteThread( threadId );
 			dispatch( { type: 'DELETE_THREAD_END_REQUEST' } );
+			dispatch( agentsActions.setAgentStarted( false ) );
 		} catch ( error ) {
 			console.error( 'Thread error', error );
 			return { type: 'DELETE_THREAD_ERROR', error: error.message };
@@ -461,7 +476,7 @@ const runSubmitToolOutputs =
 	async ( { select, dispatch } ) => {
 		const { threadId, threadRun } = select( ( state ) => ( {
 			threadId: state.root.threadId,
-			threadRun: getActiveThreadRun( state.root.messages ),
+			threadRun: getActiveThreadRun( state.root ),
 		} ) );
 		try {
 			dispatch( { type: 'SUBMIT_TOOL_OUTPUTS_BEGIN_REQUEST' } );
@@ -717,6 +732,11 @@ export const reducer = ( state = initialState, action ) => {
 				...state,
 				assistantId: action.assistantId,
 			};
+		case 'SET_DEFAULT_ASSISTANT_ID':
+			return {
+				...state,
+				defaultAssistantId: action.defaultAssistantId,
+			};
 
 		// Set Thread
 		case 'SET_THREAD_ID':
@@ -773,9 +793,9 @@ export const reducer = ( state = initialState, action ) => {
 		case 'RUN_THREAD_BEGIN_REQUEST':
 			return { ...state, isCreatingThreadRun: true };
 		case 'RUN_THREAD_END_REQUEST':
-			const additionalMessageIds = action.additionalMessages?.map(
-				( message ) => message.id
-			);
+			const additionalMessageIds =
+				action.additionalMessages?.map( ( message ) => message.id ) ??
+				[];
 
 			return {
 				...state,
@@ -1026,10 +1046,10 @@ export const selectors = {
 	isThreadRunComplete: ( state ) => {
 		const threadRunStatus = selectors.getActiveThreadRunStatus( state );
 		return (
-			( ! selectors.isRunning( state ) &&
-				selectors.isThreadDataLoaded( state ) &&
-				THREAD_RUN_COMPLETED_STATUSES.includes( threadRunStatus ) ) ||
-			! threadRunStatus
+			! selectors.isRunning( state ) &&
+			selectors.isThreadDataLoaded( state ) &&
+			( ! threadRunStatus ||
+				THREAD_RUN_COMPLETED_STATUSES.includes( threadRunStatus ) )
 		);
 	},
 	isAwaitingUserInput: ( state ) =>
@@ -1097,7 +1117,7 @@ export const selectors = {
 		return [];
 	},
 	getThreadId: ( state ) => state.threadId,
-	getAssistantId: ( state ) => state.assistantId,
+	getAssistantId: ( state ) => state.assistantId ?? state.defaultAssistantId,
 	getThreadRuns: ( state ) => state.threadRun,
 	getThreadRunsUpdated: ( state ) => state.threadRunsUpdated,
 	getThreadMessagesUpdated: ( state ) => state.threadMessagesUpdated,
@@ -1167,6 +1187,10 @@ export const actions = {
 	} ),
 	setAssistantId: ( assistantId ) => ( {
 		type: 'SET_ASSISTANT_ID',
+		assistantId,
+	} ),
+	setDefaultAssistantId: ( assistantId ) => ( {
+		type: 'SET_DEFAULT_ASSISTANT_ID',
 		assistantId,
 	} ),
 	setService: ( service ) => ( {

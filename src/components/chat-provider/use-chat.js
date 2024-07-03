@@ -58,6 +58,7 @@ export default function useChat() {
 		runCreateThread,
 		runDeleteThread,
 		setAssistantId,
+		setDefaultAssistantId,
 		runCreateThreadRun,
 		runGetThreadRun,
 		runGetThreadRuns,
@@ -190,6 +191,7 @@ export default function useChat() {
 		threadRunsUpdated,
 		threadMessagesUpdated,
 		setAssistantId,
+		setDefaultAssistantId,
 
 		createThread: runCreateThread,
 		createThreadRun: runCreateThreadRun,

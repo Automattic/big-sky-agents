@@ -20,7 +20,10 @@ import {
 	AssistantModelService,
 	AssistantModelType,
 } from '../ai/assistant-model.js';
-import { WAPUU_AGENT_ID } from '../ai/agents/wapuu-agent.js';
+import {
+	WAPUU_AGENT_ID,
+	WAPUU_ASSISTANT_ID,
+} from '../ai/agents/wapuu-agent.js';
 import './chat-demo-ui.scss';
 import PopUpControls from './popup-controls.jsx';
 import useAgentToolkit from '../hooks/use-agent-toolkit.js';
@@ -48,6 +51,8 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		assistantEnabled: true,
 		service: AssistantModelService.OPENAI,
 		model: AssistantModelType.GPT_4O,
+		initialAgentId: WAPUU_AGENT_ID,
+		defaultAssistantId: WAPUU_ASSISTANT_ID,
 	} );
 
 	useAgentToolkit();
