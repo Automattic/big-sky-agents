@@ -1,6 +1,7 @@
 import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
 import { useEffect, useState } from 'react';
+import './popup-controls.scss';
 
 const PopUpControls = ( { setApiKey } ) => {
 	const [ controlsVisible, setControlsVisible ] = useState( false );
