@@ -27,11 +27,19 @@ export { default as AgentUI } from './components/agent-ui.jsx';
 export { default as AgentControls } from './components/agent-controls.jsx';
 export { default as ChatModelControls } from './components/chat-model-controls.jsx';
 export { default as AgentsDemoPage } from './components/agents-demo-page.jsx';
+export { AgentsProvider, useAgents } from './components/agents-provider';
+export { ChatProvider } from './components/chat-provider';
+export { ToolkitsProvider } from './components/toolkits-provider';
+export { default as PopUpControls } from './components/popup-controls.jsx';
+export { default as ChatHistory } from './components/chat-history.jsx';
 
 /**
  * Hooks
  */
 export { default as useChatIcon } from './hooks/use-chat-icon.js';
+export { default as useAgentExecutor } from './hooks/use-agent-executor.js';
+export { default as useChatSettings } from './hooks/use-chat-settings.js';
+export { default as useSiteToolkit } from './hooks/use-site-toolkit.js';
 
 /**
  * Core Classes
