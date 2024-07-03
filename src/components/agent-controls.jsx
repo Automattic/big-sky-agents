@@ -104,7 +104,7 @@ const ChatAgentControls = () => {
 		activeAgent,
 		setActiveAgent,
 	} = useAgents();
-	const { onReset: onResetChat, running, enabled, setEnabled } = useChat();
+	const { reset: onResetChat, running, enabled, setEnabled } = useChat();
 	const { reset: onResetToolkit } = useToolkits();
 
 	// const {

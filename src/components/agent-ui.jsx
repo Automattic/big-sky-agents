@@ -82,7 +82,7 @@ function AgentUI() {
 		pendingToolCalls,
 		userSay,
 		setToolResult,
-		onReset: onResetChat,
+		reset: onResetChat,
 	} = useChat();
 
 	const { agentQuestion, agentConfirm } = useMemo( () => {

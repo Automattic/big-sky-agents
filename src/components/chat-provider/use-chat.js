@@ -50,21 +50,21 @@ export default function useChat() {
 	const {
 		reset,
 		setEnabled,
-		addToolCall,
-		addUserMessage,
+		call,
+		userSay,
 		clearMessages,
-		setToolCallResult,
+		setToolResult,
 		runChatCompletion,
-		runCreateThread,
-		runDeleteThread,
+		createThread,
+		deleteThread,
 		setAssistantId,
 		setDefaultAssistantId,
-		runCreateThreadRun,
-		runGetThreadRun,
-		runGetThreadRuns,
-		runGetThreadMessages,
-		runAddMessageToThread,
-		runSubmitToolOutputs,
+		createThreadRun,
+		updateThreadRun,
+		updateThreadRuns,
+		updateThreadMessages,
+		addMessageToThread,
+		submitToolOutputs,
 		setService,
 		setModel,
 		setTemperature,
@@ -168,12 +168,12 @@ export default function useChat() {
 		// messages
 		messages,
 		clearMessages,
-		userSay: addUserMessage,
+		userSay,
 		assistantMessage,
 
 		// tools
-		call: addToolCall,
-		setToolResult: setToolCallResult,
+		call,
+		setToolResult,
 		pendingToolCalls,
 		toolOutputs,
 		requiredToolOutputs,
@@ -185,7 +185,7 @@ export default function useChat() {
 		// assistants
 		isAssistantAvailable,
 		threadId,
-		deleteThread: runDeleteThread,
+		deleteThread,
 		assistantId,
 		threadRun,
 		threadRunsUpdated,
@@ -193,13 +193,13 @@ export default function useChat() {
 		setAssistantId,
 		setDefaultAssistantId,
 
-		createThread: runCreateThread,
-		createThreadRun: runCreateThreadRun,
-		updateThreadRun: runGetThreadRun, // refresh status of running threads
-		updateThreadRuns: runGetThreadRuns, // refresh status of running threads
-		updateThreadMessages: runGetThreadMessages, // refresh status of running threads
-		submitToolOutputs: runSubmitToolOutputs,
-		addMessageToThread: runAddMessageToThread,
+		createThread,
+		createThreadRun,
+		updateThreadRun, // refresh status of running threads
+		updateThreadRuns, // refresh status of running threads
+		updateThreadMessages, // refresh status of running threads
+		submitToolOutputs,
+		addMessageToThread,
 		isAvailable,
 		isThreadRunComplete,
 		isThreadRunAwaitingToolOutputs,
@@ -207,7 +207,6 @@ export default function useChat() {
 		isAwaitingUserInput,
 		isThreadDataLoaded,
 		additionalMessages,
-
-		onReset: reset,
+		reset,
 	};
 }

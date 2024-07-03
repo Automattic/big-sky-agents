@@ -124,7 +124,7 @@ interface Chat {
 	userSay: ( content: string, image_urls?: string[] ) => void;
 	assistantMessage?: string | MessageContentPart[];
 	call: ( name: string, args: any, id?: string ) => void;
-	setToolCallResult: ( toolCallId: string, result: any ) => void;
+	setToolResult: ( toolCallId: string, result: any ) => void;
 	pendingToolCalls: ToolCall[];
 	runChat: (
 		messages: Message[],
@@ -132,7 +132,7 @@ interface Chat {
 		instructions: string,
 		additionalInstructions: string
 	) => void;
-	onReset: () => void;
+	reset: () => void;
 }
 
 /**
@@ -207,14 +207,14 @@ interface ToolkitCallbacks {
 }
 
 interface Toolkit {
-	onReset: () => void;
+	reset: () => void;
 	tools: Tool[]; // TODO: Tool
-	values: any;
+	context: any;
 	callbacks: ToolkitCallbacks;
 }
 
 interface AgentToolkit extends Toolkit {
-	values: {
+	context: {
 		agents: any[]; // TODO: define this agent config
 		agent: {
 			assistantId: string,

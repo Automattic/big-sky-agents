@@ -95,6 +95,12 @@ export const selectors = {
 	isAgentStarted: ( state ) => state.started,
 };
 
+export const slice = {
+	reducer,
+	actions,
+	selectors,
+};
+
 export function createAgentsStore( name, defaultValues ) {
 	return createReduxStore( name, {
 		reducer,

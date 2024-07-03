@@ -19,6 +19,9 @@ export { default as useChatModel } from './hooks/use-chat-model.js';
  */
 export { default as useChat } from './components/chat-provider/use-chat.js';
 export { default as useAgentToolkit } from './hooks/use-agent-toolkit.js';
+export { slice as agentStoreSlice } from './store/agents.js';
+export { slice as chatStoreSlice } from './store/chat.js';
+export { slice as toolkitStoreSlice } from './store/toolkits.js';
 
 /**
  * Components

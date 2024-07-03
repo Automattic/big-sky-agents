@@ -44,6 +44,12 @@ export const selectors = {
 	},
 };
 
+export const slice = {
+	reducer,
+	actions,
+	selectors,
+};
+
 export function createToolkitsStore( name, defaultValues ) {
 	return createReduxStore( name, {
 		reducer,

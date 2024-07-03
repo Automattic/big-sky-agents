@@ -201,7 +201,7 @@ const reset =
 		dispatch( clearMessages() );
 		dispatch( clearError() );
 		if ( threadId ) {
-			dispatch( runDeleteThread() );
+			dispatch( deleteThread() );
 		}
 	};
 
@@ -275,7 +275,7 @@ const runChatCompletion =
 /**
  * Get the thread runs for a given thread.
  */
-const runGetThreadRuns =
+const updateThreadRuns =
 	() =>
 	async ( { select, dispatch } ) => {
 		const threadId = select( ( state ) => state.root.threadId );
@@ -297,7 +297,7 @@ const runGetThreadRuns =
 /**
  * Get a thread run for a given thread.
  */
-const runGetThreadRun =
+const updateThreadRun =
 	() =>
 	async ( { select, dispatch } ) => {
 		const { threadId, threadRun } = select( ( state ) => ( {
@@ -323,7 +323,7 @@ const runGetThreadRun =
 /**
  * Get the thread messages for a given thread.
  */
-const runGetThreadMessages =
+const updateThreadMessages =
 	() =>
 	async ( { select, dispatch } ) => {
 		const threadId = select( ( state ) => state.root.threadId );
@@ -331,6 +331,10 @@ const runGetThreadMessages =
 		try {
 			const threadMessagesResponse =
 				await getAssistantModel( select ).getThreadMessages( threadId );
+			// if there are messages, then set started to true
+			if ( threadMessagesResponse.data.length ) {
+				dispatch( agentsActions.setAgentStarted( true ) );
+			}
 			dispatch( {
 				type: 'GET_THREAD_MESSAGES_END_REQUEST',
 				ts: Date.now(),
@@ -362,7 +366,7 @@ const getAssistantModel = ( select ) => {
 /**
  * Create a new thread.
  */
-const runCreateThread =
+const createThread =
 	() =>
 	async ( { select, dispatch } ) => {
 		dispatch( { type: 'CREATE_THREAD_BEGIN_REQUEST' } );
@@ -382,7 +386,7 @@ const runCreateThread =
 /**
  * Delete a thread.
  */
-const runDeleteThread =
+const deleteThread =
 	() =>
 	async ( { select, dispatch } ) => {
 		const threadId = select( ( state ) => state.root.threadId );
@@ -414,7 +418,7 @@ const runDeleteThread =
  * @param {Object} request.responseFormat
  * @return {Object} Yields the resulting actions
  */
-const runCreateThreadRun =
+const createThreadRun =
 	( request ) =>
 	async ( { select, dispatch } ) => {
 		const { threadId, assistantId, model, temperature } = select(
@@ -427,7 +431,7 @@ const runCreateThreadRun =
 		);
 		dispatch( { type: 'RUN_THREAD_BEGIN_REQUEST' } );
 		try {
-			const runCreateThreadRunResponse = await getAssistantModel(
+			const createThreadRunResponse = await getAssistantModel(
 				select
 			).createThreadRun( {
 				...request,
@@ -443,7 +447,7 @@ const runCreateThreadRun =
 				type: 'RUN_THREAD_END_REQUEST',
 				ts: Date.now(),
 				additionalMessages: request.additionalMessages,
-				threadRun: runCreateThreadRunResponse,
+				threadRun: createThreadRunResponse,
 			} );
 		} catch ( error ) {
 			console.error( 'Run Thread Error', error );
@@ -461,7 +465,7 @@ const runCreateThreadRun =
  * @param {Array}  options.toolOutputs
  * @return {Object} Yields the resulting actions
  */
-const runSubmitToolOutputs =
+const submitToolOutputs =
 	( { toolOutputs } ) =>
 	async ( { select, dispatch } ) => {
 		const { threadId, threadRun } = select( ( state ) => ( {
@@ -493,7 +497,7 @@ const runSubmitToolOutputs =
  * @param {*}      promise
  * @return {Object} The resulting action
  */
-const setToolCallResult =
+const setToolResult =
 	( toolCallId, promise ) =>
 	async ( { dispatch } ) => {
 		dispatch( { type: 'TOOL_BEGIN_REQUEST' } );
@@ -515,7 +519,7 @@ const setToolCallResult =
 		}
 	};
 
-const runAddMessageToThread =
+const addMessageToThread =
 	( { message } ) =>
 	async ( { select, dispatch } ) => {
 		// add the message to the active thread
@@ -1108,7 +1112,7 @@ export const selectors = {
 	},
 	getThreadId: ( state ) => state.threadId,
 	getAssistantId: ( state ) => state.assistantId ?? state.defaultAssistantId,
-	getThreadRuns: ( state ) => state.threadRun,
+	updateThreadRuns: ( state ) => state.threadRun,
 	getThreadRunsUpdated: ( state ) => state.threadRunsUpdated,
 	getThreadMessagesUpdated: ( state ) => state.threadMessagesUpdated,
 	getActiveThreadRun,
@@ -1204,20 +1208,20 @@ export const actions = {
 		model,
 	} ),
 	clearError,
-	setToolCallResult,
-	runSubmitToolOutputs,
+	setToolResult,
+	submitToolOutputs,
 	runChatCompletion,
-	runCreateThread,
-	runDeleteThread,
-	runCreateThreadRun,
-	runGetThreadRun,
-	runGetThreadRuns,
-	runAddMessageToThread,
-	runGetThreadMessages,
+	createThread,
+	deleteThread,
+	createThreadRun,
+	updateThreadRun,
+	updateThreadRuns,
+	addMessageToThread,
+	updateThreadMessages,
 	addMessage,
 	reset,
 	clearMessages,
-	addUserMessage: ( content, image_urls = [] ) =>
+	userSay: ( content, image_urls = [] ) =>
 		addMessage( {
 			role: 'user',
 			content: [
@@ -1231,7 +1235,7 @@ export const actions = {
 				} ) ),
 			],
 		} ),
-	addToolCall: ( name, args, id ) => ( {
+	call: ( name, args, id ) => ( {
 		type: 'ADD_MESSAGE',
 		message: {
 			id: uuidv4(),
@@ -1249,6 +1253,12 @@ export const actions = {
 			],
 		},
 	} ),
+};
+
+export const slice = {
+	reducer,
+	actions,
+	selectors,
 };
 
 export function createChatStore( name, defaultValues ) {
