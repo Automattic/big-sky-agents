@@ -4,14 +4,31 @@ import ChatModel, {
 	ChatModelService,
 	ChatModelType,
 } from './src/ai/chat-model.js';
-import BaseAgentToolkit from './src/ai/toolkits/base-agent.js';
-import CombinedToolkit from './src/ai/toolkits/combined.js';
+import { WAPUU_AGENT_ID } from './src/ai/agents/wapuu-agent.js';
 import promptSync from 'prompt-sync';
 import AssistantModel from './src/ai/assistant-model.js';
 
-import agents from './src/ai/agents/default-agents.js';
-import { ASK_USER_TOOL_NAME } from './src/ai/tools/ask-user.js';
+import defaultAgents from './src/ai/agents/default-agents.js';
 import { CONFIRM_TOOL_NAME } from './src/ai/tools/confirm.js';
+
+import { dispatch, select } from '@wordpress/data';
+
+import AskUserTool, { ASK_USER_TOOL_NAME } from './src/ai/tools/ask-user.js';
+import InformTool from './src/ai/tools/inform-user.js';
+import AnalyzeUrlTool from './src/ai/tools/analyze-url.js';
+import createSetAgentTool, {
+	SET_AGENT_TOOL_NAME,
+} from './src/ai/tools/set-agent.js';
+import SetGoalTool from './src/ai/tools/set-goal.js';
+import {
+	SetSiteDescriptionTool,
+	SetSiteLocationTool,
+	SetSitePagesTool,
+	SetSiteTitleTool,
+	SetSiteTopicTool,
+	SetSiteTypeTool,
+} from './src/ai/tools/site-tools.js';
+import { store } from './src/store/index.js';
 
 dotenv.config();
 const args = minimist( process.argv.slice( 2 ) );
@@ -23,9 +40,17 @@ function logVerbose( ...stuffToLog ) {
 }
 
 class CLIChat {
-	constructor() {
-		this.assistantMessage = '';
-		this.assistantChoices = [];
+	constructor( _store ) {
+		this.store = _store;
+
+		const agent = select( this.store ).getActiveAgent();
+		agent.onStart( {
+			askUser: ( { question, choices } ) => {
+				this.assistantMessage = question;
+				this.assistantChoices = choices;
+			},
+		} );
+
 		this.prompt = promptSync();
 		this.model = ChatModel.getInstance(
 			ChatModelService.OPENAI,
@@ -36,13 +61,6 @@ class CLIChat {
 			process.env.OPENAI_API
 		);
 		this.messages = [];
-		this.agent = null;
-	}
-
-	setAgent( agent ) {
-		this.agent = agent;
-		this.assistantMessage = agent.getDefaultQuestion();
-		this.assistantChoices = agent.getDefaultChoices();
 	}
 
 	findTools( ...toolNames ) {
@@ -60,13 +78,82 @@ class CLIChat {
 	}
 
 	async runCompletion() {
-		const callbacks = this.agent.toolkit.getCallbacks();
+		const agent = select( this.store ).getActiveAgent();
+		const toolkits = select( this.store ).getToolkits();
+
+		// Merge context from all toolkits
+		const context = {
+			agents: select( store ).getAgents(),
+			agent: {
+				id: select( store ).getActiveAgent()?.id,
+				name: select( store ).getActiveAgent()?.name,
+				assistantId: select( store ).getActiveAgent()?.assistantId,
+				goal: select( store ).getAgentGoal(),
+				thought: select( store ).getAgentThought(),
+			},
+			site: {
+				title: select( store ).getSiteTitle(),
+			},
+		};
+
+		const callbacks = toolkits.reduce( ( acc, toolkit ) => {
+			const toolkitCallbacks =
+				typeof toolkit.callbacks === 'function'
+					? toolkit.callbacks()
+					: toolkit.callbacks;
+			return {
+				...acc,
+				...toolkitCallbacks,
+			};
+		}, {} );
+
+		const allTools = toolkits.reduce( ( acc, toolkit ) => {
+			const toolkitTools =
+				typeof toolkit.tools === 'function'
+					? toolkit.tools( context )
+					: toolkit.tools;
+			return [
+				...acc,
+				...toolkitTools.filter(
+					( tool ) => ! acc.some( ( t ) => t.name === tool.name )
+				),
+			];
+		}, [] );
+		let tools =
+			typeof agent.tools === 'function'
+				? agent.tools( context )
+				: agent.tools;
+		// map string tools to globally registered tool definitions
+		tools = tools
+			.map( ( tool ) => {
+				if ( typeof tool === 'string' ) {
+					const registeredTool = allTools.find(
+						( t ) => t.name === tool
+					);
+					if ( ! registeredTool ) {
+						console.warn( '🧠 Tool not found', tool );
+					}
+					return registeredTool;
+				}
+				return tool;
+			} )
+			.filter( Boolean );
+		// remap to an OpenAI tool
+		tools = tools.map( ( tool ) => ( {
+			type: 'function',
+			function: {
+				name: tool.name,
+				description: tool.description,
+				parameters: tool.parameters,
+			},
+		} ) );
+
 		const request = {
 			model: ChatModelType.GPT_4O,
 			messages: this.messages,
-			tools: this.agent.tools(),
-			instructions: this.agent.instructions(),
-			additionalInstructions: this.agent.additionalInstructions(),
+			tools,
+			instructions: agent.instructions( context ),
+			additionalInstructions: agent.additionalInstructions( context ),
 			temperature: 0,
 		};
 		logVerbose( '📡 Request:', request );
@@ -124,32 +211,17 @@ class CLIChat {
 					tool_call.id,
 					await callback( resultArgs )
 				);
-				const agentId = this.agent.toolkit.values.agent.id;
-				if ( agentId && agentId !== this.agent.id ) {
-					logVerbose( `🔄 Switching to new agent ${ agentId }` );
-					const newAgent = agents.find( ( ag ) => ag.id === agentId );
-					if ( newAgent ) {
-						let toolkit;
-						if ( newAgent.toolkit ) {
-							toolkit = new CombinedToolkit( {
-								toolkits: [
-									new newAgent.toolkit(),
-									this.agent.toolkit,
-								],
-							} );
-						} else {
-							toolkit = this.agent.toolkit;
-						}
-
-						this.setAgent( new newAgent.agent( this, toolkit ) );
-					} else {
-						const defaultAgent = agents.find(
-							( ag ) => ag.id === WAPUU_AGENT_ID
-						);
-						this.setAgent(
-							new defaultAgent.agent( this, this.agent.toolkit )
-						);
-					}
+				const newAgentId = resultArgs.agentId;
+				if ( newAgentId && newAgentId !== agent.id ) {
+					logVerbose( `🔄 Switching to new agent ${ newAgentId }` );
+					dispatch( store ).setActiveAgent( newAgentId );
+					const newAgent = select( this.store ).getActiveAgent();
+					newAgent.onStart( {
+						askUser: ( { question, choices } ) => {
+							this.assistantMessage = question;
+							this.assistantChoices = choices;
+						},
+					} );
 				} else {
 					await this.runCompletion();
 				}
@@ -217,22 +289,76 @@ class CLIChat {
 	}
 }
 
-const chat = new CLIChat();
-const baseAgentToolkit = new BaseAgentToolkit( {
-	agents,
+// register agents
+defaultAgents.forEach( ( agent ) => {
+	dispatch( store ).registerAgent( agent );
 } );
-const defaultAgent = args.agent
-	? agents.find( ( ag ) => ag.id === args.agent )
-	: agents.find( ( ag ) => ag.id === WAPUU_AGENT_ID );
+// set default Wapuu agent
+dispatch( store ).setActiveAgent( WAPUU_AGENT_ID );
 
-const defaultToolkit =
-	defaultAgent.id !== WAPUU_AGENT_ID
-		? new CombinedToolkit( {
-				toolkits: [ new defaultAgent.toolkit(), baseAgentToolkit ],
-		  } )
-		: baseAgentToolkit;
+// register toolkits
+dispatch( store ).registerToolkit( {
+	name: 'agents',
+	tools: [
+		AskUserTool,
+		SetGoalTool,
+		InformTool,
+		createSetAgentTool( select( store ).getAgents() ),
+		AnalyzeUrlTool,
+	],
+	callbacks: {
+		[ InformTool.name ]: ( { message } ) => {
+			dispatch( store ).setAgentThought( message );
+			return message ? `Agent thinks: "${ message }"` : 'Thought cleared';
+		},
+		[ SetGoalTool.name ]: ( { goal: newGoal } ) => {
+			dispatch( store ).setAgentGoal( newGoal );
+			return `Goal set to "${ newGoal }"`;
+		},
+		[ SET_AGENT_TOOL_NAME ]: ( { agentId } ) => {
+			dispatch( store ).setActiveAgent( agentId );
+			return `Agent set to ${ agentId }`;
+		},
+	},
+} );
 
-const agent = new defaultAgent.agent( chat, defaultToolkit );
+dispatch( store ).registerToolkit( {
+	name: 'site',
+	tools: [
+		SetSiteTitleTool,
+		SetSiteDescriptionTool,
+		SetSiteTypeTool,
+		SetSiteTopicTool,
+		SetSiteLocationTool,
+		SetSitePagesTool,
+	],
+	callbacks: {
+		[ SetSiteTitleTool.name ]: ( { value } ) => {
+			dispatch( store ).setSiteTitle( value );
+			return `Site title set to "${ value }"`;
+		},
+		[ SetSiteTypeTool.name ]: ( { value } ) => {
+			dispatch( store ).setSiteType( value );
+			return `Site type set to "${ value }"`;
+		},
+		[ SetSiteTopicTool.name ]: ( { value } ) => {
+			dispatch( store ).setSiteTopic( value );
+			return `Site topic set to "${ value }"`;
+		},
+		[ SetSiteLocationTool.name ]: ( { value } ) => {
+			dispatch( store ).setSiteLocation( value );
+			return `Site location set to "${ value }"`;
+		},
+		[ SetSiteDescriptionTool.name ]: ( { value } ) => {
+			dispatch( store ).setSiteDescription( value );
+			return `Site description set to "${ value }"`;
+		},
+		[ SetSitePagesTool.name ]: ( { pages } ) => {
+			dispatch( store ).setPages( pages );
+			return 'Site pages set';
+		},
+	},
+} );
 
-chat.setAgent( agent );
+const chat = new CLIChat( store );
 chat.call();

@@ -32,6 +32,8 @@ export const THREAD_RUN_RUNNING_STATUSES = [
 // 	'cancelled',
 // ];
 
+const isLocalStorageAvailable = typeof localStorage !== 'undefined';
+
 export const THREAD_RUN_COMPLETED_STATUSES = [
 	// 'cancelled',
 	// 'failed',
@@ -58,7 +60,9 @@ const initialState = {
 
 	// Assistants-API-related
 	assistantId: null, // The assistant ID
-	threadId: localStorage.getItem( 'threadId' ) || null, // The assistant thread ID
+	threadId: isLocalStorageAvailable
+		? localStorage.getItem( 'threadId' )
+		: null, // The assistant thread ID
 	threadRuns: [], // The Assistant thread runs
 	threadRunsUpdated: null, // The last time the thread runs were updated
 	threadMessagesUpdated: null, // The last time Assistant messages were updated
