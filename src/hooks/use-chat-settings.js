@@ -68,6 +68,10 @@ const useChatSettings = ( options ) => {
 
 	useEffect( () => {
 		if ( options.defaultAssistantId ) {
+			console.warn(
+				'setting default assistnt ID to ',
+				options.defaultAssistantId
+			);
 			setDefaultAssistantId( options.defaultAssistantId );
 		}
 	}, [ options.defaultAssistantId, setDefaultAssistantId ] );
