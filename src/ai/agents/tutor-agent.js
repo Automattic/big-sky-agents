@@ -14,8 +14,8 @@ class TutorAgent extends Agent {
 		return instructions.format( context );
 	}
 
-	onStart( invoke ) {
-		invoke.askUser( {
+	onStart( { askUser } ) {
+		askUser( {
 			question: 'What can I help you with?',
 			choices: [
 				'How do I add a page?',

@@ -25,6 +25,8 @@ import {
 } from '../ai/tools/site-tools.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 
+export const SITE_TOOLKIT_ID = 'site';
+
 const useSiteToolkit = ( { pageId } ) => {
 	const { registerToolkit } = useToolkits();
 
@@ -158,7 +160,7 @@ const useSiteToolkit = ( { pageId } ) => {
 
 	useEffect( () => {
 		registerToolkit( {
-			name: 'siteSpec',
+			name: SITE_TOOLKIT_ID,
 			tools: [
 				// site
 				SetSiteTitleTool,

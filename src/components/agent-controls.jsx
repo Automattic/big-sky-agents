@@ -4,10 +4,13 @@
 import {
 	BaseControl,
 	Button,
+	FormToggle,
 	__experimentalHStack as HStack,
+	Icon,
 	SelectControl,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
+import { create, trash, update } from '@wordpress/icons';
 import './agent-controls.scss';
 import useAgents from './agents-provider/use-agents.js';
 import useChat from './chat-provider/use-chat.js';
@@ -33,8 +36,6 @@ const AssistantAgentControls = () => {
 		running,
 		createThread,
 		deleteThread,
-		createThreadRun,
-		updateThreadRun,
 		updateThreadRuns,
 		threadRun,
 	} = useChat();
@@ -59,58 +60,37 @@ const AssistantAgentControls = () => {
 					{ threadId ? (
 						<>
 							{ threadId }
-							<br />
-							<button
+							<Button
+								icon={ <Icon icon={ trash } /> }
 								disabled={ running }
 								onClick={ () => deleteThread() }
-							>
-								delete
-							</button>
+							/>
 						</>
 					) : (
-						<button onClick={ () => createThread() }>create</button>
+						<Button
+							icon={ <Icon icon={ create } /> }
+							disabled={ running }
+							onClick={ () => createThread() }
+						/>
 					) }
 				</span>
 			</BaseControl>
 			<BaseControl
 				id={ 'assistant-run-control' }
-				label="Assistant Run"
+				label="Thread Run"
 				labelPosition="side"
 			>
 				<span className="big-sky__assistant-run-indicator">
-					{ threadRun ? (
+					{ threadRun && (
 						<>
 							{ threadRun.id } { threadRun.status }
-							<br />
-							<button
-								disabled={ running }
-								onClick={ () => updateThreadRun() }
-							>
-								refresh
-							</button>
-							<button
-								disabled={ running }
-								onClick={ () => createThreadRun() }
-							>
-								start
-							</button>
 						</>
-					) : (
-						<>
-							<button
-								disabled={ running }
-								onClick={ () => updateThreadRuns() }
-							>
-								refresh
-							</button>
-							<button
-								disabled={ running }
-								onClick={ () => createThreadRun() }
-							>
-								start
-							</button>
-						</>
-					) }
+					) }{ ' ' }
+					<Button
+						icon={ <Icon icon={ update } /> }
+						disabled={ running || ! threadId }
+						onClick={ () => updateThreadRuns() }
+					/>
 				</span>
 			</BaseControl>
 		</VStack>
@@ -118,15 +98,21 @@ const AssistantAgentControls = () => {
 };
 
 const ChatAgentControls = () => {
-	const { agents, activeAgent, setActiveAgent } = useAgents();
-	const { onReset: onResetChat, running, enabled, setEnabled } = useChat();
-
 	const {
-		reset: onResetToolkit,
-		context: {
-			agent: { goal: agentGoal },
-		},
-	} = useToolkits( [ 'agents' ] );
+		goal: agentGoal,
+		agents,
+		activeAgent,
+		setActiveAgent,
+	} = useAgents();
+	const { onReset: onResetChat, running, enabled, setEnabled } = useChat();
+	const { reset: onResetToolkit } = useToolkits();
+
+	// const {
+	// 	reset: onResetToolkit,
+	// 	context: {
+	// 		agent: { goal: agentGoal },
+	// 	},
+	// } = useToolkits( [ 'agents' ] );
 	return (
 		<VStack>
 			<BaseControl
@@ -216,13 +202,22 @@ const AgentControls = () => {
 	return (
 		<div className="big-sky__agent-controls">
 			<ChatAgentControls />
-			<Button
-				variant="secondary"
-				onClick={ () => setAssistantEnabled( ! assistantEnabled ) }
-			>
-				{ assistantEnabled ? 'Disable Assistant' : 'Enable Assistant' }
-			</Button>
 			{ assistantEnabled && <AssistantAgentControls /> }
+			<BaseControl
+				id={ 'assistant-enabled-control' }
+				label="Assistant"
+				labelPosition="side"
+			>
+				<span className="big-sky__assistant-enabled">
+					<FormToggle
+						checked={ assistantEnabled }
+						onClick={ () =>
+							setAssistantEnabled( ! assistantEnabled )
+						}
+					/>{ ' ' }
+					{ assistantEnabled ? 'Enabled' : 'Disabled' }
+				</span>
+			</BaseControl>
 		</div>
 	);
 };

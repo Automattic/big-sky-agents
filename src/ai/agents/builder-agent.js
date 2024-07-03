@@ -16,23 +16,23 @@ class BuilderAgent extends Agent {
 		return [ ...super.tools( context ), AnalyzeUrlTool, ConfirmTool ];
 	}
 
-	onStart( invoke ) {
-		invoke.askUser( {
+	onStart( { askUser } ) {
+		askUser( {
 			question: 'What would you like to do?',
 		} );
 	}
 
-	onConfirm( confirmed, invoke ) {
+	onConfirm( confirmed, { setGoal, informUser, askUser, userSay } ) {
 		if ( confirmed ) {
-			invoke.setGoal( 'Find out what the user wants to do next' );
-			invoke.informUser( 'Got it!' );
-			invoke.askUser( {
+			setGoal( 'Find out what the user wants to do next' );
+			informUser( 'Got it!' );
+			askUser( {
 				question: 'What would you like to do next?',
 			} );
 		} else {
-			invoke.informUser( 'Looks like you requested some changes' );
-			invoke.userSay( 'I would like to make some changes' );
-			invoke.askUser( {
+			informUser( 'Looks like you requested some changes' );
+			userSay( 'I would like to make some changes' );
+			askUser( {
 				question: 'What would you like to change?',
 			} );
 		}

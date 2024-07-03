@@ -27,25 +27,25 @@ class DesignAgent extends BuilderAgent {
 		return [ ...super.tools( context ), SetSiteColorsTool ];
 	}
 
-	onStart( invoke ) {
-		invoke.askUser( {
+	onStart( { askUser } ) {
+		askUser( {
 			question: 'How can I help refine your design?',
 			choices: defaultChoices,
 		} );
 	}
 
-	onConfirm( confirmed, invoke ) {
+	onConfirm( confirmed, { setGoal, informUser, askUser, userSay } ) {
 		if ( confirmed ) {
-			invoke.setGoal( 'Find out what the user wants to do next' );
-			invoke.informUser( 'Got it!' );
-			invoke.askUser( {
+			setGoal( 'Find out what the user wants to do next' );
+			informUser( 'Got it!' );
+			askUser( {
 				question: 'What would you like to do next?',
 				choices: defaultChoices,
 			} );
 		} else {
-			invoke.informUser( 'Looks like you requested some changes' );
-			invoke.userSay( 'I would like to make some changes' );
-			invoke.askUser( {
+			informUser( 'Looks like you requested some changes' );
+			userSay( 'I would like to make some changes' );
+			askUser( {
 				question: 'What would you like to change?',
 				choices: defaultChoices,
 			} );

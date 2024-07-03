@@ -239,12 +239,12 @@ const useAgentExecutor = () => {
 		isAssistantAvailable,
 	] );
 
-	const loaded = useMemo( () => {
+	const toolkitsLoaded = useMemo( () => {
 		return ! activeAgent?.toolkits || hasToolkits( activeAgent?.toolkits );
 	}, [ hasToolkits, activeAgent ] );
 
 	useEffect( () => {
-		if ( activeAgent && loaded ) {
+		if ( activeAgent && toolkitsLoaded ) {
 			let newTools =
 				typeof activeAgent.tools === 'function'
 					? activeAgent.tools( context )
@@ -318,7 +318,7 @@ const useAgentExecutor = () => {
 		tools,
 		allTools,
 		context,
-		loaded,
+		toolkitsLoaded,
 	] );
 
 	useEffect( () => {
@@ -329,6 +329,7 @@ const useAgentExecutor = () => {
 
 	useEffect( () => {
 		if (
+			! running &&
 			instructions &&
 			isAssistantAvailable &&
 			isThreadRunComplete &&
@@ -342,10 +343,11 @@ const useAgentExecutor = () => {
 				instructions,
 				additionalInstructions,
 				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
-				additionalMessages,
+				// additionalMessages,
 			} );
 		}
 	}, [
+		running,
 		isAssistantAvailable,
 		additionalInstructions,
 		additionalMessages,
@@ -355,6 +357,7 @@ const useAgentExecutor = () => {
 		isThreadRunComplete,
 		createThreadRun,
 		tools,
+		isThreadDataLoaded,
 	] );
 
 	/**
@@ -363,23 +366,24 @@ const useAgentExecutor = () => {
 	useEffect( () => {
 		if (
 			isAvailable &&
-			loaded &&
+			toolkitsLoaded &&
 			! isAwaitingUserInput &&
 			! running &&
 			! loading &&
 			! started &&
-			activeAgent &&
-			activeAgent.onStart
+			activeAgent
 		) {
 			setAgentStarted( true );
-			activeAgent.onStart( invoke );
+			if ( typeof activeAgent.onStart === 'function' ) {
+				activeAgent.onStart( invoke );
+			}
 		}
 	}, [
 		activeAgent,
 		invoke,
 		isAvailable,
 		isAwaitingUserInput,
-		loaded,
+		toolkitsLoaded,
 		loading,
 		running,
 		setAgentStarted,

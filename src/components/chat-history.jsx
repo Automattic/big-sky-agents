@@ -5,10 +5,10 @@ import MessageContent from './message-content.jsx';
 import useChat from './chat-provider/use-chat.js';
 
 function ChatHistory() {
-	const { history, toolOutputs } = useChat();
+	const { messages, toolOutputs } = useChat();
 	return (
 		<div className="big-sky__chat-history">
-			{ history
+			{ messages
 				?.map( ( message, rowId ) => {
 					return (
 						<div

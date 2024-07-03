@@ -15,6 +15,8 @@ import SetGoalTool from '../ai/tools/set-goal.js';
 import useAgents from '../components/agents-provider/use-agents.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 
+export const AGENTS_TOOLKIT_ID = 'agents';
+
 const useAgentToolkit = () => {
 	const {
 		agents,
@@ -34,7 +36,7 @@ const useAgentToolkit = () => {
 
 	useEffect( () => {
 		registerToolkit( {
-			name: 'agents',
+			name: AGENTS_TOOLKIT_ID,
 			tools: [
 				AskUserTool,
 				SetGoalTool,
