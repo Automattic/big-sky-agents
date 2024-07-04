@@ -12,7 +12,7 @@ import {
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { useEffect, useState } from 'react';
-import UserMessageInput from './user-message-input';
+import UserMessageInput from './user-message-input.jsx';
 
 function UserChoices( { choices, multiChoice, onChange, onSubmit } ) {
 	const [ selectedChoices, setSelectedChoices ] = useState( [] );
