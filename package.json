@@ -4,7 +4,7 @@
   "description": "The Big Sky Agents SDK",
   "repository": {
     "type": "git",
-    "url": "git@github.com:Automattic/big-sky-agents.git"
+    "url": "git+ssh://git@github.com/Automattic/big-sky-agents.git"
   },
   "author": "Automattic",
   "license": "GPL-2.0-or-later",
