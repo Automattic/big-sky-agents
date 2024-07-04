@@ -7,8 +7,8 @@ import { useMemo } from 'react';
 /**
  * Internal dependencies
  */
-import AskUserQuestion from './ask-question.jsx';
-import Confirm from './confirm.jsx';
+import AskUserComponent from './ask-user.jsx';
+import ConfirmComponent from './confirm.jsx';
 import MessageContent from './message-content.jsx';
 import { ASK_USER_TOOL_NAME } from '../ai/tools/ask-user.js';
 import { CONFIRM_TOOL_NAME } from '../ai/tools/confirm.js';
@@ -125,7 +125,7 @@ function AgentUI() {
 					{ assistantMessage && (
 						<AgentMessage message={ assistantMessage }>
 							{ ! agentQuestion && ! agentConfirm ? (
-								<AskUserQuestion
+								<AskUserComponent
 									onAnswer={ ( answer, files ) => {
 										userSay( answer, files );
 									} }
@@ -139,7 +139,7 @@ function AgentUI() {
 						</AgentMessage>
 					) }
 					{ agentQuestion && (
-						<AskUserQuestion
+						<AskUserComponent
 							{ ...agentQuestion.function.arguments }
 							onCancel={ () => {
 								setToolResult( agentQuestion.id, '(canceled)' );
@@ -155,7 +155,7 @@ function AgentUI() {
 						/>
 					) }
 					{ agentConfirm && (
-						<Confirm
+						<ConfirmComponent
 							{ ...agentConfirm.function.arguments }
 							onConfirm={ ( confirmed ) => {
 								informUser( '' );
