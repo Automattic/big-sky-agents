@@ -48,6 +48,7 @@ export { default as useAgentExecutor } from './hooks/use-agent-executor.js';
 export { default as useChatSettings } from './hooks/use-chat-settings.js';
 export { default as useSiteToolkit } from './hooks/use-site-toolkit.js';
 export { default as useToolkits } from './components/toolkits-provider/use-toolkits.js';
+export { default as useNextToolCall } from './hooks/use-next-tool-call.js';
 
 /**
  * Core Classes

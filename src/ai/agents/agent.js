@@ -18,15 +18,24 @@ class Agent {
 	toolkits = [ AGENTS_TOOLKIT_ID ];
 
 	get id() {
-		throw new Error( 'Agent must implement id' );
+		throw new Error( `Agent ${ this.id } must implement id` );
 	}
 
 	get name() {
-		throw new Error( 'Agent must implement name' );
+		throw new Error( `Agent ${ this.id } must implement name` );
 	}
 
 	get description() {
-		throw new Error( 'Agent must implement description' );
+		throw new Error( `Agent ${ this.id } must implement description` );
+	}
+
+	onToolResult( toolName, value, toolResponse ) {
+		// do nothing by default
+		console.log( 'onToolResult', {
+			toolName,
+			value,
+			toolResponse,
+		} );
 	}
 
 	instructions( context ) {

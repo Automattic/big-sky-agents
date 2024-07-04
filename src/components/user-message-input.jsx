@@ -31,6 +31,7 @@ function UserMessageInput( {
 	placeholder,
 	onSubmit,
 	onChange,
+	onCancel,
 	fileUploadEnabled,
 } ) {
 	const { RiveComponent } = useChatIcon();
@@ -50,7 +51,9 @@ function UserMessageInput( {
 	const handleChange = useCallback(
 		( value ) => {
 			setAnswer( value );
-			onChange( value );
+			if ( onChange ) {
+				onChange( value );
+			}
 		},
 		[ onChange ]
 	);
@@ -101,6 +104,8 @@ function UserMessageInput( {
 				onKeyDown={ ( event ) => {
 					if ( event.key === 'Enter' ) {
 						handleSubmit( event );
+					} else if ( event.key === 'Escape' && onCancel ) {
+						onCancel();
 					}
 				} }
 			/>

@@ -38,6 +38,7 @@ const AssistantAgentControls = () => {
 		deleteThread,
 		updateThreadRuns,
 		threadRun,
+		reset: onResetChat,
 	} = useChat();
 
 	return (
@@ -63,7 +64,10 @@ const AssistantAgentControls = () => {
 							<Button
 								icon={ <Icon icon={ trash } /> }
 								disabled={ running }
-								onClick={ () => deleteThread() }
+								onClick={ () => {
+									deleteThread();
+									onResetChat();
+								} }
 							/>
 						</>
 					) : (

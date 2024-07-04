@@ -273,6 +273,12 @@ const useAgentExecutor = () => {
 				} )
 				.filter( Boolean );
 
+			// deduplicate tools by tool.name
+			newTools = newTools.filter(
+				( tool, index, self ) =>
+					index === self.findIndex( ( t ) => t.name === tool.name )
+			);
+
 			// remap to an OpenAI tool
 			newTools = newTools.map( ( tool ) => ( {
 				type: 'function',

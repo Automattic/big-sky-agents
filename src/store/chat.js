@@ -197,10 +197,13 @@ function filterChatMessage( message ) {
 const reset =
 	() =>
 	async ( { dispatch, select } ) => {
-		const threadId = select( ( state ) => state.root.threadId );
+		const { threadId, isAssistantAvailable } = select( ( state ) => ( {
+			threadId: state.root.threadId,
+			isAssistantAvailable: selectors.isAssistantAvailable( state.root ),
+		} ) );
 		dispatch( clearMessages() );
 		dispatch( clearError() );
-		if ( threadId ) {
+		if ( threadId && isAssistantAvailable ) {
 			dispatch( deleteThread() );
 		}
 	};

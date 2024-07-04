@@ -11,8 +11,11 @@ import {
 	__experimentalItemGroup as ItemGroup,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import UserMessageInput from './user-message-input.jsx';
+import { ASK_USER_TOOL_NAME } from '../ai/tools/ask-user.js';
+import useNextToolCall from '../hooks/use-next-tool-call.js';
+import useAgents from './agents-provider/use-agents.js';
 
 function UserChoices( { choices, multiChoice, onChange, onSubmit } ) {
 	const [ selectedChoices, setSelectedChoices ] = useState( [] );
@@ -83,22 +86,36 @@ function UserChoices( { choices, multiChoice, onChange, onSubmit } ) {
 	);
 }
 
-function AskUser( {
-	onAnswer,
-	onCancel,
-	question,
-	choices,
-	placeholder,
-	multiChoice,
-} ) {
+function AskUser() {
 	const [ currentAnswer, setCurrentAnswer ] = useState( '' );
+	const { setAgentThought: informUser } = useAgents();
+	const { args, respond } = useNextToolCall( ASK_USER_TOOL_NAME );
+
+	const onSubmit = useCallback(
+		( answer ) => {
+			informUser( '' );
+			respond( answer, `The user answered: "${ answer }"` );
+		},
+		[ informUser, respond ]
+	);
+
+	const onCancel = useCallback( () => {
+		informUser( '' );
+		respond( 'User canceled' );
+	}, [ informUser, respond ] );
 
 	const submitCurrentAnswer = ( event ) => {
 		event.preventDefault();
 		if ( currentAnswer ) {
-			onAnswer( currentAnswer );
+			onSubmit( currentAnswer );
 		}
 	};
+
+	const { question, choices, placeholder, multiChoice } = args ?? {};
+
+	if ( ! args ) {
+		return null;
+	}
 
 	return (
 		<div className="big-sky__agent-input">
@@ -107,9 +124,10 @@ function AskUser( {
 					<UserMessageInput
 						label={ question }
 						placeholder={ placeholder }
-						onSubmit={ onAnswer }
+						onSubmit={ onSubmit }
 						onChange={ setCurrentAnswer }
-						fileUploadEnabled
+						onCancel={ onCancel }
+						fileUploadEnabled={ false }
 					/>
 					{ choices && choices.length > 0 && (
 						<UserChoices
@@ -118,7 +136,7 @@ function AskUser( {
 							onChange={ ( value ) => {
 								setCurrentAnswer( value );
 							} }
-							onSubmit={ onAnswer }
+							onSubmit={ onSubmit }
 						/>
 					) }
 				</CardBody>
