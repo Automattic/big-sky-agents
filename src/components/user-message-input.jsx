@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
 	Button,
 	DropZone,
@@ -37,12 +37,15 @@ function UserMessageInput( {
 	const [ answer, setAnswer ] = useState( '' );
 	const [ files, setFiles ] = useState( [] );
 
-	const handleSubmit = ( event ) => {
-		event.preventDefault();
-		onSubmit( answer, files );
-		setAnswer( '' );
-		setFiles( [] );
-	};
+	const handleSubmit = useCallback(
+		( event ) => {
+			event.preventDefault();
+			onSubmit( answer, files );
+			setAnswer( '' );
+			setFiles( [] );
+		},
+		[ answer, files, onSubmit ]
+	);
 
 	const handleChange = useCallback(
 		( value ) => {

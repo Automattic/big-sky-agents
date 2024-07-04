@@ -11,7 +11,7 @@ import {
 	__experimentalItemGroup as ItemGroup,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import UserMessageInput from './user-message-input';
 
 function UserChoices( { choices, multiChoice, onChange, onSubmit } ) {
