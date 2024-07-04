@@ -1,5 +1,3 @@
-import { createTool } from './tool.js';
-
 export const ASK_USER_TOOL_NAME = 'askUser';
 
 export default {

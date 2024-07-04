@@ -51,6 +51,17 @@ export { default as Agent } from './ai/agents/agent.js';
 export { default as BuilderAgent } from './ai/agents/builder-agent.js';
 
 /**
+ * Tools
+ */
+export { default as AskUserTool } from './ai/tools/ask-user.js';
+export { default as ConfirmTool } from './ai/tools/confirm.js';
+export { default as InformTool } from './ai/tools/inform-user.js';
+export { default as createSetAgentTool } from './ai/tools/set-agent.js';
+export { default as SetGoalTool } from './ai/tools/set-goal.js';
+export { default as AnalyzeUrlTool } from './ai/tools/analyze-url.js';
+export { createSimpleTool } from './ai/tools/tool.js';
+
+/**
  * Prompt Templates
  */
 export {

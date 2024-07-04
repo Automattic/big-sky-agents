@@ -1,5 +1,3 @@
-import { createTool } from './tool.js';
-
 export const ANALYZE_URL_TOOL_NAME = 'analyzeUrl';
 
 /**
