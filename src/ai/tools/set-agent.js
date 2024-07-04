@@ -1,5 +1,3 @@
-import { createTool } from './tool.js';
-
 export const SET_AGENT_TOOL_NAME = 'setAgent';
 
 const createSetAgentTool = ( agents ) => {
@@ -12,7 +10,7 @@ const createSetAgentTool = ( agents ) => {
 			.join( '\n' ) ?? 'No registered agents';
 	const validAgentIds =
 		agents?.map( ( agent ) => agent.id ).join( ', ' ) ?? '';
-	return createTool( {
+	return {
 		name: SET_AGENT_TOOL_NAME,
 		description: `Use this to select the agent best suited to accomplish the user's goal.
 		**Available agents**:
@@ -27,7 +25,7 @@ const createSetAgentTool = ( agents ) => {
 			},
 			required: [ 'agentId' ],
 		},
-	} );
+	};
 };
 
 export default createSetAgentTool;
