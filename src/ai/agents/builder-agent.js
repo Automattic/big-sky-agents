@@ -22,6 +22,16 @@ class BuilderAgent extends Agent {
 		} );
 	}
 
+	onToolResult( toolName, value, callbacks ) {
+		switch ( toolName ) {
+			case ConfirmTool.name:
+				this.onConfirm( value, callbacks );
+				break;
+			default:
+				super.onToolResult( toolName, value, callbacks );
+		}
+	}
+
 	onConfirm( confirmed, { setGoal, informUser, askUser, userSay } ) {
 		if ( confirmed ) {
 			setGoal( 'Find out what the user wants to do next' );

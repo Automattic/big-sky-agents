@@ -33,6 +33,10 @@ export { AgentsProvider, useAgents } from './components/agents-provider';
 export { ChatProvider } from './components/chat-provider';
 export { ToolkitsProvider } from './components/toolkits-provider';
 export { default as ChatHistory } from './components/chat-history.jsx';
+export { default as AskUserComponent } from './components/ask-user.jsx';
+export { default as ConfirmComponent } from './components/confirm.jsx';
+export { default as MessageContent } from './components/message-content.jsx';
+export { default as UserMessageInput } from './components/user-message-input.jsx';
 
 /**
  * Hooks
@@ -44,6 +48,7 @@ export { default as useAgentExecutor } from './hooks/use-agent-executor.js';
 export { default as useChatSettings } from './hooks/use-chat-settings.js';
 export { default as useSiteToolkit } from './hooks/use-site-toolkit.js';
 export { default as useToolkits } from './components/toolkits-provider/use-toolkits.js';
+export { default as useNextToolCall } from './hooks/use-next-tool-call.js';
 
 /**
  * Core Classes
