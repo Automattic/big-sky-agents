@@ -11,7 +11,7 @@ import {
 	__experimentalItemGroup as ItemGroup,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import UserMessageInput from './user-message-input.jsx';
 import { ASK_USER_TOOL_NAME } from '../ai/tools/ask-user.js';
 import useNextToolCall from '../hooks/use-next-tool-call.js';
@@ -19,6 +19,7 @@ import useAgents from './agents-provider/use-agents.js';
 
 function UserChoices( { choices, multiChoice, onChange, onSubmit } ) {
 	const [ selectedChoices, setSelectedChoices ] = useState( [] );
+	const prevSelectedChoices = useRef( selectedChoices );
 
 	const addChoice = ( choice ) => {
 		if ( ! selectedChoices.includes( choice ) ) {
@@ -31,7 +32,10 @@ function UserChoices( { choices, multiChoice, onChange, onSubmit } ) {
 	};
 
 	useEffect( () => {
-		onChange( selectedChoices.join( ',' ) );
+		if ( prevSelectedChoices.current !== selectedChoices ) {
+			onChange( selectedChoices.join( ',' ) );
+			prevSelectedChoices.current = selectedChoices;
+		}
 	}, [ selectedChoices, onChange ] );
 
 	if ( multiChoice ) {
