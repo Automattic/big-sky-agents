@@ -35,13 +35,13 @@ function UserMessageInput( {
 	fileUploadEnabled,
 } ) {
 	const { RiveComponent } = useChatIcon();
-	const [ answer, setAnswer ] = useState( '' );
+	const [ answer, setAnswer ] = useState( null );
 	const [ files, setFiles ] = useState( [] );
 
 	const handleSubmit = useCallback(
 		( event ) => {
 			event.preventDefault();
-			onSubmit( answer, files );
+			onSubmit( answer ?? '(no answer)', files );
 			setAnswer( '' );
 			setFiles( [] );
 		},

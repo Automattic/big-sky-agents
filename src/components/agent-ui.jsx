@@ -113,15 +113,14 @@ function AgentUI() {
 					) }
 					<AskUserComponent />
 					<ConfirmComponent />
-					{ ! assistantMessage &&
-						pendingToolRequests.length === 0 && (
-							<AgentThinking
-								enabled={ enabled }
-								loading={ loading }
-								running={ running }
-								toolRunning={ toolRunning }
-							/>
-						) }
+					{ ! assistantMessage && ! pendingToolRequests?.length && (
+						<AgentThinking
+							enabled={ enabled }
+							loading={ loading }
+							running={ running }
+							toolRunning={ toolRunning }
+						/>
+					) }
 				</FlexBlock>
 			</Flex>
 		</div>
