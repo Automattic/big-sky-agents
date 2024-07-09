@@ -64,6 +64,7 @@ export default function useChat() {
 		updateThreadRuns,
 		updateThreadMessages,
 		addMessageToThread,
+		addAssistantMessage,
 		submitToolOutputs,
 		setService,
 		setModel,
@@ -170,6 +171,7 @@ export default function useChat() {
 		clearMessages,
 		userSay,
 		assistantMessage,
+		addAssistantMessage,
 
 		// tools
 		call,

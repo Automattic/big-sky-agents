@@ -39,6 +39,11 @@ export { default as MessageContent } from './components/message-content.jsx';
 export { default as UserMessageInput } from './components/user-message-input.jsx';
 
 /**
+ * Decorators
+ */
+export { default as withToolCall } from './components/with-tool-call.jsx';
+
+/**
  * Hooks
  */
 export { default as useChat } from './components/chat-provider/use-chat.js';

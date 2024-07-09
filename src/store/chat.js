@@ -1157,6 +1157,18 @@ const addMessage = ( message ) => {
 	};
 };
 
+const addAssistantMessage = ( content ) => {
+	return addMessage( {
+		role: 'assistant',
+		content: [
+			{
+				type: 'text',
+				text: content,
+			},
+		],
+	} );
+}
+
 const clearMessages = () => ( {
 	type: 'SET_MESSAGES',
 	messages: [],
@@ -1224,6 +1236,7 @@ export const actions = {
 	addMessageToThread,
 	updateThreadMessages,
 	addMessage,
+	addAssistantMessage,
 	reset,
 	clearMessages,
 	userSay: ( content, image_urls = [] ) =>

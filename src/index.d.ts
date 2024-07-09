@@ -40,6 +40,8 @@ export declare function ConfirmComponent(): any;
 export declare function MessageContent( props: {
 	content: MessageContentParts;
 } ): JSX.Element;
+export declare function withToolCall( toolCallName: string, Component: any ): any;
+
 /**
  * Chat
  */
