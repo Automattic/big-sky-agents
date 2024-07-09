@@ -35,6 +35,11 @@ export declare function useAgentToolkit( options: {
 	agents: AgentConfig[];
 } ): AgentToolkit;
 
+export declare function AskUserComponent(): any;
+export declare function ConfirmComponent(): any;
+export declare function MessageContent( props: {
+	content: MessageContentParts;
+} ): JSX.Element;
 /**
  * Chat
  */
@@ -56,7 +61,7 @@ enum MessageRole {
 
 interface BaseMessage {
 	role: MessageRole;
-	content: string | MessageContentPart[];
+	content: MessageContentParts;
 }
 
 interface AssistantMessage extends BaseMessage {
@@ -86,6 +91,7 @@ interface ImageMessageContentPart {
 }
 
 type MessageContentPart = TextMessageContentPart | ImageMessageContentPart;
+type MessageContentParts = string | MessageContentPart[];
 
 interface ToolCall {
 	id: string;
@@ -122,7 +128,7 @@ interface Chat {
 	messages: Message[];
 	clearMessages: () => void;
 	userSay: ( content: string, image_urls?: string[] ) => void;
-	assistantMessage?: string | MessageContentPart[];
+	assistantMessage?: MessageContentParts;
 	call: ( name: string, args: any, id?: string ) => void;
 	setToolResult: ( toolCallId: string, result: any ) => void;
 	pendingToolCalls: ToolCall[];
@@ -217,11 +223,11 @@ interface AgentToolkit extends Toolkit {
 	context: {
 		agents: any[]; // TODO: define this agent config
 		agent: {
-			assistantId: string,
-			id: string,
-			name: string,
-			goal: string,
-			thought: string,
+			assistantId: string;
+			id: string;
+			name: string;
+			goal: string;
+			thought: string;
 		};
 	};
 	callbacks: ToolkitCallbacks;
