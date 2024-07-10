@@ -49,20 +49,16 @@ const useSiteToolkit = ( { pageId } ) => {
 	} = useDispatch( agentStore );
 
 	// these are fed to the templating engine on each render of the system/after-call prompt
-	const context = useSelect(
+	const siteData = useSelect(
 		( select ) => ( {
-			site: {
-				title: select( agentStore ).getSiteTitle(),
-				description: select( agentStore ).getSiteDescription(),
-				topic: select( agentStore ).getSiteTopic(),
-				type: select( agentStore ).getSiteType(),
-				location: select( agentStore ).getSiteLocation(),
-			},
-			design: {
-				textColor: select( agentStore ).getTextColor(),
-				backgroundColor: select( agentStore ).getBackgroundColor(),
-				accentColor: select( agentStore ).getAccentColor(),
-			},
+			title: select( agentStore ).getSiteTitle(),
+			description: select( agentStore ).getSiteDescription(),
+			topic: select( agentStore ).getSiteTopic(),
+			type: select( agentStore ).getSiteType(),
+			location: select( agentStore ).getSiteLocation(),
+			textColor: select( agentStore ).getTextColor(),
+			backgroundColor: select( agentStore ).getBackgroundColor(),
+			accentColor: select( agentStore ).getAccentColor(),
 			pages: select( agentStore ).getPages(),
 			pageId,
 			page: select( agentStore ).getPage( pageId ),
@@ -70,6 +66,29 @@ const useSiteToolkit = ( { pageId } ) => {
 			// pageSections: select( agentStore ).getPageSections(),
 		} ),
 		[ pageId ]
+	);
+
+	const context = useMemo(
+		() => ( {
+			site: {
+				title: siteData.title,
+				description: siteData.description,
+				topic: siteData.topic,
+				type: siteData.type,
+				location: siteData.location,
+			},
+			design: {
+				textColor: siteData.textColor,
+				backgroundColor: siteData.backgroundColor,
+				accentColor: siteData.accentColor,
+			},
+			pages: siteData.pages,
+			pageId,
+			page: siteData.page,
+			// TODO
+			// pageSections: select( agentStore ).getPageSections(),
+		} ),
+		[ siteData, pageId ]
 	);
 
 	const callbacks = useMemo( () => {

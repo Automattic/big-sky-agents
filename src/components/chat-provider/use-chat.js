@@ -103,40 +103,43 @@ export default function useChat() {
 		isAwaitingUserInput,
 		isThreadRunAwaitingToolOutputs,
 		feature,
-	} = useSelect( ( select ) => {
-		const store = select( agentStore );
-		return {
-			assistantEnabled: store.isAssistantEnabled(),
-			service: store.getService(),
-			apiKey: store.getApiKey(),
-			error: store.getError(),
-			model: store.getModel(),
-			loading: store.isLoading(),
-			running: store.isRunning(),
-			enabled: store.isEnabled(),
-			messages: store.getMessages(),
-			assistantMessage: store.getAssistantMessage(),
-			pendingToolCalls: store.getPendingToolCalls(),
-			additionalMessages: store.getAdditionalMessages(),
-			requiredToolOutputs: store.getRequiredToolOutputs(),
-			toolOutputs: store.getToolOutputs(),
-			threadId: store.getThreadId(),
-			assistantId: store.getAssistantId(),
-			threadRun: store.getActiveThreadRun(),
-			threadRunsUpdated: store.getThreadRunsUpdated(),
-			threadMessagesUpdated: store.getThreadMessagesUpdated(),
-			isAvailable: store.isAvailable(),
-			isChatAvailable: store.isChatAvailable(),
-			isAssistantAvailable: store.isAssistantAvailable(),
-			isThreadRunInProgress: store.isThreadRunInProgress(),
-			isThreadDataLoaded: store.isThreadDataLoaded(),
-			isThreadRunComplete: store.isThreadRunComplete(),
-			isAwaitingUserInput: store.isAwaitingUserInput(),
-			isThreadRunAwaitingToolOutputs:
-				store.isThreadRunAwaitingToolOutputs(),
-			feature: store.getFeature(),
-		};
-	} );
+	} = useSelect(
+		( select ) => {
+			const store = select( agentStore );
+			return {
+				assistantEnabled: store.isAssistantEnabled(),
+				service: store.getService(),
+				apiKey: store.getApiKey(),
+				error: store.getError(),
+				model: store.getModel(),
+				loading: store.isLoading(),
+				running: store.isRunning(),
+				enabled: store.isEnabled(),
+				messages: store.getMessages(),
+				assistantMessage: store.getAssistantMessage(),
+				pendingToolCalls: store.getPendingToolCalls(),
+				additionalMessages: store.getAdditionalMessages(),
+				requiredToolOutputs: store.getRequiredToolOutputs(),
+				toolOutputs: store.getToolOutputs(),
+				threadId: store.getThreadId(),
+				assistantId: store.getAssistantId(),
+				threadRun: store.getActiveThreadRun(),
+				threadRunsUpdated: store.getThreadRunsUpdated(),
+				threadMessagesUpdated: store.getThreadMessagesUpdated(),
+				isAvailable: store.isAvailable(),
+				isChatAvailable: store.isChatAvailable(),
+				isAssistantAvailable: store.isAssistantAvailable(),
+				isThreadRunInProgress: store.isThreadRunInProgress(),
+				isThreadDataLoaded: store.isThreadDataLoaded(),
+				isThreadRunComplete: store.isThreadRunComplete(),
+				isAwaitingUserInput: store.isAwaitingUserInput(),
+				isThreadRunAwaitingToolOutputs:
+					store.isThreadRunAwaitingToolOutputs(),
+				feature: store.getFeature(),
+			};
+		},
+		[ agentStore ]
+	);
 
 	return {
 		// running state

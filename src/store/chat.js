@@ -1,4 +1,12 @@
+/**
+ * External dependencies
+ */
+import createSelector from 'rememo';
 import { createReduxStore } from '@wordpress/data';
+
+/**
+ * Internal dependencies
+ */
 import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../ai/chat-model.js';
 import AssistantModel from '../ai/assistant-model.js';
@@ -984,13 +992,16 @@ const getToolCalls = ( state, function_name = null ) => {
  * @param {*} state The state
  * @return {Array} An array of tool outputs
  */
-const getToolOutputs = ( state ) =>
-	state.messages
-		.filter( ( message ) => message.role === 'tool' )
-		.map( ( message ) => ( {
-			tool_call_id: message.tool_call_id,
-			output: message.content,
-		} ) );
+const getToolOutputs = createSelector(
+	( state ) =>
+		state.messages
+			.filter( ( message ) => message.role === 'tool' )
+			.map( ( message ) => ( {
+				tool_call_id: message.tool_call_id,
+				output: message.content,
+			} ) ),
+	( state ) => [ state.messages ]
+);
 
 const getActiveThreadRun = ( state ) => {
 	return state.threadRuns.find( ( threadRun ) =>
@@ -1080,41 +1091,53 @@ export const selectors = {
 			: null;
 	},
 	getToolOutputs,
-	getPendingToolCalls: ( state, function_name = null ) => {
-		const toolCalls = getToolCalls( state, function_name );
 
-		const toolOutputs = getToolOutputs( state );
+	getPendingToolCalls: createSelector(
+		( state, function_name = null ) => {
+			const toolCalls = getToolCalls( state, function_name );
 
-		const result = toolCalls.filter(
-			( toolCall ) =>
-				! toolOutputs.some(
-					( toolOutput ) => toolOutput.tool_call_id === toolCall.id
-				)
-		);
+			const toolOutputs = getToolOutputs( state );
 
-		return result;
-	},
-	getAdditionalMessages: ( state ) => {
-		// user/assistant messages without a threadId are considered not to have been synced
-		return state.messages.filter(
-			( message ) =>
-				[ 'assistant', 'user' ].includes( message.role ) &&
-				message.content &&
-				! message.thread_id
-		);
-	},
-	getRequiredToolOutputs: ( state ) => {
-		const currentThreadRun = state.threadRuns[ 0 ];
-		if (
-			currentThreadRun &&
-			currentThreadRun.status === 'requires_action' &&
-			currentThreadRun.required_action.type === 'submit_tool_outputs'
-		) {
-			return currentThreadRun.required_action.submit_tool_outputs
-				.tool_calls;
-		}
-		return [];
-	},
+			const result = toolCalls.filter(
+				( toolCall ) =>
+					! toolOutputs.some(
+						( toolOutput ) =>
+							toolOutput.tool_call_id === toolCall.id
+					)
+			);
+
+			return result;
+		},
+		( state ) => [ state.messages ]
+	),
+
+	getAdditionalMessages: createSelector(
+		( state ) => {
+			// user/assistant messages without a threadId are considered not to have been synced
+			return state.messages.filter(
+				( message ) =>
+					[ 'assistant', 'user' ].includes( message.role ) &&
+					message.content &&
+					! message.thread_id
+			);
+		},
+		( state ) => [ state.messages ]
+	),
+	getRequiredToolOutputs: createSelector(
+		( state ) => {
+			const currentThreadRun = state.threadRuns[ 0 ];
+			if (
+				currentThreadRun &&
+				currentThreadRun.status === 'requires_action' &&
+				currentThreadRun.required_action.type === 'submit_tool_outputs'
+			) {
+				return currentThreadRun.required_action.submit_tool_outputs
+					.tool_calls;
+			}
+			return [];
+		},
+		( state ) => [ state.threadRuns ]
+	),
 	getThreadId: ( state ) => state.threadId,
 	getAssistantId: ( state ) => state.assistantId ?? state.defaultAssistantId,
 	updateThreadRuns: ( state ) => state.threadRun,
