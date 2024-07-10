@@ -1,3 +1,8 @@
+/**
+ * Internal dependencies
+ */
+import log from '../../utils/log-debug.js';
+
 import AskUserTool from '../tools/ask-user.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 import InformUserTool from '../tools/inform-user.js';
@@ -31,7 +36,7 @@ class Agent {
 
 	onToolResult( toolName, value, toolResponse ) {
 		// do nothing by default
-		console.log( 'onToolResult', {
+		log.info( 'onToolResult', {
 			toolName,
 			value,
 			toolResponse,
