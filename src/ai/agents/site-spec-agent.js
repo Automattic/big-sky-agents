@@ -118,7 +118,11 @@ class SiteSpecAgent extends BuilderAgent {
 		} );
 	}
 
-	onConfirm( confirmed, { setGoal, informUser, askUser, userSay }, { site } ) {
+	onConfirm(
+		confirmed,
+		{ setGoal, informUser, askUser, userSay },
+		{ site }
+	) {
 		if ( confirmed ) {
 			setGoal( { goal: 'Find out what the user wants to do next' } );
 			informUser( { message: 'Got it!' } );
