@@ -1,4 +1,4 @@
-import { createReduxStore } from '@wordpress/data';
+import { createReduxStore, createSelector } from '@wordpress/data';
 import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../ai/chat-model.js';
 import AssistantModel from '../ai/assistant-model.js';
@@ -984,19 +984,24 @@ const getToolCalls = ( state, function_name = null ) => {
  * @param {*} state The state
  * @return {Array} An array of tool outputs
  */
-const getToolOutputs = ( state ) =>
-	state.messages
-		.filter( ( message ) => message.role === 'tool' )
-		.map( ( message ) => ( {
-			tool_call_id: message.tool_call_id,
-			output: message.content,
-		} ) );
+const getToolOutputs = createSelector(
+	( state ) =>
+		state.messages
+			.filter( ( message ) => message.role === 'tool' )
+			.map( ( message ) => ( {
+				tool_call_id: message.tool_call_id,
+				output: message.content,
+			} ) ),
+	( state ) => [ state.messages ]
+);
 
-const getActiveThreadRun = ( state ) => {
-	return state.threadRuns.find( ( threadRun ) =>
-		THREAD_RUN_ACTIVE_STATUSES.includes( threadRun.status )
-	);
-};
+const getActiveThreadRun = createSelector(
+	( state ) =>
+		state.threadRuns.find( ( threadRun ) =>
+			THREAD_RUN_ACTIVE_STATUSES.includes( threadRun.status )
+		),
+	( state ) => [ state.threadRuns ]
+);
 
 export const selectors = {
 	isEnabled: ( state ) => {
@@ -1068,6 +1073,7 @@ export const selectors = {
 	},
 	getService: ( state ) => state.service,
 	getModel: ( state ) => state.model,
+	getTemperature: ( state ) => state.temperature,
 	getFeature: ( state ) => state.feature,
 	getApiKey: ( state ) => state.apiKey,
 	getError: ( state ) => state.error,
@@ -1103,42 +1109,50 @@ export const selectors = {
 				! message.thread_id
 		);
 	},
-	getRequiredToolOutputs: ( state ) => {
-		const currentThreadRun = state.threadRuns[ 0 ];
-		if (
-			currentThreadRun &&
-			currentThreadRun.status === 'requires_action' &&
-			currentThreadRun.required_action.type === 'submit_tool_outputs'
-		) {
-			return currentThreadRun.required_action.submit_tool_outputs
-				.tool_calls;
-		}
-		return [];
-	},
+	getRequiredToolOutputs: createSelector(
+		( state ) => {
+			const currentThreadRun = state.threadRuns[ 0 ];
+			if (
+				currentThreadRun &&
+				currentThreadRun.status === 'requires_action' &&
+				currentThreadRun.required_action.type === 'submit_tool_outputs'
+			) {
+				return currentThreadRun.required_action.submit_tool_outputs
+					.tool_calls;
+			}
+			return [];
+		},
+		( state ) => [ state.threadRuns ]
+	),
 	getThreadId: ( state ) => state.threadId,
 	getAssistantId: ( state ) => state.assistantId ?? state.defaultAssistantId,
 	updateThreadRuns: ( state ) => state.threadRun,
 	getThreadRunsUpdated: ( state ) => state.threadRunsUpdated,
 	getThreadMessagesUpdated: ( state ) => state.threadMessagesUpdated,
-	getActiveThreadRun,
-	getActiveThreadRunStatus: ( state ) => {
-		const activeThreadRun = getActiveThreadRun( state );
-		return activeThreadRun?.status;
-	},
-	getCompletedThreadRuns: ( state ) => {
-		return state.threadRuns.find( ( threadRun ) =>
-			THREAD_RUN_COMPLETED_STATUSES.includes( threadRun.status )
-		);
-	},
+	getActiveThreadRun: createSelector(
+		( state ) =>
+			state.threadRuns.find( ( threadRun ) =>
+				THREAD_RUN_ACTIVE_STATUSES.includes( threadRun.status )
+			),
+		( state ) => [ state.threadRuns ]
+	),
+	getActiveThreadRunStatus: createSelector(
+		( state ) => getActiveThreadRun( state )?.status,
+		( state ) => [ state.threadRuns ]
+	),
+	getCompletedThreadRuns: createSelector(
+		( state ) =>
+			state.threadRuns.find( ( threadRun ) =>
+				THREAD_RUN_COMPLETED_STATUSES.includes( threadRun.status )
+			),
+		( state ) => [ state.threadRuns ]
+	),
 	hasNewMessagesToProcess: ( state ) => {
-		// compare threadRun.created_at to syncedThreadMessagesAt / 1000
 		const activeThreadRun = getActiveThreadRun( state );
-		if ( ! activeThreadRun ) {
-			return false;
-		}
-		const activeThreadRunCreatedAt = activeThreadRun.created_at;
-		const syncedThreadMessagesAt = state.syncedThreadMessagesAt;
-		return activeThreadRunCreatedAt > syncedThreadMessagesAt / 1000;
+		return (
+			activeThreadRun &&
+			activeThreadRun.created_at > state.syncedThreadMessagesAt / 1000
+		);
 	},
 };
 
@@ -1167,7 +1181,7 @@ const addAssistantMessage = ( content ) => {
 			},
 		],
 	} );
-}
+};
 
 const clearMessages = () => ( {
 	type: 'SET_MESSAGES',

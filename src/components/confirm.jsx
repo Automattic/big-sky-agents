@@ -3,11 +3,13 @@ import MessageContent from './message-content.jsx';
 import useNextToolCall from '../hooks/use-next-tool-call.js';
 import { CONFIRM_TOOL_NAME } from '../ai/tools/confirm.js';
 import useAgents from './agents-provider/use-agents.js';
+import useToolkits from './toolkits-provider/use-toolkits.js';
 import { useCallback } from 'react';
 
 function Confirm( { onConfirm } ) {
 	const { args, respond } = useNextToolCall( CONFIRM_TOOL_NAME );
 	const { activeAgent } = useAgents();
+	const { invoke } = useToolkits();
 
 	const onSubmit = useCallback(
 		( value ) => {
@@ -18,10 +20,10 @@ function Confirm( { onConfirm } ) {
 				onConfirm( value );
 			}
 			if ( activeAgent.onConfirm ) {
-				activeAgent.onConfirm( value );
+				activeAgent.onConfirm( value, invoke );
 			}
 		},
-		[ activeAgent, onConfirm, respond ]
+		[ activeAgent, onConfirm, respond, invoke ]
 	);
 
 	if ( ! args ) {

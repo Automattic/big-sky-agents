@@ -94,15 +94,15 @@ class SiteSpecAgent extends BuilderAgent {
 
 	onConfirm( confirmed, { setGoal, informUser, askUser, userSay } ) {
 		if ( confirmed ) {
-			setGoal( 'Find out what the user wants to do next' );
-			informUser( 'Got it!' );
+			setGoal( { goal: 'Find out what the user wants to do next' } );
+			informUser( { message: 'Got it!' } );
 			askUser( {
 				question: 'What would you like to do next?',
 				choices: defaultChoices,
 			} );
 		} else {
 			userSay( 'I would like to make some changes' );
-			informUser( 'Looks like you requested some changes' );
+			informUser( { message: 'Looks like you requested some changes' } );
 			askUser( {
 				question: 'What would you like to change?',
 				choices: [

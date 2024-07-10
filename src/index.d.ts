@@ -40,7 +40,10 @@ export declare function ConfirmComponent(): any;
 export declare function MessageContent( props: {
 	content: MessageContentParts;
 } ): JSX.Element;
-export declare function withToolCall( toolCallName: string, Component: any ): any;
+export declare function withToolCall(
+	toolCallName: string,
+	Component: any
+): any;
 
 /**
  * Chat
@@ -246,23 +249,13 @@ type AgentUIProps = {
 };
 
 export declare function AgentUI( props: AgentUIProps ): JSX.Element;
-export declare function AgentControls( props: AgentUIProps ): JSX.Element;
 
 /**
  * Chat UI
  */
-
-type ChatModelControlsProps = {
-	model: string;
-	service: string;
-	temperature: number;
-	apiKey: string;
-	onServiceChanged: ( service: string ) => void;
-	onModelChanged: ( model: string ) => void;
-	onTemperatureChanged: ( temperature: number ) => void;
+export declare function AgentControls( props: AgentUIProps ): JSX.Element;
+export declare function ChatModelControls( props: {
 	onApiKeyChanged: ( apiKey: string ) => void;
-};
+} ): JSX.Element;
 
-export declare function ChatModelControls(
-	props: ChatModelControlsProps
-): JSX.Element;
+export declare function ToolCallControls(): JSX.Element;

@@ -27,6 +27,7 @@ export { slice as toolkitStoreSlice } from './store/toolkits.js';
 export { default as AgentUI } from './components/agent-ui.jsx';
 export { default as AgentControls } from './components/agent-controls.jsx';
 export { default as ChatModelControls } from './components/chat-model-controls.jsx';
+export { default as ToolCallControls } from './components/tool-call-controls.jsx';
 export { default as PopUpControls } from './components/popup-controls.jsx';
 export { default as AgentsDemoPage } from './components/agents-demo-page.jsx';
 export { AgentsProvider, useAgents } from './components/agents-provider';

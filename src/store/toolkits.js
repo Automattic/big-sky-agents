@@ -25,11 +25,11 @@ export const reducer = ( state = initialState, action ) => {
 				// throw new Error(
 				// 	`a toolkit should only be registered once: ${ toolkit.name }`
 				// );
-				return state;
+				// return state;
 				// // If tool with the same name already exists, replace it with the new tool
-				// const updatedAgents = [ ...state.toolkits ];
-				// updatedAgents[ existingToolkitIndex ] = toolkit;
-				// return { ...state, toolkits: updatedAgents };
+				const updatedToolkits = [ ...state.toolkits ];
+				updatedToolkits[ existingToolkitIndex ] = toolkit;
+				return { ...state, toolkits: updatedToolkits };
 			}
 			// If tool with the same ID doesn't exist, add the new tool to the array
 			return { ...state, toolkits: [ ...state.toolkits, toolkit ] };

@@ -1,4 +1,4 @@
-import { createReduxStore } from '@wordpress/data';
+import { createReduxStore, createSelector } from '@wordpress/data';
 
 const DEFAULT_GOAL = "Find out the user's goal";
 
@@ -71,28 +71,22 @@ export const reducer = ( state = initialState, action ) => {
 };
 
 export const selectors = {
-	getActiveAgentId: ( state ) => {
-		return state.activeAgentId;
-	},
-	getActiveAgent: ( state ) => {
-		return state.agents.find(
-			( agent ) => agent.id === state.activeAgentId
-		);
-	},
-	getActiveAgentName: ( state ) => {
-		const activeAgent = selectors.getActiveAgent( state );
-		return activeAgent?.name;
-	},
-	getAgents: ( state ) => {
-		return state.agents;
-	},
-	getAgentGoal: ( state ) => {
-		return state.agentGoal;
-	},
-	getAgentThought: ( state ) => {
-		return state.agentThought;
-	},
+	getActiveAgentId: ( state ) => state.activeAgentId,
+	getAgents: ( state ) => state.agents,
+	getAgentGoal: ( state ) => state.agentGoal,
+	getAgentThought: ( state ) => state.agentThought,
 	isAgentStarted: ( state ) => state.started,
+
+	getActiveAgent: createSelector(
+		( state ) =>
+			state.agents.find( ( agent ) => agent.id === state.activeAgentId ),
+		( state ) => [ state.agents, state.activeAgentId ]
+	),
+
+	getActiveAgentName: createSelector(
+		( state ) => selectors.getActiveAgent( state )?.name,
+		( state ) => [ state.agents, state.activeAgentId ]
+	),
 };
 
 export const slice = {

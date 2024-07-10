@@ -17,7 +17,6 @@ const useAgentExecutor = () => {
 		messages,
 		isAssistantAvailable,
 		isChatAvailable,
-		call,
 		loading,
 		running,
 		isAvailable,
@@ -51,20 +50,19 @@ const useAgentExecutor = () => {
 		setAssistantId,
 	} = useChat();
 
-	const { tools: allTools, hasToolkits, context, callbacks } = useToolkits();
+	const {
+		tools: allTools,
+		invoke,
+		hasToolkits,
+		context,
+		callbacks,
+	} = useToolkits();
 
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =
 		useState( '' );
-
-	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
-	const invoke = useMemo( () => {
-		return allTools.reduce( ( acc, tool ) => {
-			acc[ tool.name ] = ( args, id ) => call( tool.name, args, id );
-			return acc;
-		}, {} );
-	}, [ call, allTools ] );
+	const [ prevToolOutputsLength, setPrevToolOutputsLength ] = useState( 0 );
 
 	// update thread runs if they haven't been updated
 	useEffect( () => {
@@ -152,15 +150,6 @@ const useAgentExecutor = () => {
 			pendingToolCalls.length > 0
 		) {
 			pendingToolCalls.forEach( ( tool_call ) => {
-				if ( tool_call.inProgress ) {
-					return;
-				}
-
-				if ( tool_call.error ) {
-					throw new Error( tool_call.error );
-				}
-
-				// parse arguments if they're a string
 				const args =
 					typeof tool_call.function.arguments === 'string'
 						? JSON.parse( tool_call.function.arguments )
@@ -172,9 +161,8 @@ const useAgentExecutor = () => {
 					 * Looks like this:
 					 * multi_tool_use.parallel({"tool_uses":[{"recipient_name":"WPSiteSpec","parameters":{"title":"Lorem Ipsum","description":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.","type":"Blog","topic":"Lorem Ipsum","location":"Lorem Ipsum"}}]})
 					 *
-					 * I assume the result is supposed to be an array...
+					 * I assume the result is supposed to be an array... but I could be wrong.
 					 */
-					// create an array of promises for the tool uses
 					const promises = args.tool_uses.map( ( tool_use ) => {
 						const callback = callbacks[ tool_use.recipient_name ];
 
@@ -188,7 +176,6 @@ const useAgentExecutor = () => {
 						return `Unknown tool ${ tool_use.recipient_name }`;
 					} );
 
-					// set to tool result to the promise
 					setToolResult( tool_call.id, Promise.all( promises ) );
 				}
 
@@ -426,6 +413,36 @@ const useAgentExecutor = () => {
 		runChatCompletion,
 		running,
 		tools,
+	] );
+
+	useEffect( () => {
+		if ( toolOutputs.length > prevToolOutputsLength && activeAgent ) {
+			const newToolOutputs = toolOutputs.slice( prevToolOutputsLength );
+
+			newToolOutputs.forEach( ( toolOutput ) => {
+				const toolCall = requiredToolOutputs.find(
+					( requiredToolOutput ) =>
+						requiredToolOutput.id === toolOutput.tool_call_id
+				);
+
+				if ( toolCall ) {
+					const toolName = toolCall.toolName;
+					const value = toolOutput.output;
+
+					if ( typeof activeAgent.onToolResult === 'function' ) {
+						activeAgent.onToolResult( toolName, value, callbacks );
+					}
+				}
+			} );
+
+			setPrevToolOutputsLength( toolOutputs.length );
+		}
+	}, [
+		toolOutputs,
+		requiredToolOutputs,
+		activeAgent,
+		callbacks,
+		prevToolOutputsLength,
 	] );
 };
 
