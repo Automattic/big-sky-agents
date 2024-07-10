@@ -88,8 +88,8 @@ const DemoWithSingleAgent = ( { apiKey } ) => {
 	return (
 		<ToolkitsProvider toolkits={ [ GetWeatherToolkit ] }>
 			<AgentsProvider
-				goal="Help the user find out about the weather"
-				thought="I am going to help the user find out about the weather"
+				agentGoal="Help the user find out about the weather"
+				agentThought="I am going to help the user find out about the weather"
 				activeAgentId="weatherbot"
 				agents={ [ WeatherAgent ] }
 			>

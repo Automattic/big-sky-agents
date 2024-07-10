@@ -14,8 +14,8 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import UserMessageInput from './user-message-input.jsx';
 import { ASK_USER_TOOL_NAME } from '../ai/tools/ask-user.js';
-import useNextToolCall from '../hooks/use-next-tool-call.js';
 import useAgents from './agents-provider/use-agents.js';
+import withToolCall from './with-tool-call.jsx';
 
 function UserChoices( { choices, multiChoice, onChange, onSubmit } ) {
 	const [ selectedChoices, setSelectedChoices ] = useState( [] );
@@ -90,10 +90,9 @@ function UserChoices( { choices, multiChoice, onChange, onSubmit } ) {
 	);
 }
 
-function AskUser() {
+function AskUser( { args, respond } ) {
 	const [ currentAnswer, setCurrentAnswer ] = useState( '' );
 	const { setAgentThought: informUser } = useAgents();
-	const { args, respond } = useNextToolCall( ASK_USER_TOOL_NAME );
 
 	const onSubmit = useCallback(
 		( answer ) => {
@@ -159,4 +158,4 @@ function AskUser() {
 	);
 }
 
-export default AskUser;
+export default withToolCall( ASK_USER_TOOL_NAME, AskUser );

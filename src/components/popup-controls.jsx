@@ -1,5 +1,6 @@
 import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
+import ToolCallControls from './tool-call-controls.jsx';
 import { useEffect, useState } from 'react';
 import './popup-controls.scss';
 
@@ -33,6 +34,7 @@ const PopUpControls = ( { setApiKey } ) => {
 							}
 						} }
 					/>
+					<ToolCallControls />
 				</>
 			) : (
 				<button onClick={ () => setControlsVisible( true ) }>

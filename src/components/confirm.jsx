@@ -2,12 +2,10 @@ import { Button, Card, CardBody, CardFooter } from '@wordpress/components';
 import MessageContent from './message-content.jsx';
 import useNextToolCall from '../hooks/use-next-tool-call.js';
 import { CONFIRM_TOOL_NAME } from '../ai/tools/confirm.js';
-import useAgents from './agents-provider/use-agents.js';
 import { useCallback } from 'react';
 
 function Confirm( { onConfirm } ) {
 	const { args, respond } = useNextToolCall( CONFIRM_TOOL_NAME );
-	const { activeAgent } = useAgents();
 
 	const onSubmit = useCallback(
 		( value ) => {
@@ -17,11 +15,8 @@ function Confirm( { onConfirm } ) {
 			if ( onConfirm ) {
 				onConfirm( value );
 			}
-			if ( activeAgent.onConfirm ) {
-				activeAgent.onConfirm( value );
-			}
 		},
-		[ activeAgent, onConfirm, respond ]
+		[ onConfirm, respond ]
 	);
 
 	if ( ! args ) {

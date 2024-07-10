@@ -22,25 +22,26 @@ class BuilderAgent extends Agent {
 		} );
 	}
 
-	onToolResult( toolName, value, callbacks ) {
+	// by overriding this method you can handle almost any kind of lifecycle callback
+	onToolResult( toolName, value, callbacks, context ) {
 		switch ( toolName ) {
 			case ConfirmTool.name:
-				this.onConfirm( value, callbacks );
+				this.onConfirm( value, callbacks, context );
 				break;
 			default:
-				super.onToolResult( toolName, value, callbacks );
+				super.onToolResult( toolName, value, callbacks, context );
 		}
 	}
 
 	onConfirm( confirmed, { setGoal, informUser, askUser, userSay } ) {
 		if ( confirmed ) {
-			setGoal( 'Find out what the user wants to do next' );
-			informUser( 'Got it!' );
+			setGoal( { goal: 'Find out what the user wants to do next' } );
+			informUser( { message: 'Got it!' } );
 			askUser( {
 				question: 'What would you like to do next?',
 			} );
 		} else {
-			informUser( 'Looks like you requested some changes' );
+			informUser( { message: 'Looks like you requested some changes' } );
 			userSay( 'I would like to make some changes' );
 			askUser( {
 				question: 'What would you like to change?',

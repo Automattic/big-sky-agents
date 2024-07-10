@@ -1,4 +1,4 @@
-import { createReduxStore } from '@wordpress/data';
+import { createReduxStore, createSelector } from '@wordpress/data';
 import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../ai/chat-model.js';
 import AssistantModel from '../ai/assistant-model.js';
@@ -54,6 +54,7 @@ const initialState = {
 
 	// Chat-API-related
 	messages: [],
+	tool_calls: [],
 	isToolRunning: false,
 	isFetchingChatCompletion: false,
 
@@ -505,12 +506,16 @@ const submitToolOutputs =
 const setToolResult =
 	( toolCallId, promise ) =>
 	async ( { dispatch } ) => {
-		dispatch( { type: 'TOOL_BEGIN_REQUEST' } );
+		dispatch( {
+			type: 'TOOL_BEGIN_REQUEST',
+			ts: Date.now(),
+			tool_call_id: toolCallId,
+		} );
 		try {
 			const result = await promise;
 			dispatch( {
 				type: 'TOOL_END_REQUEST',
-				id: uuidv4(),
+				id: `tc:${ toolCallId }`,
 				ts: Date.now(),
 				tool_call_id: toolCallId,
 				result,
@@ -689,6 +694,13 @@ export const reducer = ( state = initialState, action ) => {
 		case 'TOOL_BEGIN_REQUEST':
 			return {
 				...state,
+				tool_calls: [
+					...state.tool_calls,
+					{
+						id: action.tool_call_id,
+						created_at: action.ts,
+					},
+				],
 				isToolRunning: true,
 			};
 		case 'TOOL_END_REQUEST':
@@ -702,6 +714,9 @@ export const reducer = ( state = initialState, action ) => {
 				} ),
 				error: null,
 				isToolRunning: false,
+				tool_calls: state.tool_calls.filter(
+					( tc ) => tc.id !== action.tool_call_id
+				),
 			};
 		case 'TOOL_ERROR':
 			return {
@@ -713,6 +728,15 @@ export const reducer = ( state = initialState, action ) => {
 				} ),
 				error: action.error,
 				isToolRunning: false,
+				tool_calls: state.tool_calls.map( ( tc ) => {
+					if ( tc.id === action.tool_call_id ) {
+						return {
+							...tc,
+							error: action.error,
+						};
+					}
+					return tc;
+				} ),
 			};
 
 		// Add and Clear Messages
@@ -984,19 +1008,24 @@ const getToolCalls = ( state, function_name = null ) => {
  * @param {*} state The state
  * @return {Array} An array of tool outputs
  */
-const getToolOutputs = ( state ) =>
-	state.messages
-		.filter( ( message ) => message.role === 'tool' )
-		.map( ( message ) => ( {
-			tool_call_id: message.tool_call_id,
-			output: message.content,
-		} ) );
+const getToolOutputs = createSelector(
+	( state ) =>
+		state.messages
+			.filter( ( message ) => message.role === 'tool' )
+			.map( ( message ) => ( {
+				tool_call_id: message.tool_call_id,
+				output: message.content,
+			} ) ),
+	( state ) => [ state.messages ]
+);
 
-const getActiveThreadRun = ( state ) => {
-	return state.threadRuns.find( ( threadRun ) =>
-		THREAD_RUN_ACTIVE_STATUSES.includes( threadRun.status )
-	);
-};
+const getActiveThreadRun = createSelector(
+	( state ) =>
+		state.threadRuns.find( ( threadRun ) =>
+			THREAD_RUN_ACTIVE_STATUSES.includes( threadRun.status )
+		),
+	( state ) => [ state.threadRuns ]
+);
 
 export const selectors = {
 	isEnabled: ( state ) => {
@@ -1053,6 +1082,7 @@ export const selectors = {
 	},
 	isAwaitingUserInput: ( state ) =>
 		selectors.getPendingToolCalls( state ).length > 0 ||
+		selectors.getRunningToolCallIds( state ).length > 0 ||
 		selectors.getAssistantMessage( state ),
 	isThreadRunAwaitingToolOutputs: ( state ) => {
 		const threadRun = getActiveThreadRun( state );
@@ -1068,6 +1098,7 @@ export const selectors = {
 	},
 	getService: ( state ) => state.service,
 	getModel: ( state ) => state.model,
+	getTemperature: ( state ) => state.temperature,
 	getFeature: ( state ) => state.feature,
 	getApiKey: ( state ) => state.apiKey,
 	getError: ( state ) => state.error,
@@ -1082,17 +1113,21 @@ export const selectors = {
 	getToolOutputs,
 	getPendingToolCalls: ( state, function_name = null ) => {
 		const toolCalls = getToolCalls( state, function_name );
-
+		const runningToolCalls = selectors.getRunningToolCallIds( state );
 		const toolOutputs = getToolOutputs( state );
 
 		const result = toolCalls.filter(
 			( toolCall ) =>
+				! runningToolCalls.includes( toolCall.id ) &&
 				! toolOutputs.some(
 					( toolOutput ) => toolOutput.tool_call_id === toolCall.id
 				)
 		);
 
 		return result;
+	},
+	getRunningToolCallIds: ( state ) => {
+		return state.tool_calls.map( ( tc ) => tc.id );
 	},
 	getAdditionalMessages: ( state ) => {
 		// user/assistant messages without a threadId are considered not to have been synced
@@ -1103,42 +1138,50 @@ export const selectors = {
 				! message.thread_id
 		);
 	},
-	getRequiredToolOutputs: ( state ) => {
-		const currentThreadRun = state.threadRuns[ 0 ];
-		if (
-			currentThreadRun &&
-			currentThreadRun.status === 'requires_action' &&
-			currentThreadRun.required_action.type === 'submit_tool_outputs'
-		) {
-			return currentThreadRun.required_action.submit_tool_outputs
-				.tool_calls;
-		}
-		return [];
-	},
+	getRequiredToolOutputs: createSelector(
+		( state ) => {
+			const currentThreadRun = state.threadRuns[ 0 ];
+			if (
+				currentThreadRun &&
+				currentThreadRun.status === 'requires_action' &&
+				currentThreadRun.required_action.type === 'submit_tool_outputs'
+			) {
+				return currentThreadRun.required_action.submit_tool_outputs
+					.tool_calls;
+			}
+			return [];
+		},
+		( state ) => [ state.threadRuns ]
+	),
 	getThreadId: ( state ) => state.threadId,
 	getAssistantId: ( state ) => state.assistantId ?? state.defaultAssistantId,
 	updateThreadRuns: ( state ) => state.threadRun,
 	getThreadRunsUpdated: ( state ) => state.threadRunsUpdated,
 	getThreadMessagesUpdated: ( state ) => state.threadMessagesUpdated,
-	getActiveThreadRun,
-	getActiveThreadRunStatus: ( state ) => {
-		const activeThreadRun = getActiveThreadRun( state );
-		return activeThreadRun?.status;
-	},
-	getCompletedThreadRuns: ( state ) => {
-		return state.threadRuns.find( ( threadRun ) =>
-			THREAD_RUN_COMPLETED_STATUSES.includes( threadRun.status )
-		);
-	},
+	getActiveThreadRun: createSelector(
+		( state ) =>
+			state.threadRuns.find( ( threadRun ) =>
+				THREAD_RUN_ACTIVE_STATUSES.includes( threadRun.status )
+			),
+		( state ) => [ state.threadRuns ]
+	),
+	getActiveThreadRunStatus: createSelector(
+		( state ) => getActiveThreadRun( state )?.status,
+		( state ) => [ state.threadRuns ]
+	),
+	getCompletedThreadRuns: createSelector(
+		( state ) =>
+			state.threadRuns.find( ( threadRun ) =>
+				THREAD_RUN_COMPLETED_STATUSES.includes( threadRun.status )
+			),
+		( state ) => [ state.threadRuns ]
+	),
 	hasNewMessagesToProcess: ( state ) => {
-		// compare threadRun.created_at to syncedThreadMessagesAt / 1000
 		const activeThreadRun = getActiveThreadRun( state );
-		if ( ! activeThreadRun ) {
-			return false;
-		}
-		const activeThreadRunCreatedAt = activeThreadRun.created_at;
-		const syncedThreadMessagesAt = state.syncedThreadMessagesAt;
-		return activeThreadRunCreatedAt > syncedThreadMessagesAt / 1000;
+		return (
+			activeThreadRun &&
+			activeThreadRun.created_at > state.syncedThreadMessagesAt / 1000
+		);
 	},
 };
 
@@ -1155,6 +1198,18 @@ const addMessage = ( message ) => {
 			created_at: message.created_at || Date.now(),
 		},
 	};
+};
+
+const addAssistantMessage = ( content ) => {
+	return addMessage( {
+		role: 'assistant',
+		content: [
+			{
+				type: 'text',
+				text: content,
+			},
+		],
+	} );
 };
 
 const clearMessages = () => ( {
@@ -1224,6 +1279,7 @@ export const actions = {
 	addMessageToThread,
 	updateThreadMessages,
 	addMessage,
+	addAssistantMessage,
 	reset,
 	clearMessages,
 	userSay: ( content, image_urls = [] ) =>

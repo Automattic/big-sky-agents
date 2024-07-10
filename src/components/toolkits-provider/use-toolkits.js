@@ -12,14 +12,25 @@ import defaultToolkits from '../../ai/toolkits/default-toolkits';
  * Internal dependencies
  */
 import { Context } from './context.jsx';
+import useChat from '../chat-provider/use-chat.js';
 import { useDispatch, useSelect } from '@wordpress/data';
 
 export default function useToolkits() {
 	const toolkitsStore = useContext( Context );
 	const { registerToolkit } = useDispatch( toolkitsStore );
+	const { call } = useChat();
 	const toolkits = useSelect( ( select ) =>
 		select( toolkitsStore ).getToolkits()
 	);
+
+	// if ( typeof activeAgent?.onToolResult === 'function' ) {
+	// 	activeAgent.onToolResult(
+	// 		tool_call.function.name,
+	// 		toolResult,
+	// 		callbacks,
+	// 		context
+	// 	);
+	// }
 
 	const registerDefaultToolkits = useCallback( () => {
 		defaultToolkits.forEach( ( tool ) => {
@@ -72,6 +83,14 @@ export default function useToolkits() {
 		}, [] );
 	}, [ toolkits, context ] );
 
+	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
+	const invoke = useMemo( () => {
+		return tools.reduce( ( acc, tool ) => {
+			acc[ tool.name ] = ( args, id ) => call( tool.name, args, id );
+			return acc;
+		}, {} );
+	}, [ call, tools ] );
+
 	const hasToolkits = useCallback(
 		( requestedToolkits ) => {
 			return requestedToolkits.every( ( requestedToolkit ) =>
@@ -97,6 +116,7 @@ export default function useToolkits() {
 		hasToolkits,
 		tools,
 		context,
+		invoke,
 		callbacks,
 		registerToolkit,
 		registerDefaultToolkits,

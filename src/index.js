@@ -27,6 +27,7 @@ export { slice as toolkitStoreSlice } from './store/toolkits.js';
 export { default as AgentUI } from './components/agent-ui.jsx';
 export { default as AgentControls } from './components/agent-controls.jsx';
 export { default as ChatModelControls } from './components/chat-model-controls.jsx';
+export { default as ToolCallControls } from './components/tool-call-controls.jsx';
 export { default as PopUpControls } from './components/popup-controls.jsx';
 export { default as AgentsDemoPage } from './components/agents-demo-page.jsx';
 export { AgentsProvider, useAgents } from './components/agents-provider';
@@ -37,6 +38,11 @@ export { default as AskUserComponent } from './components/ask-user.jsx';
 export { default as ConfirmComponent } from './components/confirm.jsx';
 export { default as MessageContent } from './components/message-content.jsx';
 export { default as UserMessageInput } from './components/user-message-input.jsx';
+
+/**
+ * Decorators
+ */
+export { default as withToolCall } from './components/with-tool-call.jsx';
 
 /**
  * Hooks

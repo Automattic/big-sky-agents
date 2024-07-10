@@ -49,27 +49,48 @@ const useSiteToolkit = ( { pageId } ) => {
 	} = useDispatch( agentStore );
 
 	// these are fed to the templating engine on each render of the system/after-call prompt
-	const context = useSelect(
+	const siteContext = useSelect(
 		( select ) => ( {
-			site: {
-				title: select( agentStore ).getSiteTitle(),
-				description: select( agentStore ).getSiteDescription(),
-				topic: select( agentStore ).getSiteTopic(),
-				type: select( agentStore ).getSiteType(),
-				location: select( agentStore ).getSiteLocation(),
-			},
-			design: {
-				textColor: select( agentStore ).getTextColor(),
-				backgroundColor: select( agentStore ).getBackgroundColor(),
-				accentColor: select( agentStore ).getAccentColor(),
-			},
+			title: select( agentStore ).getSiteTitle(),
+			description: select( agentStore ).getSiteDescription(),
+			topic: select( agentStore ).getSiteTopic(),
+			type: select( agentStore ).getSiteType(),
+			location: select( agentStore ).getSiteLocation(),
+		} ),
+		[]
+	);
+
+	const designContext = useSelect(
+		( select ) => ( {
+			textColor: select( agentStore ).getTextColor(),
+			backgroundColor: select( agentStore ).getBackgroundColor(),
+			accentColor: select( agentStore ).getAccentColor(),
+		} ),
+		[]
+	);
+
+	const pagesContext = useSelect(
+		( select ) => ( {
 			pages: select( agentStore ).getPages(),
-			pageId,
+		} ),
+		[]
+	);
+
+	const pageContext = useSelect(
+		( select ) => ( {
 			page: select( agentStore ).getPage( pageId ),
-			// TODO
-			// pageSections: select( agentStore ).getPageSections(),
 		} ),
 		[ pageId ]
+	);
+
+	const context = useMemo(
+		() => ( {
+			site: siteContext,
+			design: designContext,
+			pages: pagesContext,
+			page: pageContext,
+		} ),
+		[ siteContext, designContext, pagesContext, pageContext ]
 	);
 
 	const callbacks = useMemo( () => {

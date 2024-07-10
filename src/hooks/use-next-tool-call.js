@@ -12,17 +12,22 @@ const useNextToolCall = ( toolName ) => {
 			),
 		[ pendingToolCalls, toolName ]
 	);
-	const { callbacks } = useToolkits();
+	const { invoke, context } = useToolkits();
 	const { activeAgent } = useAgents();
 
 	const respond = useCallback(
 		( value, toolResponse ) => {
 			setToolResult( toolCall.id, toolResponse ?? value );
 			if ( activeAgent.onToolResult ) {
-				activeAgent.onToolResult( toolCall, value, callbacks );
+				activeAgent.onToolResult(
+					toolCall.function.name,
+					value,
+					invoke,
+					context
+				);
 			}
 		},
-		[ setToolResult, toolCall, activeAgent, callbacks ]
+		[ setToolResult, toolCall, activeAgent, invoke, context ]
 	);
 
 	return {
