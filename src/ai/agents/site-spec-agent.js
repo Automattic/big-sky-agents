@@ -49,6 +49,32 @@ const additionalInstructions = new DotPromptTemplate( {
 	inputVariables: [ 'agent', 'site' ],
 } );
 
+const getChoicesForSite = ( site ) => {
+	const choices = [];
+
+	if ( ! site.title ) {
+		choices.push( 'Set the title' );
+	}
+
+	if ( ! site.description ) {
+		choices.push( 'Set the description' );
+	}
+
+	if ( ! site.category ) {
+		choices.push( 'Set the category' );
+	}
+
+	if ( ! site.topic ) {
+		choices.push( 'Set the topic' );
+	}
+
+	if ( ! site.location ) {
+		choices.push( 'Set the location' );
+	}
+
+	return choices;
+};
+
 class SiteSpecAgent extends BuilderAgent {
 	id = 'WPSiteSpec';
 	name = 'Site Building Assistant';
@@ -92,25 +118,19 @@ class SiteSpecAgent extends BuilderAgent {
 		} );
 	}
 
-	onConfirm( confirmed, { setGoal, informUser, askUser, userSay } ) {
+	onConfirm( confirmed, { setGoal, informUser, askUser, userSay }, { site } ) {
 		if ( confirmed ) {
 			setGoal( { goal: 'Find out what the user wants to do next' } );
 			informUser( { message: 'Got it!' } );
 			askUser( {
 				question: 'What would you like to do next?',
-				choices: defaultChoices,
+				choices: getChoicesForSite( site ),
 			} );
 		} else {
 			userSay( 'I would like to make some changes' );
 			informUser( { message: 'Looks like you requested some changes' } );
 			askUser( {
 				question: 'What would you like to change?',
-				choices: [
-					'Change the title',
-					'Change the description',
-					'Change the category',
-					'Add a section',
-				],
 			} );
 		}
 	}

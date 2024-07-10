@@ -18,10 +18,19 @@ import { useDispatch, useSelect } from '@wordpress/data';
 export default function useToolkits() {
 	const toolkitsStore = useContext( Context );
 	const { registerToolkit } = useDispatch( toolkitsStore );
-	const { call } = useChat();
+	const { call, setToolCallResult } = useChat();
 	const toolkits = useSelect( ( select ) =>
 		select( toolkitsStore ).getToolkits()
 	);
+
+	// if ( typeof activeAgent?.onToolResult === 'function' ) {
+	// 	activeAgent.onToolResult(
+	// 		tool_call.function.name,
+	// 		toolResult,
+	// 		callbacks,
+	// 		context
+	// 	);
+	// }
 
 	const registerDefaultToolkits = useCallback( () => {
 		defaultToolkits.forEach( ( tool ) => {

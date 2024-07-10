@@ -149,7 +149,7 @@ const useAgentExecutor = () => {
 			isAvailable &&
 			pendingToolCalls.length > 0
 		) {
-			pendingToolCalls.forEach( ( tool_call ) => {
+			pendingToolCalls.forEach( async ( tool_call ) => {
 				const args =
 					typeof tool_call.function.arguments === 'string'
 						? JSON.parse( tool_call.function.arguments )
@@ -176,14 +176,17 @@ const useAgentExecutor = () => {
 						return `Unknown tool ${ tool_use.recipient_name }`;
 					} );
 
-					setToolResult( tool_call.id, Promise.all( promises ) );
+					const toolResult = Promise.all( promises );
+
+					setToolResult( tool_call.id, toolResult );
 				}
 
 				const callback = callbacks[ tool_call.function.name ];
 
 				if ( typeof callback === 'function' ) {
 					console.warn( '🧠 Tool callback', tool_call.function.name );
-					setToolResult( tool_call.id, callback( args ) );
+					const toolResult = await callback( args );
+					setToolResult( tool_call.id, toolResult );
 				}
 			} );
 		}
@@ -420,9 +423,8 @@ const useAgentExecutor = () => {
 			const newToolOutputs = toolOutputs.slice( prevToolOutputsLength );
 
 			newToolOutputs.forEach( ( toolOutput ) => {
-				const toolCall = requiredToolOutputs.find(
-					( requiredToolOutput ) =>
-						requiredToolOutput.id === toolOutput.tool_call_id
+				const toolCall = toolOutputs.find(
+					( tc ) => tc.id === toolOutput.tool_call_id
 				);
 
 				if ( toolCall ) {
@@ -430,7 +432,12 @@ const useAgentExecutor = () => {
 					const value = toolOutput.output;
 
 					if ( typeof activeAgent.onToolResult === 'function' ) {
-						activeAgent.onToolResult( toolName, value, callbacks );
+						activeAgent.onToolResult(
+							toolName,
+							value,
+							callbacks,
+							context
+						);
 					}
 				}
 			} );
@@ -443,6 +450,7 @@ const useAgentExecutor = () => {
 		activeAgent,
 		callbacks,
 		prevToolOutputsLength,
+		context,
 	] );
 };
 
