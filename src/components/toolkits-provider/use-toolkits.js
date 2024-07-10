@@ -18,7 +18,7 @@ import { useDispatch, useSelect } from '@wordpress/data';
 export default function useToolkits() {
 	const toolkitsStore = useContext( Context );
 	const { registerToolkit } = useDispatch( toolkitsStore );
-	const { call, setToolCallResult } = useChat();
+	const { call } = useChat();
 	const toolkits = useSelect( ( select ) =>
 		select( toolkitsStore ).getToolkits()
 	);
