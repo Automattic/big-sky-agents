@@ -29,12 +29,12 @@ class Agent {
 		throw new Error( `Agent ${ this.id } must implement description` );
 	}
 
-	onToolResult( toolName, value, toolResponse, context ) {
+	onToolResult( toolName, value, callbacks, context ) {
 		// do nothing by default
 		console.log( 'onToolResult', {
 			toolName,
 			value,
-			toolResponse,
+			callbacks,
 			context,
 		} );
 	}
