@@ -1,5 +1,8 @@
 'use strict';
-
+/**
+ * Internal dependencies
+ */
+import log from '../../utils/log-debug.js';
 // Adapted from doT.js, 2011-2014, Laura Doktorova, https://github.com/olado/doT
 // Licensed under the MIT license.
 
@@ -203,7 +206,7 @@ export function compile( tmpl, def ) {
 		try {
 			return f();
 		} catch ( e ) {
-			console.log( 'Could not create a template function: ' + str );
+			log.error( 'Could not create a template function: ' + str );
 			throw e;
 		}
 	}

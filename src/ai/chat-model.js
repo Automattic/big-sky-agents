@@ -1,3 +1,8 @@
+/**
+ * Internal dependencies
+ */
+import log from '../utils/log-debug';
+
 // TODO: extract all this to a JSON configuration file
 export const ChatModelService = {
 	WPCOM_JETPACK_AI: 'wpcom-jetpack-ai',
@@ -293,7 +298,7 @@ class ChatModel {
 		const params = this.getParams( request );
 		const headers = this.getHeaders();
 
-		console.log(
+		log.info(
 			`🤖 Calling ${ this.constructor.name } with model ${ params.model }, temperature ${ params.temperature }, max_tokens ${ params.max_tokens }`
 		);
 

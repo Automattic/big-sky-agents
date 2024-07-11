@@ -7,6 +7,11 @@ import {
 	__experimentalItemGroup as ItemGroup,
 } from '@wordpress/components';
 
+/**
+ * Internal dependencies
+ */
+import log from '../utils/log-debug.js';
+
 function ObjectPreview( { object, prefix = '' } ) {
 	if ( ! object ) {
 		return (
@@ -42,7 +47,7 @@ function ObjectPreview( { object, prefix = '' } ) {
 						key={ prop }
 						className={ `big-sky__edit-site-spec-${ prefix }${ prop }` }
 						onClick={ () => {
-							console.log( `clicked ${ prop } - would edit now` );
+							log.info( `clicked ${ prop } - would edit now` );
 						} }
 					>
 						<BaseControl
