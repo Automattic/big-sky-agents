@@ -149,7 +149,7 @@ const useAgentExecutor = () => {
 			isAvailable &&
 			pendingToolCalls.length > 0
 		) {
-			pendingToolCalls.forEach( async ( tool_call ) => {
+			pendingToolCalls.forEach( ( tool_call ) => {
 				const args =
 					typeof tool_call.function.arguments === 'string'
 						? JSON.parse( tool_call.function.arguments )
@@ -185,8 +185,7 @@ const useAgentExecutor = () => {
 
 				if ( typeof callback === 'function' ) {
 					console.warn( '🧠 Tool callback', tool_call.function.name );
-					const toolResult = await callback( args );
-					setToolResult( tool_call.id, toolResult );
+					setToolResult( tool_call.id, callback( args ) );
 				}
 			} );
 		}
@@ -237,7 +236,7 @@ const useAgentExecutor = () => {
 		if ( activeAgent && toolkitsLoaded ) {
 			let newTools =
 				typeof activeAgent.tools === 'function'
-					? activeAgent.tools( context )
+					? activeAgent.tools( context, allTools )
 					: activeAgent.tools;
 
 			// for any tools that are a string, look up the definition from allTools by name
@@ -371,6 +370,7 @@ const useAgentExecutor = () => {
 		) {
 			setAgentStarted( true );
 			if ( typeof activeAgent.onStart === 'function' ) {
+				console.warn( '🧠 Agent started', activeAgent.name, invoke );
 				activeAgent.onStart( invoke );
 			}
 		}

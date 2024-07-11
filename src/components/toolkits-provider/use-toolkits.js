@@ -75,12 +75,25 @@ export default function useToolkits() {
 	}, [ toolkits, context ] );
 
 	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
+	// const invoke = useMemo( () => {
+	// 	return tools.reduce( ( acc, tool ) => {
+	// 		acc[ tool.name ] = ( args, id ) => call( tool.name, args, id );
+	// 		return acc;
+	// 	}, {} );
+	// }, [ call, tools ] );
+
+	// allow any tool name, even if it's not in the tools list
+	// this is because agents may add additional tools that are not in the toolkit
 	const invoke = useMemo( () => {
-		return tools.reduce( ( acc, tool ) => {
-			acc[ tool.name ] = ( args, id ) => call( tool.name, args, id );
-			return acc;
-		}, {} );
-	}, [ call, tools ] );
+		return new Proxy(
+			{},
+			{
+				get: ( target, prop ) => {
+					return ( args, id ) => call( prop, args, id );
+				},
+			}
+		);
+	}, [ call ] );
 
 	const hasToolkits = useCallback(
 		( requestedToolkits ) => {

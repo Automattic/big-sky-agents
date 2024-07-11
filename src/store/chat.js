@@ -741,6 +741,7 @@ export const reducer = ( state = initialState, action ) => {
 
 		// Add and Clear Messages
 		case 'ADD_MESSAGE':
+			console.warn( 'Adding message', action.message );
 			return addMessageReducer( state, action.message );
 		case 'SET_MESSAGES':
 			return { ...state, messages: action.messages };
