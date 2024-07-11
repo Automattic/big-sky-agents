@@ -74,81 +74,68 @@ export default function useChat() {
 		setAssistantEnabled,
 	} = useDispatch( agentStore );
 
-	const assistantEnabled = useSelect( ( select ) =>
-		select( agentStore ).isAssistantEnabled()
-	);
-	const service = useSelect( ( select ) =>
-		select( agentStore ).getService()
-	);
-	const temperature = useSelect( ( select ) =>
-		select( agentStore ).getTemperature()
-	);
-	const apiKey = useSelect( ( select ) => select( agentStore ).getApiKey() );
-	const error = useSelect( ( select ) => select( agentStore ).getError() );
-	const model = useSelect( ( select ) => select( agentStore ).getModel() );
-	const loading = useSelect( ( select ) => select( agentStore ).isLoading() );
-	const running = useSelect( ( select ) => select( agentStore ).isRunning() );
-	const enabled = useSelect( ( select ) => select( agentStore ).isEnabled() );
-	const messages = useSelect( ( select ) =>
-		select( agentStore ).getMessages()
-	);
-	const assistantMessage = useSelect( ( select ) =>
-		select( agentStore ).getAssistantMessage()
-	);
-	const pendingToolCalls = useSelect( ( select ) =>
-		select( agentStore ).getPendingToolCalls()
-	);
-	const additionalMessages = useSelect( ( select ) =>
-		select( agentStore ).getAdditionalMessages()
-	);
-	const requiredToolOutputs = useSelect( ( select ) =>
-		select( agentStore ).getRequiredToolOutputs()
-	);
-	const toolOutputs = useSelect( ( select ) =>
-		select( agentStore ).getToolOutputs()
-	);
-	const threadId = useSelect( ( select ) =>
-		select( agentStore ).getThreadId()
-	);
-	const assistantId = useSelect( ( select ) =>
-		select( agentStore ).getAssistantId()
-	);
-	const threadRun = useSelect( ( select ) =>
-		select( agentStore ).getActiveThreadRun()
-	);
-	const threadRunsUpdated = useSelect( ( select ) =>
-		select( agentStore ).getThreadRunsUpdated()
-	);
-	const threadMessagesUpdated = useSelect( ( select ) =>
-		select( agentStore ).getThreadMessagesUpdated()
-	);
-	const isAvailable = useSelect( ( select ) =>
-		select( agentStore ).isAvailable()
-	);
-	const isChatAvailable = useSelect( ( select ) =>
-		select( agentStore ).isChatAvailable()
-	);
-	const isAssistantAvailable = useSelect( ( select ) =>
-		select( agentStore ).isAssistantAvailable()
-	);
-	const isThreadRunInProgress = useSelect( ( select ) =>
-		select( agentStore ).isThreadRunInProgress()
-	);
-	const isThreadDataLoaded = useSelect( ( select ) =>
-		select( agentStore ).isThreadDataLoaded()
-	);
-	const isThreadRunComplete = useSelect( ( select ) =>
-		select( agentStore ).isThreadRunComplete()
-	);
-	const isAwaitingUserInput = useSelect( ( select ) =>
-		select( agentStore ).isAwaitingUserInput()
-	);
-	const isThreadRunAwaitingToolOutputs = useSelect( ( select ) =>
-		select( agentStore ).isThreadRunAwaitingToolOutputs()
-	);
-	const feature = useSelect( ( select ) =>
-		select( agentStore ).getFeature()
-	);
+	const {
+		assistantEnabled,
+		service,
+		temperature,
+		apiKey,
+		error,
+		model,
+		loading,
+		running,
+		enabled,
+		messages,
+		assistantMessage,
+		pendingToolCalls,
+		additionalMessages,
+		requiredToolOutputs,
+		toolOutputs,
+		threadId,
+		assistantId,
+		threadRun,
+		threadRunsUpdated,
+		threadMessagesUpdated,
+		isAvailable,
+		isChatAvailable,
+		isAssistantAvailable,
+		isThreadRunInProgress,
+		isThreadDataLoaded,
+		isThreadRunComplete,
+		isAwaitingUserInput,
+		isThreadRunAwaitingToolOutputs,
+		feature,
+	} = useSelect( ( select ) => ( {
+		assistantEnabled: select( agentStore ).isAssistantEnabled(),
+		service: select( agentStore ).getService(),
+		temperature: select( agentStore ).getTemperature(),
+		apiKey: select( agentStore ).getApiKey(),
+		error: select( agentStore ).getError(),
+		model: select( agentStore ).getModel(),
+		loading: select( agentStore ).isLoading(),
+		running: select( agentStore ).isRunning(),
+		enabled: select( agentStore ).isEnabled(),
+		messages: select( agentStore ).getMessages(),
+		assistantMessage: select( agentStore ).getAssistantMessage(),
+		pendingToolCalls: select( agentStore ).getPendingToolCalls(),
+		additionalMessages: select( agentStore ).getAdditionalMessages(),
+		requiredToolOutputs: select( agentStore ).getRequiredToolOutputs(),
+		toolOutputs: select( agentStore ).getToolOutputs(),
+		threadId: select( agentStore ).getThreadId(),
+		assistantId: select( agentStore ).getAssistantId(),
+		threadRun: select( agentStore ).getActiveThreadRun(),
+		threadRunsUpdated: select( agentStore ).getThreadRunsUpdated(),
+		threadMessagesUpdated: select( agentStore ).getThreadMessagesUpdated(),
+		isAvailable: select( agentStore ).isAvailable(),
+		isChatAvailable: select( agentStore ).isChatAvailable(),
+		isAssistantAvailable: select( agentStore ).isAssistantAvailable(),
+		isThreadRunInProgress: select( agentStore ).isThreadRunInProgress(),
+		isThreadDataLoaded: select( agentStore ).isThreadDataLoaded(),
+		isThreadRunComplete: select( agentStore ).isThreadRunComplete(),
+		isAwaitingUserInput: select( agentStore ).isAwaitingUserInput(),
+		isThreadRunAwaitingToolOutputs:
+			select( agentStore ).isThreadRunAwaitingToolOutputs(),
+		feature: select( agentStore ).getFeature(),
+	} ) );
 
 	return {
 		// running state

@@ -1111,33 +1111,40 @@ export const selectors = {
 			: null;
 	},
 	getToolOutputs,
-	getPendingToolCalls: ( state, function_name = null ) => {
-		const toolCalls = getToolCalls( state, function_name );
-		const runningToolCalls = selectors.getRunningToolCallIds( state );
-		const toolOutputs = getToolOutputs( state );
+	getPendingToolCalls: createSelector(
+		( state, function_name = null ) => {
+			const toolCalls = getToolCalls( state, function_name );
+			const runningToolCalls = selectors.getRunningToolCallIds( state );
+			const toolOutputs = getToolOutputs( state );
 
-		const result = toolCalls.filter(
-			( toolCall ) =>
-				! runningToolCalls.includes( toolCall.id ) &&
-				! toolOutputs.some(
-					( toolOutput ) => toolOutput.tool_call_id === toolCall.id
-				)
-		);
+			const result = toolCalls.filter(
+				( toolCall ) =>
+					! runningToolCalls.includes( toolCall.id ) &&
+					! toolOutputs.some(
+						( toolOutput ) =>
+							toolOutput.tool_call_id === toolCall.id
+					)
+			);
 
-		return result;
-	},
+			return result;
+		},
+		( state ) => [ state.messages ]
+	),
 	getRunningToolCallIds: ( state ) => {
 		return state.tool_calls.map( ( tc ) => tc.id );
 	},
-	getAdditionalMessages: ( state ) => {
-		// user/assistant messages without a threadId are considered not to have been synced
-		return state.messages.filter(
-			( message ) =>
-				[ 'assistant', 'user' ].includes( message.role ) &&
-				message.content &&
-				! message.thread_id
-		);
-	},
+	getAdditionalMessages: createSelector(
+		( state ) => {
+			// user/assistant messages without a threadId are considered not to have been synced
+			return state.messages.filter(
+				( message ) =>
+					[ 'assistant', 'user' ].includes( message.role ) &&
+					message.content &&
+					! message.thread_id
+			);
+		},
+		( state ) => [ state.messages ]
+	),
 	getRequiredToolOutputs: createSelector(
 		( state ) => {
 			const currentThreadRun = state.threadRuns[ 0 ];

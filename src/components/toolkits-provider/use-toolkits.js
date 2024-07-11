@@ -23,15 +23,6 @@ export default function useToolkits() {
 		select( toolkitsStore ).getToolkits()
 	);
 
-	// if ( typeof activeAgent?.onToolResult === 'function' ) {
-	// 	activeAgent.onToolResult(
-	// 		tool_call.function.name,
-	// 		toolResult,
-	// 		callbacks,
-	// 		context
-	// 	);
-	// }
-
 	const registerDefaultToolkits = useCallback( () => {
 		defaultToolkits.forEach( ( tool ) => {
 			registerToolkit( tool );
