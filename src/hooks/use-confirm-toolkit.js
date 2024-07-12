@@ -7,18 +7,13 @@ import { useEffect } from '@wordpress/element';
  * Internal dependencies
  */
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
-import { ConfirmTool } from '../index.js';
-
-export const CONFIRM_TOOLKIT_ID = 'confirm';
+import ConfirmToolkit from '../ai/toolkits/confirm-toolkit.js';
 
 const useConfirmToolkit = () => {
 	const { registerToolkit } = useToolkits();
 
 	useEffect( () => {
-		registerToolkit( {
-			name: CONFIRM_TOOLKIT_ID,
-			tools: [ ConfirmTool ],
-		} );
+		registerToolkit( ConfirmToolkit );
 	}, [ registerToolkit ] );
 };
 

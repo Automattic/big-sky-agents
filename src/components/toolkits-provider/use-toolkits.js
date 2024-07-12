@@ -80,7 +80,13 @@ export default function useToolkits() {
 					? toolkit.context()
 					: toolkit.context;
 			// console.warn( 'toolkitContext', toolkitContext );
-			return deepMerge( acc, toolkitContext );
+
+			if ( ! toolkitContext ) {
+				return acc;
+			}
+
+			const result = deepMerge( acc, toolkitContext );
+			return result;
 		}, {} );
 	}, [ toolkits ] );
 

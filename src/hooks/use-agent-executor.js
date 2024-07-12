@@ -58,6 +58,8 @@ const useAgentExecutor = () => {
 		callbacks,
 	} = useToolkits();
 
+	console.warn( 'context: ', context );
+
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =

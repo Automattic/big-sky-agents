@@ -4,7 +4,7 @@ import InformUserTool from '../tools/inform-user.js';
 import SetGoalTool from '../tools/set-goal.js';
 import { SET_AGENT_TOOL_NAME } from '../tools/set-agent.js';
 import { AGENTS_TOOLKIT_NAME } from '../../hooks/use-agent-toolkit.js';
-import QuestionToolkit from '../toolkits/question-toolkit.js';
+import AskUserToolkit from '../toolkits/ask-user-toolkit.js';
 import GoalToolkit from '../toolkits/goal-toolkit.js';
 import Agent from './agent.js';
 
@@ -18,7 +18,7 @@ const additionalInstructions = DotPromptTemplate.fromString(
 );
 
 class BasicAgent extends Agent {
-	toolkits = [ AGENTS_TOOLKIT_NAME, QuestionToolkit.name, GoalToolkit.name ];
+	toolkits = [ AGENTS_TOOLKIT_NAME, AskUserToolkit.name, GoalToolkit.name ];
 
 	onToolResult( toolName, value, callbacks, context ) {
 		switch ( toolName ) {

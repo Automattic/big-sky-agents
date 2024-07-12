@@ -1,6 +1,6 @@
 import AskUserTool from '../tools/ask-user';
 
 export default {
-	name: 'questions',
+	name: 'ask-user',
 	tools: [ AskUserTool ],
 };
