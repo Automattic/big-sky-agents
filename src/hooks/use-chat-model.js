@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
  * Internal dependencies
  */
 import ChatModel from '../ai/chat-model.js';
+import log from '../utils/log-debug.js';
 
 const useChatModel = ( { apiKey, service, feature, sessionId } ) => {
 	const [ chatModel, setChatModel ] = useState();
@@ -25,13 +26,7 @@ const useChatModel = ( { apiKey, service, feature, sessionId } ) => {
 			return;
 		}
 		// eslint-disable-next-line no-console
-		console.log(
-			'🤖 Creating Chat Model',
-			service,
-			apiKey,
-			feature,
-			sessionId
-		);
+		log.info( '🤖 Creating Chat Model', service, feature, sessionId );
 		setChatModel(
 			ChatModel.getInstance( service, apiKey, feature, sessionId )
 		);

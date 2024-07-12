@@ -1,3 +1,7 @@
+/**
+ * Internal dependencies
+ */
+import log from '../../utils/log-debug.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 
 const instructions = DotPromptTemplate.fromString(
@@ -21,7 +25,7 @@ class Agent {
 
 	onToolResult( toolName, value, callbacks, context ) {
 		// do nothing by default
-		console.log( 'onToolResult', {
+		log.info( 'onToolResult', {
 			toolName,
 			value,
 			callbacks,
