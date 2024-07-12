@@ -26,8 +26,6 @@ import useAgentToolkit from '../hooks/use-agent-toolkit.js';
 import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 import useAgentExecutor from '../hooks/use-agent-executor.js';
 import useSiteToolkit from '../hooks/use-site-toolkit.js';
-import useConfirmToolkit from '../hooks/use-confirm-toolkit.js';
-import useAskUserToolkit from '../hooks/use-ask-user-toolkit.js';
 import useAgentGoalToolkit from '../hooks/use-agent-goal-toolkit.js';
 
 /**
@@ -55,8 +53,6 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	useAgentToolkit();
 	useSiteToolkit( { pageId: selectedPageId } );
 	useAnalyzeSiteToolkit( { apiKey } );
-	// useConfirmToolkit();
-	// useAskUserToolkit();
 	useAgentGoalToolkit();
 	useAgentExecutor();
 
