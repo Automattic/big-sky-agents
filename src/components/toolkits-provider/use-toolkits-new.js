@@ -42,11 +42,7 @@ function deepMerge( target, source ) {
 
 export default function useToolkits() {
 	const toolkitsStore = useContext( Context );
-	const {
-		registerToolkit,
-		registerToolkitCallbacks,
-		registerToolkitContext,
-	} = useDispatch( toolkitsStore );
+	const { registerToolkit } = useDispatch( toolkitsStore );
 	const { call } = useChat();
 	const toolkits = useSelect( ( select ) =>
 		select( toolkitsStore ).getToolkits()
@@ -101,25 +97,25 @@ export default function useToolkits() {
 	}, [ toolkits, context ] );
 
 	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
-	const invoke = useMemo( () => {
-		return tools.reduce( ( acc, tool ) => {
-			acc[ tool.name ] = ( args, id ) => call( tool.name, args, id );
-			return acc;
-		}, {} );
-	}, [ call, tools ] );
-
-	// // allow any tool name, even if it's not in the tools list
-	// // this is because agents may add additional tools that are not in the toolkit
 	// const invoke = useMemo( () => {
-	// 	return new Proxy(
-	// 		{},
-	// 		{
-	// 			get: ( target, prop ) => {
-	// 				return ( args, id ) => call( prop, args, id );
-	// 			},
-	// 		}
-	// 	);
-	// }, [ call ] );
+	// 	return tools.reduce( ( acc, tool ) => {
+	// 		acc[ tool.name ] = ( args, id ) => call( tool.name, args, id );
+	// 		return acc;
+	// 	}, {} );
+	// }, [ call, tools ] );
+
+	// allow any tool name, even if it's not in the tools list
+	// this is because agents may add additional tools that are not in the toolkit
+	const invoke = useMemo( () => {
+		return new Proxy(
+			{},
+			{
+				get: ( target, prop ) => {
+					return ( args, id ) => call( prop, args, id );
+				},
+			}
+		);
+	}, [ call ] );
 
 	const hasToolkits = useCallback(
 		( requestedToolkits ) => {
@@ -149,8 +145,6 @@ export default function useToolkits() {
 		invoke,
 		callbacks,
 		registerToolkit,
-		registerToolkitCallbacks,
-		registerToolkitContext,
 		registerDefaultToolkits,
 	};
 }

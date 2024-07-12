@@ -370,7 +370,6 @@ const useAgentExecutor = () => {
 		) {
 			setAgentStarted( true );
 			if ( typeof activeAgent.onStart === 'function' ) {
-				console.warn( '🧠 Agent started', activeAgent.name, invoke );
 				activeAgent.onStart( invoke );
 			}
 		}

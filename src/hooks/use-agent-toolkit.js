@@ -1,87 +1,53 @@
 /**
  * WordPress dependencies
  */
-import { useCallback, useEffect } from '@wordpress/element';
+import { useEffect } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
-import InformTool from '../ai/tools/inform-user.js';
 import createSetAgentTool, {
 	SET_AGENT_TOOL_NAME,
 } from '../ai/tools/set-agent.js';
-import AskUserTool from '../ai/tools/ask-user.js';
-import SetGoalTool from '../ai/tools/set-goal.js';
 import useAgents from '../components/agents-provider/use-agents.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 
-export const AGENTS_TOOLKIT_ID = 'agents';
+export const AGENTS_TOOLKIT_NAME = 'agents';
 
 const useAgentToolkit = () => {
+	const { agents, activeAgent, setActiveAgent } = useAgents();
 	const {
-		agents,
-		activeAgent,
-		setActiveAgent,
-		thought,
-		setAgentThought,
-		goal,
-		setAgentGoal,
-	} = useAgents();
-	const { registerToolkit } = useToolkits();
-
-	const reset = useCallback( () => {
-		setAgentGoal( null );
-		setAgentThought( null );
-	}, [ setAgentGoal, setAgentThought ] );
+		registerToolkit,
+		registerToolkitCallbacks,
+		registerToolkitContext,
+	} = useToolkits();
 
 	useEffect( () => {
 		registerToolkit( {
-			name: AGENTS_TOOLKIT_ID,
-			tools: [
-				AskUserTool,
-				SetGoalTool,
-				InformTool,
-				createSetAgentTool( agents ),
-			],
-			callbacks: {
-				[ InformTool.name ]: ( { message } ) => {
-					setAgentThought( message );
-					return message
-						? `Agent thinks: "${ message }"`
-						: 'Thought cleared';
-				},
-				[ SetGoalTool.name ]: ( { goal: newGoal } ) => {
-					setAgentGoal( newGoal );
-					return `Goal set to "${ newGoal }"`;
-				},
-				[ SET_AGENT_TOOL_NAME ]: ( { agentId } ) => {
-					setActiveAgent( agentId );
-					return `Agent set to ${ agentId }`;
-				},
-			},
-			context: {
-				agents,
-				agent: {
-					id: activeAgent?.id,
-					name: activeAgent?.name,
-					assistantId: activeAgent?.assistantId,
-					goal,
-					thought,
-				},
-			},
-			reset,
+			name: AGENTS_TOOLKIT_NAME,
+			tools: [ createSetAgentTool( agents ) ],
 		} );
-	}, [
-		agents,
-		activeAgent,
-		goal,
-		thought,
-		setAgentThought,
-		setAgentGoal,
-		setActiveAgent,
-		reset,
-		registerToolkit,
-	] );
+	}, [ agents, registerToolkit ] );
+
+	useEffect( () => {
+		registerToolkitCallbacks( AGENTS_TOOLKIT_NAME, {
+			[ SET_AGENT_TOOL_NAME ]: ( { agentId } ) => {
+				setActiveAgent( agentId );
+				return `Agent set to ${ agentId }`;
+			},
+		} );
+	}, [ registerToolkitCallbacks, setActiveAgent ] );
+
+	useEffect( () => {
+		registerToolkitContext( AGENTS_TOOLKIT_NAME, {
+			agents,
+			agent: {
+				id: activeAgent?.id,
+				name: activeAgent?.name,
+				assistantId: activeAgent?.assistantId,
+			},
+		} );
+	}, [ registerToolkitContext, agents, activeAgent ] );
 };
 
 export default useAgentToolkit;

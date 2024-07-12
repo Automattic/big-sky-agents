@@ -11,6 +11,52 @@ export const actions = {
 			toolkit,
 		};
 	},
+	registerToolkitCallbacks: ( name, callbacks ) => {
+		return {
+			type: 'REGISTER_TOOLKIT_CALLBACKS',
+			name,
+			callbacks,
+		};
+	},
+	registerToolkitContext: ( name, context ) => {
+		return {
+			type: 'REGISTER_TOOLKIT_CONTEXT',
+			name,
+			context,
+		};
+	},
+};
+
+const registerToolkitCallbacks = ( state, action ) => {
+	const { name, callbacks } = action;
+	const toolkitIndex = state.toolkits.findIndex( ( a ) => a.name === name );
+	if ( toolkitIndex === -1 ) {
+		throw new Error( `toolkit not found for callbacks: ${ name }` );
+	}
+	const toolkitToUpdate = state.toolkits[ toolkitIndex ];
+	const updatedToolkit = {
+		...toolkitToUpdate,
+		callbacks,
+	};
+	const updatedToolkits = [ ...state.toolkits ];
+	updatedToolkits[ toolkitIndex ] = updatedToolkit;
+	return { ...state, toolkits: updatedToolkits };
+};
+
+const registerToolkitContext = ( state, action ) => {
+	const { name, context } = action;
+	const toolkitIndex = state.toolkits.findIndex( ( a ) => a.name === name );
+	if ( toolkitIndex === -1 ) {
+		throw new Error( `toolkit not found for context: ${ name }` );
+	}
+	const toolkitToUpdate = state.toolkits[ toolkitIndex ];
+	const updatedToolkit = {
+		...toolkitToUpdate,
+		context,
+	};
+	const updatedToolkits = [ ...state.toolkits ];
+	updatedToolkits[ toolkitIndex ] = updatedToolkit;
+	return { ...state, toolkits: updatedToolkits };
 };
 
 export const reducer = ( state = initialState, action ) => {
@@ -22,17 +68,16 @@ export const reducer = ( state = initialState, action ) => {
 			);
 
 			if ( existingToolkitIndex !== -1 ) {
-				// throw new Error(
-				// 	`a toolkit should only be registered once: ${ toolkit.name }`
-				// );
-				// return state;
-				// // If tool with the same name already exists, replace it with the new tool
 				const updatedToolkits = [ ...state.toolkits ];
 				updatedToolkits[ existingToolkitIndex ] = toolkit;
 				return { ...state, toolkits: updatedToolkits };
 			}
 			// If tool with the same ID doesn't exist, add the new tool to the array
 			return { ...state, toolkits: [ ...state.toolkits, toolkit ] };
+		case 'REGISTER_TOOLKIT_CALLBACKS':
+			return registerToolkitCallbacks( state, action );
+		case 'REGISTER_TOOLKIT_CONTEXT':
+			return registerToolkitContext( state, action );
 		default:
 			return state;
 	}

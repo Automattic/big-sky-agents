@@ -1,4 +1,4 @@
-import Agent from './agent.js';
+import BasicAgent from './basic-agent.js';
 import AnalyzeUrlTool from '../tools/analyze-url.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 import { ANALYZE_SITE_TOOLKIT_ID } from '../../hooks/use-analyze-site-toolkit.js';
@@ -24,7 +24,7 @@ const instructions = DotPromptTemplate.fromString(
 	`You are a helpful AI assistant. Your mission is to find out what the user needs, clearly set goal and choose an appropriate agent to help them.`
 );
 
-class WapuuAgent extends Agent {
+class WapuuAgent extends BasicAgent {
 	id = WAPUU_AGENT_ID;
 	name = 'Wapuu';
 	assistantId = WAPUU_ASSISTANT_ID;

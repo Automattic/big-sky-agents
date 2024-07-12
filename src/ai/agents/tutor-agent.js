@@ -1,11 +1,11 @@
-import Agent from './agent.js';
+import BasicAgent from './basic-agent.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 
 const instructions = DotPromptTemplate.fromString(
 	`You are a helpful WordPress tutor. You are an expert in all things WordPress.`
 );
 
-class TutorAgent extends Agent {
+class TutorAgent extends BasicAgent {
 	id = 'WPTutor';
 	name = 'WordPress Tutor';
 	description = 'Here to help you learn WordPress.';
