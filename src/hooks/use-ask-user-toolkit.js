@@ -6,15 +6,15 @@ import { useEffect } from '@wordpress/element';
 /**
  * Internal dependencies
  */
+import AskUserToolkit from '../ai/toolkits/ask-user-toolkit.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
-import ConfirmToolkit from '../ai/toolkits/confirm-toolkit.js';
 
-const useConfirmToolkit = () => {
+const useAskUserToolkit = () => {
 	const { registerToolkit } = useToolkits();
 
 	useEffect( () => {
-		registerToolkit( ConfirmToolkit );
+		registerToolkit( AskUserToolkit );
 	}, [ registerToolkit ] );
 };
 
-export default useConfirmToolkit;
+export default useAskUserToolkit;

@@ -149,7 +149,7 @@ const useAgentExecutor = () => {
 			isAvailable &&
 			pendingToolCalls.length > 0
 		) {
-			pendingToolCalls.forEach( async ( tool_call ) => {
+			pendingToolCalls.forEach( ( tool_call ) => {
 				const args =
 					typeof tool_call.function.arguments === 'string'
 						? JSON.parse( tool_call.function.arguments )
@@ -185,8 +185,7 @@ const useAgentExecutor = () => {
 
 				if ( typeof callback === 'function' ) {
 					console.warn( '🧠 Tool callback', tool_call.function.name );
-					const toolResult = await callback( args );
-					setToolResult( tool_call.id, toolResult );
+					setToolResult( tool_call.id, callback( args ) );
 				}
 			} );
 		}
@@ -201,13 +200,18 @@ const useAgentExecutor = () => {
 
 	// while threadRun.status is queued or in_progress, poll for thread run status
 	useEffect( () => {
-		if ( ! running && isThreadRunInProgress ) {
+		if ( isAssistantAvailable && ! running && isThreadRunInProgress ) {
 			const interval = setInterval( () => {
 				updateThreadRun();
 			}, 1000 );
 			return () => clearInterval( interval );
 		}
-	}, [ updateThreadRun, isThreadRunInProgress, running ] );
+	}, [
+		isAssistantAvailable,
+		updateThreadRun,
+		isThreadRunInProgress,
+		running,
+	] );
 
 	// if there are pendingThreadMessages, send them using addMessageToThread
 	useEffect( () => {
@@ -235,49 +239,30 @@ const useAgentExecutor = () => {
 
 	useEffect( () => {
 		if ( activeAgent && toolkitsLoaded ) {
-			let newTools =
-				typeof activeAgent.tools === 'function'
-					? activeAgent.tools( context )
-					: activeAgent.tools;
-
-			// for any tools that are a string, look up the definition from allTools by name
-
-			if ( ! newTools ) {
-				// use all tools if none specified
-				newTools = allTools;
-			}
-
-			// map string tools to globally registered tool definitions
-			newTools = newTools
-				.map( ( tool ) => {
-					if ( typeof tool === 'string' ) {
-						const registeredTool = allTools.find(
-							( t ) => t.name === tool
-						);
-						if ( ! registeredTool ) {
-							console.warn( '🧠 Tool not found', tool );
-						}
-						return registeredTool;
-					}
-					return tool;
-				} )
-				.filter( Boolean );
-
-			// deduplicate tools by tool.name
-			newTools = newTools.filter(
-				( tool, index, self ) =>
-					index === self.findIndex( ( t ) => t.name === tool.name )
-			);
-
-			// remap to an OpenAI tool
-			newTools = newTools.map( ( tool ) => ( {
-				type: 'function',
-				function: {
-					name: tool.name,
-					description: tool.description,
-					parameters: tool.parameters,
-				},
-			} ) );
+			// deduplicate and convert to OpenAI format
+			const newTools = allTools
+				.filter(
+					( tool, index, self ) =>
+						index ===
+						self.findIndex( ( t ) => t.name === tool.name )
+				)
+				.map( ( tool ) => ( {
+					type: 'function',
+					function: {
+						name: tool.name,
+						description: tool.description,
+						// default to a single string parameter called "value"
+						parameters: tool.parameters ?? {
+							type: 'object',
+							properties: {
+								value: {
+									type: 'string',
+								},
+							},
+							required: [ 'value' ],
+						},
+					},
+				} ) );
 
 			const newInstructions =
 				typeof activeAgent.instructions === 'function'

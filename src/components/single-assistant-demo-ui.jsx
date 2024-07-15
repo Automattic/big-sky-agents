@@ -14,15 +14,19 @@ import './chat-demo-ui.scss';
 import { AgentsProvider } from './agents-provider';
 import { ChatProvider } from './chat-provider';
 import { ToolkitsProvider } from './toolkits-provider';
+import AskUserToolkit from '../ai/toolkits/ask-user-toolkit.js';
+import InformUserToolkit from '../ai/toolkits/inform-toolkit.js';
+import GoalsToolkit from '../ai/toolkits/goal-toolkit.js';
+import AgentsToolkit from '../ai/toolkits/agents-toolkit.js';
 
 // Toolkits allows us to register tools and state that use redux stores and can integrate with core Gutenberg libraries
 // the Agent Toolkit supports core functionality like determining the current agent and switching agents
-import useAgentToolkit from '../hooks/use-agent-toolkit.js';
+import useAgentsToolkit from '../hooks/use-agents-toolkit.js';
 import useAgentExecutor from '../hooks/use-agent-executor.js';
 import PopUpControls from './popup-controls.jsx';
 
 const SingleAssistantDemoUI = () => {
-	useAgentToolkit();
+	useAgentsToolkit();
 	useAgentExecutor();
 
 	return (
@@ -70,7 +74,12 @@ const WeatherAgent = {
 	name: 'WeatherBot',
 	description: 'Looks up the weather for you',
 	instructions: 'You are a helpful weather bot',
-	toolkits: [ 'agents', 'weather' ],
+	toolkits: [
+		InformUserToolkit.name,
+		AskUserToolkit.name,
+		GoalsToolkit.name,
+		GetWeatherToolkit.name,
+	],
 	onStart: ( invoke ) => {
 		invoke.askUser( {
 			question: 'What location would you like the weather for?',
@@ -86,7 +95,15 @@ const WeatherAgent = {
 
 const DemoWithSingleAgent = ( { apiKey } ) => {
 	return (
-		<ToolkitsProvider toolkits={ [ GetWeatherToolkit ] }>
+		<ToolkitsProvider
+			toolkits={ [
+				AgentsToolkit,
+				GetWeatherToolkit,
+				InformUserToolkit,
+				AskUserToolkit,
+				GoalsToolkit,
+			] }
+		>
 			<AgentsProvider
 				agentGoal="Help the user find out about the weather"
 				agentThought="I am going to help the user find out about the weather"

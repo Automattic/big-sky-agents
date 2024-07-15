@@ -22,11 +22,13 @@ import {
 } from '../ai/agents/wapuu-agent.js';
 import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
 import './chat-demo-ui.scss';
-import useAgentToolkit from '../hooks/use-agent-toolkit.js';
+import useAgentsToolkit from '../hooks/use-agents-toolkit.js';
 import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 import useAgentExecutor from '../hooks/use-agent-executor.js';
 import useSiteToolkit from '../hooks/use-site-toolkit.js';
-import useConfirmToolkit from '../hooks/use-confirm-toolkit.js';
+import useGoalToolkit from '../hooks/use-goal-toolkit.js';
+import useInformToolkit from '../hooks/use-inform-toolkit.js';
+import useAskUserToolkit from '../hooks/use-ask-user-toolkit.js';
 
 /**
  * Renders the Chat Demo UI component - a simple chat without persistence.
@@ -50,10 +52,12 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		defaultAssistantId: WAPUU_ASSISTANT_ID,
 	} );
 
-	useAgentToolkit();
+	useAgentsToolkit();
 	useSiteToolkit( { pageId: selectedPageId } );
 	useAnalyzeSiteToolkit( { apiKey } );
-	useConfirmToolkit();
+	useAskUserToolkit();
+	useGoalToolkit();
+	useInformToolkit();
 	useAgentExecutor();
 
 	const { pages } = useSelect( ( select ) => {

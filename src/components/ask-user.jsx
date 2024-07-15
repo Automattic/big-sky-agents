@@ -13,9 +13,9 @@ import {
 } from '@wordpress/components';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import UserMessageInput from './user-message-input.jsx';
-import { ASK_USER_TOOL_NAME } from '../ai/tools/ask-user.js';
-import useAgents from './agents-provider/use-agents.js';
+import AskUserTool from '../ai/tools/ask-user.js';
 import withToolCall from './with-tool-call.jsx';
+import useThought from './thought-provider/use-thought.js';
 
 function UserChoices( { choices, multiChoice, onChange, onSubmit } ) {
 	const [ selectedChoices, setSelectedChoices ] = useState( [] );
@@ -92,20 +92,20 @@ function UserChoices( { choices, multiChoice, onChange, onSubmit } ) {
 
 function AskUser( { args, respond } ) {
 	const [ currentAnswer, setCurrentAnswer ] = useState( '' );
-	const { setAgentThought: informUser } = useAgents();
+	const { setThought } = useThought();
 
 	const onSubmit = useCallback(
 		( answer ) => {
-			informUser( '' );
+			setThought( '' );
 			respond( answer, `The user answered: "${ answer }"` );
 		},
-		[ informUser, respond ]
+		[ setThought, respond ]
 	);
 
 	const onCancel = useCallback( () => {
-		informUser( '' );
+		setThought( '' );
 		respond( 'User canceled' );
-	}, [ informUser, respond ] );
+	}, [ setThought, respond ] );
 
 	const submitCurrentAnswer = ( event ) => {
 		event.preventDefault();
@@ -158,4 +158,4 @@ function AskUser( { args, respond } ) {
 	);
 }
 
-export default withToolCall( ASK_USER_TOOL_NAME, AskUser );
+export default withToolCall( AskUserTool.name, AskUser );

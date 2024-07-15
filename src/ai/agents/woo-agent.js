@@ -1,4 +1,4 @@
-import Agent from './agent.js';
+import BasicAgent from './basic-agent.js';
 import AnalyzeUrlTool from '../tools/analyze-url.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 
@@ -6,7 +6,7 @@ const instructions = DotPromptTemplate.fromString(
 	`You are a helpful eCommerce assistant. You are an expert in all things WooCommerce.`
 );
 
-class WooAgent extends Agent {
+class WooAgent extends BasicAgent {
 	id = 'WooStore';
 	name = 'WooCommerce Store Assistant';
 	description = 'Here to help you with your WooCommerce store.';
