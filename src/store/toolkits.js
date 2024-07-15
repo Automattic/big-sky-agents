@@ -53,7 +53,8 @@ const registerToolkitCallbacks = ( state, action ) => {
 	const { name, callbacks } = action;
 	const toolkitIndex = state.toolkits.findIndex( ( a ) => a.name === name );
 	if ( toolkitIndex === -1 ) {
-		throw new Error( `toolkit not found for callbacks: ${ name }` );
+		// register the toolkit instead
+		return registerToolkit( state, { toolkit: { name, callbacks } } );
 	}
 	const toolkitToUpdate = state.toolkits[ toolkitIndex ];
 	const updatedToolkit = {
@@ -69,7 +70,8 @@ const registerToolkitContext = ( state, action ) => {
 	const { name, context } = action;
 	const toolkitIndex = state.toolkits.findIndex( ( a ) => a.name === name );
 	if ( toolkitIndex === -1 ) {
-		throw new Error( `toolkit not found for context: ${ name }` );
+		// register the toolkit instead
+		return registerToolkit( state, { toolkit: { name, context } } );
 	}
 	const toolkitToUpdate = state.toolkits[ toolkitIndex ];
 	const updatedToolkit = {

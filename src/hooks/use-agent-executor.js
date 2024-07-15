@@ -251,7 +251,16 @@ const useAgentExecutor = () => {
 					function: {
 						name: tool.name,
 						description: tool.description,
-						parameters: tool.parameters,
+						// default to a single string parameter called "value"
+						parameters: tool.parameters ?? {
+							type: 'object',
+							properties: {
+								value: {
+									type: 'string',
+								},
+							},
+							required: [ 'value' ],
+						},
 					},
 				} ) );
 

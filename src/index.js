@@ -80,6 +80,7 @@ export { default as AskUserToolkit } from './ai/toolkits/ask-user-toolkit.js';
 export { default as ConfirmToolkit } from './ai/toolkits/confirm-toolkit.js';
 export { default as InformToolkit } from './ai/toolkits/inform-toolkit.js';
 export { default as GoalToolkit } from './ai/toolkits/goal-toolkit.js';
+export { default as AgentsToolkit } from './ai/toolkits/agents-toolkit.js';
 
 /**
  * Prompt Templates

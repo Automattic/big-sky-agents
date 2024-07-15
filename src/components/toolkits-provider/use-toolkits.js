@@ -114,6 +114,13 @@ export default function useToolkits() {
 				toolkit = toolkits.find( ( t ) => t.name === toolkit );
 			}
 
+			if ( ! toolkit ) {
+				// if the toolkit can't be found, it might not be registered yet.
+				// we rely on the hasToolkits function to check if the required toolkits are loaded
+				// before making the agent interactive
+				return acc;
+			}
+
 			const toolkitTools =
 				typeof toolkit.tools === 'function'
 					? toolkit.tools()
