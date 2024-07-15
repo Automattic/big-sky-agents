@@ -20,6 +20,8 @@ export { default as useChatModel } from './hooks/use-chat-model.js';
 export { slice as agentStoreSlice } from './store/agents.js';
 export { slice as chatStoreSlice } from './store/chat.js';
 export { slice as toolkitStoreSlice } from './store/toolkits.js';
+export { slice as goalsStoreSlice } from './store/goals.js';
+export { slice as thoughtSlice } from './store/thought.js';
 
 /**
  * Components
@@ -30,9 +32,17 @@ export { default as ChatModelControls } from './components/chat-model-controls.j
 export { default as ToolCallControls } from './components/tool-call-controls.jsx';
 export { default as PopUpControls } from './components/popup-controls.jsx';
 export { default as AgentsDemoPage } from './components/agents-demo-page.jsx';
-export { AgentsProvider, useAgents } from './components/agents-provider';
+export {
+	AgentsProvider,
+	useAgents,
+	useAgent,
+} from './components/agents-provider';
 export { ChatProvider } from './components/chat-provider';
-export { ToolkitsProvider } from './components/toolkits-provider';
+export {
+	ToolkitsProvider,
+	useToolkits,
+	useToolkit,
+} from './components/toolkits-provider';
 export { default as ChatHistory } from './components/chat-history.jsx';
 export { default as AskUserComponent } from './components/ask-user.jsx';
 export { default as ConfirmComponent } from './components/confirm.jsx';
@@ -52,7 +62,6 @@ export { default as useChatIcon } from './hooks/use-chat-icon.js';
 export { default as useAgentExecutor } from './hooks/use-agent-executor.js';
 export { default as useChatSettings } from './hooks/use-chat-settings.js';
 export { default as useSiteToolkit } from './hooks/use-site-toolkit.js';
-export { default as useToolkits } from './components/toolkits-provider/use-toolkits.js';
 export { default as useNextToolCall } from './hooks/use-next-tool-call.js';
 export { default as useAskUserToolkit } from './hooks/use-ask-user-toolkit.js';
 export { default as useConfirmToolkit } from './hooks/use-confirm-toolkit.js';

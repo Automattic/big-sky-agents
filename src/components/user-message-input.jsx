@@ -54,6 +54,10 @@ function UserMessageInput( {
 	const handleSubmit = useCallback(
 		( event ) => {
 			event.preventDefault();
+			// if now files or value, don't submit
+			if ( ! value && files.length === 0 ) {
+				return;
+			}
 			onSubmit( value ?? '(no answer)', files );
 			setFiles( [] );
 		},

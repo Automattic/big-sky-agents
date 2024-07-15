@@ -2,6 +2,7 @@
  * WordPress dependencies
  */
 import { useCallback, useContext, useMemo } from '@wordpress/element';
+import { useDispatch, useSelect } from '@wordpress/data';
 
 /**
  * Internal dependencies
@@ -14,7 +15,6 @@ import useAgents from '../agents-provider/use-agents';
  */
 import { Context } from './context.jsx';
 import useChat from '../chat-provider/use-chat.js';
-import { useDispatch, useSelect } from '@wordpress/data';
 
 function deepMerge( target, source ) {
 	if ( typeof target !== 'object' || typeof source !== 'object' ) {
@@ -46,7 +46,7 @@ export default function useToolkits() {
 	const { activeAgent } = useAgents();
 	const { registerToolkit, setCallbacks, setContext, setTools } =
 		useDispatch( toolkitsStore );
-	const { call } = useChat();
+	const { call, agentSay, userSay } = useChat();
 	const toolkits = useSelect( ( select ) =>
 		select( toolkitsStore ).getToolkits()
 	);
@@ -157,11 +157,16 @@ export default function useToolkits() {
 
 	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
 	const invoke = useMemo( () => {
-		return tools.reduce( ( acc, tool ) => {
+		const invokeTools = tools.reduce( ( acc, tool ) => {
 			acc[ tool.name ] = ( args, id ) => call( tool.name, args, id );
 			return acc;
 		}, {} );
-	}, [ call, tools ] );
+		return {
+			...invokeTools,
+			userSay,
+			agentSay,
+		};
+	}, [ agentSay, call, tools, userSay ] );
 
 	const hasToolkits = useCallback(
 		( requestedToolkits ) => {

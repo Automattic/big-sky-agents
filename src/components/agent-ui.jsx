@@ -106,15 +106,15 @@ function AgentUI() {
 							<UserMessageInput
 								value={ userMessgae }
 								onChange={ setUserMessage }
-								onSubmit={ ( value ) => {
-									userSay( value );
+								onSubmit={ ( value, files ) => {
+									userSay( value, files );
 									setUserMessage( '' );
 								} }
 								onCancel={ () => {
 									informUser( 'Canceled!' );
 									onResetChat();
 								} }
-								fileUploadEnabled={ false }
+								fileUploadEnabled={ true }
 							/>
 						</AgentMessage>
 					) }
