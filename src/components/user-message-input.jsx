@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
 	Button,
 	DropZone,
@@ -6,7 +6,7 @@ import {
 	__experimentalItem as Item,
 	__experimentalItemGroup as ItemGroup,
 } from '@wordpress/components';
-import { close } from '@wordpress/icons';
+import { arrowRight, close } from '@wordpress/icons';
 import useChatIcon from '../hooks/use-chat-icon';
 
 const FilePreview = ( { name, url, onRemove } ) => {
@@ -27,6 +27,7 @@ const FilePreview = ( { name, url, onRemove } ) => {
 };
 
 function UserMessageInput( {
+	value,
 	label,
 	placeholder,
 	onSubmit,
@@ -35,27 +36,16 @@ function UserMessageInput( {
 	fileUploadEnabled,
 } ) {
 	const { RiveComponent } = useChatIcon();
-	const [ answer, setAnswer ] = useState( null );
 	const [ files, setFiles ] = useState( [] );
+	const inputRef = useRef( null );
 
 	const handleSubmit = useCallback(
 		( event ) => {
 			event.preventDefault();
-			onSubmit( answer ?? '(no answer)', files );
-			setAnswer( '' );
+			onSubmit( value ?? '(no answer)', files );
 			setFiles( [] );
 		},
-		[ answer, files, onSubmit ]
-	);
-
-	const handleChange = useCallback(
-		( value ) => {
-			setAnswer( value );
-			if ( onChange ) {
-				onChange( value );
-			}
-		},
-		[ onChange ]
+		[ files, onSubmit, value ]
 	);
 
 	const readFileAsDataURL = ( file ) => {
@@ -88,9 +78,16 @@ function UserMessageInput( {
 		[ files ]
 	);
 
+	useEffect( () => {
+		if ( inputRef.current ) {
+			inputRef.current.focus();
+		}
+	}, [ value ] );
+
 	return (
 		<div className="user-message-input">
 			<InputControl
+				ref={ inputRef }
 				size="__unstable-large"
 				label={ label }
 				prefix={
@@ -98,9 +95,20 @@ function UserMessageInput( {
 						style={ { width: '32px', height: '32px' } }
 					/>
 				}
+				suffix={
+					value && (
+						<Button
+							label="Submit"
+							icon={ arrowRight }
+							iconPosition="right"
+							variant="tertiary"
+							onClick={ handleSubmit }
+						/>
+					)
+				}
 				placeholder={ placeholder }
-				value={ answer }
-				onChange={ handleChange }
+				value={ value }
+				onChange={ onChange }
 				onKeyDown={ ( event ) => {
 					if ( event.key === 'Enter' ) {
 						handleSubmit( event );

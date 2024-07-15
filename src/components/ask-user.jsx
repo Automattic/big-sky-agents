@@ -126,6 +126,7 @@ function AskUser( { args, respond } ) {
 				<CardBody>
 					<UserMessageInput
 						label={ question }
+						value={ currentAnswer }
 						placeholder={ placeholder }
 						onSubmit={ onSubmit }
 						onChange={ setCurrentAnswer }
@@ -136,10 +137,8 @@ function AskUser( { args, respond } ) {
 						<UserChoices
 							choices={ choices }
 							multiChoice={ multiChoice }
-							onChange={ ( value ) => {
-								setCurrentAnswer( value );
-							} }
-							onSubmit={ onSubmit }
+							onChange={ setCurrentAnswer }
+							onSubmit={ setCurrentAnswer }
 						/>
 					) }
 				</CardBody>

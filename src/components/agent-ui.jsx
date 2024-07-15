@@ -2,6 +2,7 @@
  * WordPress dependencies
  */
 import { Flex, FlexBlock, Notice } from '@wordpress/components';
+import { useState } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -74,6 +75,8 @@ function AgentUI() {
 		reset: onResetChat,
 	} = useChat();
 
+	const [ userMessgae, setUserMessage ] = useState( '' );
+
 	return (
 		<div
 			className={ `big-sky__agent-ui big-sky__agent-ui-${
@@ -101,6 +104,8 @@ function AgentUI() {
 					{ assistantMessage && (
 						<AgentMessage message={ assistantMessage }>
 							<UserMessageInput
+								value={ userMessgae }
+								onChange={ setUserMessage }
 								onSubmit={ userSay }
 								onCancel={ () => {
 									informUser( 'Canceled!' );
