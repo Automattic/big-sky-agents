@@ -13,10 +13,8 @@ import {
 } from '@wordpress/components';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import UserMessageInput from './user-message-input.jsx';
-import { ASK_USER_TOOL_NAME } from '../ai/tools/ask-user.js';
-import useAgents from './agents-provider/use-agents.js';
+import AskUserTool from '../ai/tools/ask-user.js';
 import withToolCall from './with-tool-call.jsx';
-import useAgentInformToolkit from '../hooks/use-inform-toolkit.js';
 import useThought from './thought-provider/use-thought.js';
 
 function UserChoices( { choices, multiChoice, onChange, onSubmit } ) {
@@ -160,4 +158,4 @@ function AskUser( { args, respond } ) {
 	);
 }
 
-export default withToolCall( ASK_USER_TOOL_NAME, AskUser );
+export default withToolCall( AskUserTool.name, AskUser );
