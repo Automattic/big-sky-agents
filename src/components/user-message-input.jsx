@@ -8,7 +8,6 @@ import {
 } from '@wordpress/components';
 import { close } from '@wordpress/icons';
 import useChatIcon from '../hooks/use-chat-icon';
-// import sendSvg from './send.svg';
 
 const sendSVG = (
 	<svg
