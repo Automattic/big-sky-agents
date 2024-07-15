@@ -7,6 +7,7 @@ import { useCallback, useContext, useMemo } from '@wordpress/element';
  * Internal dependencies
  */
 import defaultToolkits from '../../ai/toolkits/default-toolkits';
+import useAgents from '../agents-provider/use-agents';
 
 /**
  * Internal dependencies
@@ -42,10 +43,12 @@ function deepMerge( target, source ) {
 
 export default function useToolkits() {
 	const toolkitsStore = useContext( Context );
+	const { activeAgent } = useAgents();
 	const {
 		registerToolkit,
 		registerToolkitCallbacks,
 		registerToolkitContext,
+		registerToolkitTools,
 	} = useDispatch( toolkitsStore );
 	const { call } = useChat();
 	const toolkits = useSelect( ( select ) =>
@@ -92,11 +95,37 @@ export default function useToolkits() {
 
 	// flattened array of tools, avoiding duplicates
 	const tools = useMemo( () => {
-		return toolkits.reduce( ( acc, toolkit ) => {
+		if ( ! activeAgent ) {
+			return [];
+		}
+		const agentToolkits =
+			typeof activeAgent.toolkits === 'function'
+				? activeAgent.toolkits()
+				: activeAgent.toolkits;
+
+		// look up all toolkit tools, resolving toolkit names to instances
+		// this allows:
+		// {
+		//  toolkits: [ 'ask-user', { name: 'my-custom-toolkit', tools: [ ... ]} ]}
+		// }
+		// ...to be used in the agent definition
+		const allToolkitTools = agentToolkits.reduce( ( acc, toolkit ) => {
+			// if the toolkit is a string, look up the instance
+			console.warn( 'toolkit input', toolkit );
+			if ( typeof toolkit === 'string' ) {
+				toolkit = toolkits.find( ( t ) => t.name === toolkit );
+			}
+
+			console.warn( 'toolkit resolved', toolkit );
+
 			const toolkitTools =
 				typeof toolkit.tools === 'function'
-					? toolkit.tools( context )
+					? toolkit.tools()
 					: toolkit.tools;
+
+			if ( ! toolkitTools ) {
+				return acc;
+			}
 			return [
 				...acc,
 				...toolkitTools.filter(
@@ -104,7 +133,18 @@ export default function useToolkits() {
 				),
 			];
 		}, [] );
-	}, [ toolkits, context ] );
+
+		const agentTools =
+			typeof activeAgent.tools === 'function'
+				? activeAgent.tools( context, allToolkitTools )
+				: activeAgent.tools;
+
+		if ( ! agentTools ) {
+			return allToolkitTools;
+		}
+
+		return agentTools;
+	}, [ activeAgent, context, toolkits ] );
 
 	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
 	const invoke = useMemo( () => {
@@ -113,19 +153,6 @@ export default function useToolkits() {
 			return acc;
 		}, {} );
 	}, [ call, tools ] );
-
-	// // allow any tool name, even if it's not in the tools list
-	// // this is because agents may add additional tools that are not in the toolkit
-	// const invoke = useMemo( () => {
-	// 	return new Proxy(
-	// 		{},
-	// 		{
-	// 			get: ( target, prop ) => {
-	// 				return ( args, id ) => call( prop, args, id );
-	// 			},
-	// 		}
-	// 	);
-	// }, [ call ] );
 
 	const hasToolkits = useCallback(
 		( requestedToolkits ) => {
@@ -157,6 +184,7 @@ export default function useToolkits() {
 		registerToolkit,
 		registerToolkitCallbacks,
 		registerToolkitContext,
+		registerToolkitTools,
 		registerDefaultToolkits,
 	};
 }

@@ -236,49 +236,22 @@ const useAgentExecutor = () => {
 
 	useEffect( () => {
 		if ( activeAgent && toolkitsLoaded ) {
-			let newTools =
-				typeof activeAgent.tools === 'function'
-					? activeAgent.tools( context, allTools )
-					: activeAgent.tools;
-
-			// for any tools that are a string, look up the definition from allTools by name
-
-			if ( ! newTools ) {
-				// use all tools if none specified
-				newTools = allTools;
-			}
-
-			// map string tools to globally registered tool definitions
-			newTools = newTools
-				.map( ( tool ) => {
-					if ( typeof tool === 'string' ) {
-						const registeredTool = allTools.find(
-							( t ) => t.name === tool
-						);
-						if ( ! registeredTool ) {
-							console.warn( '🧠 Tool not found', tool );
-						}
-						return registeredTool;
-					}
-					return tool;
-				} )
-				.filter( Boolean );
-
-			// deduplicate tools by tool.name
-			newTools = newTools.filter(
-				( tool, index, self ) =>
-					index === self.findIndex( ( t ) => t.name === tool.name )
-			);
-
-			// remap to an OpenAI tool
-			newTools = newTools.map( ( tool ) => ( {
-				type: 'function',
-				function: {
-					name: tool.name,
-					description: tool.description,
-					parameters: tool.parameters,
-				},
-			} ) );
+			// deduplicate and convert to OpenAI format
+			console.warn( 'all tools', allTools );
+			const newTools = allTools
+				.filter(
+					( tool, index, self ) =>
+						index ===
+						self.findIndex( ( t ) => t.name === tool.name )
+				)
+				.map( ( tool ) => ( {
+					type: 'function',
+					function: {
+						name: tool.name,
+						description: tool.description,
+						parameters: tool.parameters,
+					},
+				} ) );
 
 			const newInstructions =
 				typeof activeAgent.instructions === 'function'

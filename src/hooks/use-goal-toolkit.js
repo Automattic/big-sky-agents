@@ -9,15 +9,14 @@ import { useEffect } from '@wordpress/element';
 import SetGoalTool from '../ai/tools/set-goal.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 import useAgents from '../components/agents-provider/use-agents.js';
+import GoalToolkit from '../ai/toolkits/goal-toolkit.js';
 
-const AGENT_GOAL_TOOLKIT_NAME = 'agent-goal';
-
-const useAgentGoalToolkit = () => {
+const useGoalToolkit = () => {
 	const { registerToolkitCallbacks, registerToolkitContext } = useToolkits();
 	const { goal, setAgentGoal } = useAgents();
 
 	useEffect( () => {
-		registerToolkitCallbacks( AGENT_GOAL_TOOLKIT_NAME, {
+		registerToolkitCallbacks( GoalToolkit.name, {
 			[ SetGoalTool.name ]: ( { goal: newGoal } ) => {
 				setAgentGoal( newGoal );
 				return `Goal set to "${ newGoal }"`;
@@ -26,7 +25,7 @@ const useAgentGoalToolkit = () => {
 	}, [ registerToolkitCallbacks, setAgentGoal ] );
 
 	useEffect( () => {
-		registerToolkitContext( AGENT_GOAL_TOOLKIT_NAME, {
+		registerToolkitContext( GoalToolkit.name, {
 			agent: {
 				goal,
 			},
@@ -34,4 +33,4 @@ const useAgentGoalToolkit = () => {
 	}, [ registerToolkitContext, goal ] );
 };
 
-export default useAgentGoalToolkit;
+export default useGoalToolkit;

@@ -1,13 +1,21 @@
-import Agent from './agent.js';
+import BasicAgent from './basic-agent.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 import AnalyzeUrlTool from '../tools/analyze-url.js';
 import ConfirmTool from '../tools/confirm.js';
+import ConfirmToolkit from '../toolkits/confirm-toolkit.js';
+import { ANALYZE_SITE_TOOLKIT_ID } from '../../hooks/use-analyze-site-toolkit.js';
 
 const instructions = DotPromptTemplate.fromString(
 	`You are a helpful assistant. Your mission is to help the user design the perfect site.`
 );
 
-class BuilderAgent extends Agent {
+class BuilderAgent extends BasicAgent {
+	static toolkits = [
+		...BasicAgent.toolkits,
+		ConfirmToolkit.name,
+		ANALYZE_SITE_TOOLKIT_ID,
+	];
+
 	instructions( context ) {
 		return instructions.format( context );
 	}

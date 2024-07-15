@@ -11,26 +11,24 @@ import createSetAgentTool, {
 } from '../ai/tools/set-agent.js';
 import useAgents from '../components/agents-provider/use-agents.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
+import AgentsToolkit from '../ai/toolkits/agents-toolkit.js';
 
-export const AGENTS_TOOLKIT_NAME = 'agents';
-
-const useAgentToolkit = () => {
+const useAgentsToolkit = () => {
 	const { agents, activeAgent, setActiveAgent } = useAgents();
 	const {
-		registerToolkit,
+		registerToolkitTools,
 		registerToolkitCallbacks,
 		registerToolkitContext,
 	} = useToolkits();
 
 	useEffect( () => {
-		registerToolkit( {
-			name: AGENTS_TOOLKIT_NAME,
-			tools: [ createSetAgentTool( agents ) ],
-		} );
-	}, [ agents, registerToolkit ] );
+		registerToolkitTools( AgentsToolkit.name, [
+			createSetAgentTool( agents ),
+		] );
+	}, [ agents, registerToolkitTools ] );
 
 	useEffect( () => {
-		registerToolkitCallbacks( AGENTS_TOOLKIT_NAME, {
+		registerToolkitCallbacks( AgentsToolkit.name, {
 			[ SET_AGENT_TOOL_NAME ]: ( { agentId } ) => {
 				setActiveAgent( agentId );
 				return `Agent set to ${ agentId }`;
@@ -39,7 +37,7 @@ const useAgentToolkit = () => {
 	}, [ registerToolkitCallbacks, setActiveAgent ] );
 
 	useEffect( () => {
-		registerToolkitContext( AGENTS_TOOLKIT_NAME, {
+		registerToolkitContext( AgentsToolkit.name, {
 			agents,
 			agent: {
 				id: activeAgent?.id,
@@ -50,4 +48,4 @@ const useAgentToolkit = () => {
 	}, [ registerToolkitContext, agents, activeAgent ] );
 };
 
-export default useAgentToolkit;
+export default useAgentsToolkit;

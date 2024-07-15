@@ -25,6 +25,28 @@ export const actions = {
 			context,
 		};
 	},
+	registerToolkitTools: ( name, tools ) => {
+		return {
+			type: 'REGISTER_TOOLKIT_TOOLS',
+			name,
+			tools,
+		};
+	},
+};
+
+const registerToolkit = ( state, action ) => {
+	const { toolkit } = action;
+	const existingToolkitIndex = state.toolkits.findIndex(
+		( a ) => a.name === toolkit.name
+	);
+
+	if ( existingToolkitIndex !== -1 ) {
+		const updatedToolkits = [ ...state.toolkits ];
+		updatedToolkits[ existingToolkitIndex ] = toolkit;
+		return { ...state, toolkits: updatedToolkits };
+	}
+	// If tool with the same ID doesn't exist, add the new tool to the array
+	return { ...state, toolkits: [ ...state.toolkits, toolkit ] };
 };
 
 const registerToolkitCallbacks = ( state, action ) => {
@@ -59,25 +81,34 @@ const registerToolkitContext = ( state, action ) => {
 	return { ...state, toolkits: updatedToolkits };
 };
 
+const registerToolkitTools = ( state, action ) => {
+	const { name, tools } = action;
+	const toolkitIndex = state.toolkits.findIndex( ( a ) => a.name === name );
+	if ( toolkitIndex === -1 ) {
+		throw new Error(
+			`toolkit not found then registering tools: ${ name }`
+		);
+	}
+	const toolkitToUpdate = state.toolkits[ toolkitIndex ];
+	const updatedToolkit = {
+		...toolkitToUpdate,
+		tools,
+	};
+	const updatedToolkits = [ ...state.toolkits ];
+	updatedToolkits[ toolkitIndex ] = updatedToolkit;
+	return { ...state, toolkits: updatedToolkits };
+};
+
 export const reducer = ( state = initialState, action ) => {
 	switch ( action.type ) {
 		case 'REGISTER_TOOLKIT':
-			const { toolkit } = action;
-			const existingToolkitIndex = state.toolkits.findIndex(
-				( a ) => a.name === toolkit.name
-			);
-
-			if ( existingToolkitIndex !== -1 ) {
-				const updatedToolkits = [ ...state.toolkits ];
-				updatedToolkits[ existingToolkitIndex ] = toolkit;
-				return { ...state, toolkits: updatedToolkits };
-			}
-			// If tool with the same ID doesn't exist, add the new tool to the array
-			return { ...state, toolkits: [ ...state.toolkits, toolkit ] };
+			return registerToolkit( state, action );
 		case 'REGISTER_TOOLKIT_CALLBACKS':
 			return registerToolkitCallbacks( state, action );
 		case 'REGISTER_TOOLKIT_CONTEXT':
 			return registerToolkitContext( state, action );
+		case 'REGISTER_TOOLKIT_TOOLS':
+			return registerToolkitTools( state, action );
 		default:
 			return state;
 	}

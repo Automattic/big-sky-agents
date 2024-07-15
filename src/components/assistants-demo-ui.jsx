@@ -26,7 +26,7 @@ import {
 } from '../ai/agents/wapuu-agent.js';
 import './chat-demo-ui.scss';
 import PopUpControls from './popup-controls.jsx';
-import useAgentToolkit from '../hooks/use-agent-toolkit.js';
+import useAgentsToolkit from '../hooks/use-agents-toolkit.js';
 import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 import useAgentExecutor from '../hooks/use-agent-executor.js';
 import useSiteToolkit from '../hooks/use-site-toolkit.js';
@@ -55,7 +55,7 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		defaultAssistantId: WAPUU_ASSISTANT_ID,
 	} );
 
-	useAgentToolkit();
+	useAgentsToolkit();
 	useAnalyzeSiteToolkit( { apiKey } );
 	useSiteToolkit( { pageId: selectedPageId } );
 	useAgentExecutor();

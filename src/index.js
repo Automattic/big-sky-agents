@@ -48,7 +48,6 @@ export { default as withToolCall } from './components/with-tool-call.jsx';
  * Hooks
  */
 export { default as useChat } from './components/chat-provider/use-chat.js';
-export { default as useAgentToolkit } from './hooks/use-agent-toolkit.js';
 export { default as useChatIcon } from './hooks/use-chat-icon.js';
 export { default as useAgentExecutor } from './hooks/use-agent-executor.js';
 export { default as useChatSettings } from './hooks/use-chat-settings.js';
@@ -72,6 +71,15 @@ export { default as createSetAgentTool } from './ai/tools/set-agent.js';
 export { default as SetGoalTool } from './ai/tools/set-goal.js';
 export { default as AnalyzeUrlTool } from './ai/tools/analyze-url.js';
 export { createSimpleTool } from './ai/tools/tool.js';
+
+/**
+ * Toolkits
+ */
+export { default as useAgentsToolkit } from './hooks/use-agents-toolkit.js';
+export { default as AskUserToolkit } from './ai/toolkits/ask-user-toolkit.js';
+export { default as ConfirmToolkit } from './ai/toolkits/confirm-toolkit.js';
+export { default as InformToolkit } from './ai/toolkits/inform-toolkit.js';
+export { default as GoalToolkit } from './ai/toolkits/goal-toolkit.js';
 
 /**
  * Prompt Templates

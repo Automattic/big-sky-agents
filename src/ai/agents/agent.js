@@ -9,7 +9,7 @@ const instructions = DotPromptTemplate.fromString(
 );
 
 class Agent {
-	toolkits = [];
+	static toolkits = [];
 
 	get id() {
 		throw new Error( `Agent ${ this.id } must implement id` );

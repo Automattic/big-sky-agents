@@ -31,7 +31,7 @@ class WapuuAgent extends BasicAgent {
 	description =
 		'Here to understand your goal and choose the best agent to help you.';
 
-	get toolkits() {
+	static get toolkits() {
 		return [ ...super.toolkits, ANALYZE_SITE_TOOLKIT_ID ];
 	}
 
@@ -51,8 +51,9 @@ class WapuuAgent extends BasicAgent {
 		return defaultChoices;
 	}
 
-	onStart( { askUser } ) {
-		askUser( {
+	onStart( invoke ) {
+		console.warn( 'WapuuAgent.onStart', invoke );
+		invoke.askUser( {
 			question: defaultQuestion,
 			choices: defaultChoices,
 		} );
