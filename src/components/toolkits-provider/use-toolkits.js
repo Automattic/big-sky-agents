@@ -82,7 +82,6 @@ export default function useToolkits() {
 				typeof toolkit.context === 'function'
 					? toolkit.context()
 					: toolkit.context;
-			// console.warn( 'toolkitContext', toolkitContext );
 
 			if ( ! toolkitContext ) {
 				return acc;
@@ -103,21 +102,11 @@ export default function useToolkits() {
 				? activeAgent.toolkits()
 				: activeAgent.toolkits;
 
-		// look up all toolkit tools, resolving toolkit names to instances
-		// this allows:
-		// {
-		//  toolkits: [ 'ask-user', { name: 'my-custom-toolkit', tools: [ ... ]} ]}
-		// }
-		// ...to be used in the agent definition
-		console.warn( 'activeagent', activeAgent );
 		const allToolkitTools = agentToolkits.reduce( ( acc, toolkit ) => {
 			// if the toolkit is a string, look up the instance
-			console.warn( 'toolkit input', toolkit );
 			if ( typeof toolkit === 'string' ) {
 				toolkit = toolkits.find( ( t ) => t.name === toolkit );
 			}
-
-			console.warn( 'toolkit resolved', toolkit );
 
 			const toolkitTools =
 				typeof toolkit.tools === 'function'
@@ -137,14 +126,10 @@ export default function useToolkits() {
 			];
 		}, [] );
 
-		console.warn( 'allToolkitTools', allToolkitTools );
-
 		const agentTools =
 			typeof activeAgent.tools === 'function'
 				? activeAgent.tools( context, allToolkitTools )
 				: activeAgent.tools;
-
-		console.warn( 'agentTools', agentTools );
 
 		if ( ! agentTools ) {
 			return allToolkitTools;
