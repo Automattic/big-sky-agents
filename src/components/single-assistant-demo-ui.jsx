@@ -98,7 +98,7 @@ const WeatherAgent = {
 
 const DemoWithSingleAgent = ( { apiKey } ) => {
 	return (
-		<ToolkitsProvider>
+		<ToolkitsProvider toolkits={ [ AskUserToolkit, GetWeatherToolkit ] }>
 			<AgentsProvider>
 				<ChatProvider
 					service={ ChatModelService.OPENAI }

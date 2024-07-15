@@ -100,15 +100,14 @@ function resolveAgentTools( agent, context, allTools ) {
 			: agent.tools;
 
 	// remap string values to the same-named toolkit tool
-	const resolvedTools =
-		tools?.map( ( tool ) => {
-			if ( typeof tool === 'string' ) {
-				return allTools.find( ( t ) => t.name === tool );
-			}
-			return tool;
-		} ) ?? [];
+	const resolvedTools = tools?.map( ( tool ) => {
+		if ( typeof tool === 'string' ) {
+			return allTools.find( ( t ) => t.name === tool );
+		}
+		return tool;
+	} );
 
-	return resolvedTools;
+	return resolvedTools ?? allTools;
 }
 
 export default function useToolkits() {
