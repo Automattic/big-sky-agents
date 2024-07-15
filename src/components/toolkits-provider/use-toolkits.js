@@ -41,6 +41,76 @@ function deepMerge( target, source ) {
 	return target;
 }
 
+function resolveAgentToolkits( agent, allToolkits ) {
+	const toolkits =
+		typeof agent.toolkits === 'function'
+			? agent.toolkits()
+			: agent.toolkits;
+
+	const resolvedToolkits =
+		toolkits?.map( ( toolkit ) => {
+			if ( typeof toolkit === 'string' ) {
+				return allToolkits.find( ( t ) => t.name === toolkit );
+			}
+			return toolkit;
+		} ) ?? [];
+
+	return resolvedToolkits;
+}
+
+function resolveToolkitTools( toolkits, context ) {
+	return (
+		toolkits?.reduce( ( acc, toolkit ) => {
+			// if the toolkit is a string, look up the instance
+			if ( typeof toolkit === 'string' ) {
+				toolkit = toolkits.find( ( t ) => t.name === toolkit );
+			}
+
+			if ( ! toolkit ) {
+				// if the toolkit can't be found, it might not be registered yet.
+				// we rely on the hasToolkits function to check if the required toolkits are loaded
+				// before making the agent interactive
+				return acc;
+			}
+
+			const toolkitTools =
+				typeof toolkit.tools === 'function'
+					? toolkit.tools( context )
+					: toolkit.tools;
+
+			if ( ! toolkitTools ) {
+				return acc;
+			}
+
+			return [
+				...acc,
+				// deduplicate
+				...toolkitTools.filter(
+					( tool ) => ! acc.some( ( t ) => t.name === tool.name )
+				),
+			];
+		}, [] ) ?? []
+	);
+}
+
+function resolveAgentTools( agent, context, allTools ) {
+	const tools =
+		typeof agent.tools === 'function'
+			? agent.tools( context, allTools )
+			: agent.tools;
+
+	// remap string values to the same-named toolkit tool
+	const resolvedTools =
+		tools?.map( ( tool ) => {
+			if ( typeof tool === 'string' ) {
+				return allTools.find( ( t ) => t.name === tool );
+			}
+			return tool;
+		} ) ?? [];
+
+	return resolvedTools;
+}
+
 export default function useToolkits() {
 	const toolkitsStore = useContext( Context );
 	const { activeAgent } = useAgents();
@@ -99,60 +169,25 @@ export default function useToolkits() {
 		if ( ! activeAgent ) {
 			return [];
 		}
-		const agentToolkits =
-			typeof activeAgent.toolkits === 'function'
-				? activeAgent.toolkits()
-				: activeAgent.toolkits;
 
-		const allToolkitTools = agentToolkits.reduce( ( acc, toolkit ) => {
-			// if the toolkit is a string, look up the instance
-			if ( typeof toolkit === 'string' ) {
-				toolkit = toolkits.find( ( t ) => t.name === toolkit );
-			}
+		// get the array of agent toolkits
+		const agentToolkits = resolveAgentToolkits( activeAgent, toolkits );
+		// get the full set of tools from those toolkits
+		const toolkitTools = resolveToolkitTools( agentToolkits, context );
+		// get the subset of tools, if any, that the agent chooses
+		const agentTools = resolveAgentTools(
+			activeAgent,
+			context,
+			toolkitTools
+		);
 
-			if ( ! toolkit ) {
-				// if the toolkit can't be found, it might not be registered yet.
-				// we rely on the hasToolkits function to check if the required toolkits are loaded
-				// before making the agent interactive
-				return acc;
-			}
-
-			const toolkitTools =
-				typeof toolkit.tools === 'function'
-					? toolkit.tools()
-					: toolkit.tools;
-
-			if ( ! toolkitTools ) {
-				return acc;
-			}
-
-			return [
-				...acc,
-				// deduplicate
-				...toolkitTools.filter(
-					( tool ) => ! acc.some( ( t ) => t.name === tool.name )
-				),
-			];
-		}, [] );
-
-		const agentTools =
-			typeof activeAgent.tools === 'function'
-				? activeAgent.tools( context, allToolkitTools )
-				: activeAgent.tools;
-
-		if ( ! agentTools ) {
-			return allToolkitTools;
-		}
-
-		// remap string values to the same-named toolkit tool
-		const resolvedToolkitTools = agentTools.map( ( tool ) => {
-			if ( typeof tool === 'string' ) {
-				return allToolkitTools.find( ( t ) => t.name === tool );
-			}
-			return tool;
+		console.warn( 'tools', {
+			agentToolkits,
+			toolkitTools,
+			agentTools,
 		} );
 
-		return resolvedToolkitTools;
+		return agentTools;
 	}, [ activeAgent, context, toolkits ] );
 
 	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )

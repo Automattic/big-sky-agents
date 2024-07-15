@@ -10,7 +10,7 @@ import { useState } from '@wordpress/element';
 import AskUserComponent from './ask-user.jsx';
 import ConfirmComponent from './confirm.jsx';
 import MessageContent from './message-content.jsx';
-import UserMessageInput from './user-message-input.jsx';
+import MessageInput from './message-input.jsx';
 import useChat from './chat-provider/use-chat.js';
 import useAgents from './agents-provider/use-agents.js';
 import './agent-ui.scss';
@@ -103,7 +103,7 @@ function AgentUI() {
 					) }
 					{ assistantMessage && (
 						<AgentMessage message={ assistantMessage }>
-							<UserMessageInput
+							<MessageInput
 								value={ userMessgae }
 								onChange={ setUserMessage }
 								onSubmit={ ( value, files ) => {
