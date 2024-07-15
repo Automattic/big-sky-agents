@@ -31,7 +31,7 @@ class WapuuAgent extends BasicAgent {
 	description =
 		'Here to understand your goal and choose the best agent to help you.';
 
-	static get toolkits() {
+	get toolkits() {
 		return [ ...super.toolkits, ANALYZE_SITE_TOOLKIT_ID ];
 	}
 

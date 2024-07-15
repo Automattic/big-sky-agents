@@ -10,11 +10,13 @@ const instructions = DotPromptTemplate.fromString(
 );
 
 class BuilderAgent extends BasicAgent {
-	static toolkits = [
-		...BasicAgent.toolkits,
-		ConfirmToolkit.name,
-		ANALYZE_SITE_TOOLKIT_ID,
-	];
+	get toolkits() {
+		return [
+			...super.toolkits,
+			ConfirmToolkit.name,
+			ANALYZE_SITE_TOOLKIT_ID,
+		];
+	}
 
 	instructions( context ) {
 		return instructions.format( context );

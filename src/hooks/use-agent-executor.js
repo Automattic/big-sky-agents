@@ -202,13 +202,18 @@ const useAgentExecutor = () => {
 
 	// while threadRun.status is queued or in_progress, poll for thread run status
 	useEffect( () => {
-		if ( ! running && isThreadRunInProgress ) {
+		if ( isAssistantAvailable && ! running && isThreadRunInProgress ) {
 			const interval = setInterval( () => {
 				updateThreadRun();
 			}, 1000 );
 			return () => clearInterval( interval );
 		}
-	}, [ updateThreadRun, isThreadRunInProgress, running ] );
+	}, [
+		isAssistantAvailable,
+		updateThreadRun,
+		isThreadRunInProgress,
+		running,
+	] );
 
 	// if there are pendingThreadMessages, send them using addMessageToThread
 	useEffect( () => {
@@ -252,6 +257,8 @@ const useAgentExecutor = () => {
 						parameters: tool.parameters,
 					},
 				} ) );
+
+			console.warn( 'new tools', newTools );
 
 			const newInstructions =
 				typeof activeAgent.instructions === 'function'

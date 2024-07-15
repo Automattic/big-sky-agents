@@ -19,13 +19,15 @@ const additionalInstructions = DotPromptTemplate.fromString(
 );
 
 class BasicAgent extends Agent {
-	static toolkits = [
-		...Agent.toolkits,
-		AgentsToolkit.name,
-		AskUserToolkit.name,
-		InformUserToolkit.name,
-		GoalToolkit.name,
-	];
+	get toolkits() {
+		return [
+			...super.toolkits,
+			AgentsToolkit.name,
+			AskUserToolkit.name,
+			InformUserToolkit.name,
+			GoalToolkit.name,
+		];
+	}
 
 	onToolResult( toolName, value, callbacks, context ) {
 		switch ( toolName ) {

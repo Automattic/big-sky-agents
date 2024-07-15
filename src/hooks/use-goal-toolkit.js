@@ -8,21 +8,21 @@ import { useEffect } from '@wordpress/element';
  */
 import SetGoalTool from '../ai/tools/set-goal.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
-import useAgents from '../components/agents-provider/use-agents.js';
+import useGoals from '../components/goals-provider/use-goals.js';
 import GoalToolkit from '../ai/toolkits/goal-toolkit.js';
 
 const useGoalToolkit = () => {
 	const { registerToolkitCallbacks, registerToolkitContext } = useToolkits();
-	const { goal, setAgentGoal } = useAgents();
+	const { goal, setGoal } = useGoals();
 
 	useEffect( () => {
 		registerToolkitCallbacks( GoalToolkit.name, {
 			[ SetGoalTool.name ]: ( { goal: newGoal } ) => {
-				setAgentGoal( newGoal );
+				setGoal( newGoal );
 				return `Goal set to "${ newGoal }"`;
 			},
 		} );
-	}, [ registerToolkitCallbacks, setAgentGoal ] );
+	}, [ registerToolkitCallbacks, setGoal ] );
 
 	useEffect( () => {
 		registerToolkitContext( GoalToolkit.name, {

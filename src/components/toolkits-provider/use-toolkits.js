@@ -109,6 +109,7 @@ export default function useToolkits() {
 		//  toolkits: [ 'ask-user', { name: 'my-custom-toolkit', tools: [ ... ]} ]}
 		// }
 		// ...to be used in the agent definition
+		console.warn( 'activeagent', activeAgent );
 		const allToolkitTools = agentToolkits.reduce( ( acc, toolkit ) => {
 			// if the toolkit is a string, look up the instance
 			console.warn( 'toolkit input', toolkit );
@@ -126,24 +127,38 @@ export default function useToolkits() {
 			if ( ! toolkitTools ) {
 				return acc;
 			}
+
 			return [
 				...acc,
+				// deduplicate
 				...toolkitTools.filter(
 					( tool ) => ! acc.some( ( t ) => t.name === tool.name )
 				),
 			];
 		}, [] );
 
+		console.warn( 'allToolkitTools', allToolkitTools );
+
 		const agentTools =
 			typeof activeAgent.tools === 'function'
 				? activeAgent.tools( context, allToolkitTools )
 				: activeAgent.tools;
 
+		console.warn( 'agentTools', agentTools );
+
 		if ( ! agentTools ) {
 			return allToolkitTools;
 		}
 
-		return agentTools;
+		// remap string values to the same-named toolkit tool
+		const resolvedToolkitTools = agentTools.map( ( tool ) => {
+			if ( typeof tool === 'string' ) {
+				return allToolkitTools.find( ( t ) => t.name === tool );
+			}
+			return tool;
+		} );
+
+		return resolvedToolkitTools;
 	}, [ activeAgent, context, toolkits ] );
 
 	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )

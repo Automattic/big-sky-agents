@@ -28,6 +28,7 @@ import useAgentExecutor from '../hooks/use-agent-executor.js';
 import useSiteToolkit from '../hooks/use-site-toolkit.js';
 import useGoalToolkit from '../hooks/use-goal-toolkit.js';
 import useInformToolkit from '../hooks/use-inform-toolkit.js';
+import useAskUserToolkit from '../hooks/use-ask-user-toolkit.js';
 
 /**
  * Renders the Chat Demo UI component - a simple chat without persistence.
@@ -54,6 +55,7 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	useAgentsToolkit();
 	useSiteToolkit( { pageId: selectedPageId } );
 	useAnalyzeSiteToolkit( { apiKey } );
+	useAskUserToolkit();
 	useGoalToolkit();
 	useInformToolkit();
 	useAgentExecutor();
