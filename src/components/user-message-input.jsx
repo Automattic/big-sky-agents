@@ -96,8 +96,6 @@ function UserMessageInput( {
 		}
 	}, [ value ] );
 
-	console.warn( 'sendSVG', sendSVG );
-
 	return (
 		<div className="user-message-input">
 			<InputControl
