@@ -44,12 +44,8 @@ function deepMerge( target, source ) {
 export default function useToolkits() {
 	const toolkitsStore = useContext( Context );
 	const { activeAgent } = useAgents();
-	const {
-		registerToolkit,
-		registerToolkitCallbacks,
-		registerToolkitContext,
-		registerToolkitTools,
-	} = useDispatch( toolkitsStore );
+	const { registerToolkit, setCallbacks, setContext, setTools } =
+		useDispatch( toolkitsStore );
 	const { call } = useChat();
 	const toolkits = useSelect( ( select ) =>
 		select( toolkitsStore ).getToolkits()
@@ -195,9 +191,9 @@ export default function useToolkits() {
 		invoke,
 		callbacks,
 		registerToolkit,
-		registerToolkitCallbacks,
-		registerToolkitContext,
-		registerToolkitTools,
+		setCallbacks,
+		setContext,
+		setTools,
 		registerDefaultToolkits,
 	};
 }

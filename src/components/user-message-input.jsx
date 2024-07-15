@@ -6,8 +6,21 @@ import {
 	__experimentalItem as Item,
 	__experimentalItemGroup as ItemGroup,
 } from '@wordpress/components';
-import { arrowRight, close } from '@wordpress/icons';
+import { close } from '@wordpress/icons';
 import useChatIcon from '../hooks/use-chat-icon';
+// import sendSvg from './send.svg';
+
+const sendSVG = (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		viewBox="2 2 42 42"
+		width="24"
+		height="24"
+	>
+		<path d="M4.02 42 46 24 4.02 6 4 20l30 4-30 4z"></path>
+		<path fill="none" d="M0 0h48v48H0z"></path>
+	</svg>
+);
 
 const FilePreview = ( { name, url, onRemove } ) => {
 	return (
@@ -84,6 +97,8 @@ function UserMessageInput( {
 		}
 	}, [ value ] );
 
+	console.warn( 'sendSVG', sendSVG );
+
 	return (
 		<div className="user-message-input">
 			<InputControl
@@ -96,15 +111,14 @@ function UserMessageInput( {
 					/>
 				}
 				suffix={
-					value && (
-						<Button
-							label="Submit"
-							icon={ arrowRight }
-							iconPosition="right"
-							variant="tertiary"
-							onClick={ handleSubmit }
-						/>
-					)
+					<Button
+						label="Submit"
+						disabled={ ! value }
+						icon={ sendSVG }
+						iconPosition="right"
+						variant="tertiary"
+						onClick={ handleSubmit }
+					/>
 				}
 				placeholder={ placeholder }
 				value={ value }

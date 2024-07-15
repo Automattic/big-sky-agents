@@ -54,6 +54,9 @@ export { default as useChatSettings } from './hooks/use-chat-settings.js';
 export { default as useSiteToolkit } from './hooks/use-site-toolkit.js';
 export { default as useToolkits } from './components/toolkits-provider/use-toolkits.js';
 export { default as useNextToolCall } from './hooks/use-next-tool-call.js';
+export { default as useAskUserToolkit } from './hooks/use-ask-user-toolkit.js';
+export { default as useConfirmToolkit } from './hooks/use-confirm-toolkit.js';
+export { default as useGoalToolkit } from './hooks/use-goal-toolkit.js';
 
 /**
  * Core Classes

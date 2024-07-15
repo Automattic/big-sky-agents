@@ -15,29 +15,23 @@ import AgentsToolkit from '../ai/toolkits/agents-toolkit.js';
 
 const useAgentsToolkit = () => {
 	const { agents, activeAgent, setActiveAgent } = useAgents();
-	const {
-		registerToolkitTools,
-		registerToolkitCallbacks,
-		registerToolkitContext,
-	} = useToolkits();
+	const { setTools, setCallbacks, setContext } = useToolkits();
 
 	useEffect( () => {
-		registerToolkitTools( AgentsToolkit.name, [
-			createSetAgentTool( agents ),
-		] );
-	}, [ agents, registerToolkitTools ] );
+		setTools( AgentsToolkit.name, [ createSetAgentTool( agents ) ] );
+	}, [ agents, setTools ] );
 
 	useEffect( () => {
-		registerToolkitCallbacks( AgentsToolkit.name, {
+		setCallbacks( AgentsToolkit.name, {
 			[ SET_AGENT_TOOL_NAME ]: ( { agentId } ) => {
 				setActiveAgent( agentId );
 				return `Agent set to ${ agentId }`;
 			},
 		} );
-	}, [ registerToolkitCallbacks, setActiveAgent ] );
+	}, [ setCallbacks, setActiveAgent ] );
 
 	useEffect( () => {
-		registerToolkitContext( AgentsToolkit.name, {
+		setContext( AgentsToolkit.name, {
 			agents,
 			agent: {
 				id: activeAgent?.id,
@@ -45,7 +39,7 @@ const useAgentsToolkit = () => {
 				assistantId: activeAgent?.assistantId,
 			},
 		} );
-	}, [ registerToolkitContext, agents, activeAgent ] );
+	}, [ setContext, agents, activeAgent ] );
 };
 
 export default useAgentsToolkit;

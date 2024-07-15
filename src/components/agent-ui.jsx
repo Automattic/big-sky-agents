@@ -106,10 +106,12 @@ function AgentUI() {
 							<UserMessageInput
 								value={ userMessgae }
 								onChange={ setUserMessage }
-								onSubmit={ userSay }
+								onSubmit={ ( value ) => {
+									userSay( value );
+									setUserMessage( '' );
+								} }
 								onCancel={ () => {
 									informUser( 'Canceled!' );
-									// onResetTools();
 									onResetChat();
 								} }
 								fileUploadEnabled={ false }

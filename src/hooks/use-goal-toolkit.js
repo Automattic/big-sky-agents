@@ -12,25 +12,25 @@ import useGoals from '../components/goals-provider/use-goals.js';
 import GoalToolkit from '../ai/toolkits/goal-toolkit.js';
 
 const useGoalToolkit = () => {
-	const { registerToolkitCallbacks, registerToolkitContext } = useToolkits();
+	const { setCallbacks, setContext } = useToolkits();
 	const { goal, setGoal } = useGoals();
 
 	useEffect( () => {
-		registerToolkitCallbacks( GoalToolkit.name, {
+		setCallbacks( GoalToolkit.name, {
 			[ SetGoalTool.name ]: ( { goal: newGoal } ) => {
 				setGoal( newGoal );
 				return `Goal set to "${ newGoal }"`;
 			},
 		} );
-	}, [ registerToolkitCallbacks, setGoal ] );
+	}, [ setCallbacks, setGoal ] );
 
 	useEffect( () => {
-		registerToolkitContext( GoalToolkit.name, {
+		setContext( GoalToolkit.name, {
 			agent: {
 				goal,
 			},
 		} );
-	}, [ registerToolkitContext, goal ] );
+	}, [ setContext, goal ] );
 };
 
 export default useGoalToolkit;

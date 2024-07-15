@@ -12,25 +12,25 @@ import useThought from '../components/thought-provider/use-thought.js';
 import InformToolkit from '../ai/toolkits/inform-toolkit.js';
 
 const useInformToolkit = () => {
-	const { registerToolkitCallbacks, registerToolkitContext } = useToolkits();
+	const { setCallbacks, setContext } = useToolkits();
 	const { thought, setThought } = useThought();
 
 	useEffect( () => {
-		registerToolkitCallbacks( InformToolkit.name, {
+		setCallbacks( InformToolkit.name, {
 			[ InformUserTool.name ]: ( { message: newThought } ) => {
 				setThought( newThought );
 				return `Assistant thinks "${ newThought }"`;
 			},
 		} );
-	}, [ registerToolkitCallbacks, setThought ] );
+	}, [ setCallbacks, setThought ] );
 
 	useEffect( () => {
-		registerToolkitContext( InformToolkit.name, {
+		setContext( InformToolkit.name, {
 			agent: {
 				thought,
 			},
 		} );
-	}, [ registerToolkitContext, thought ] );
+	}, [ setContext, thought ] );
 };
 
 export default useInformToolkit;
