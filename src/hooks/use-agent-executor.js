@@ -58,8 +58,6 @@ const useAgentExecutor = () => {
 		callbacks,
 	} = useToolkits();
 
-	console.warn( 'context: ', context );
-
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =
@@ -242,7 +240,6 @@ const useAgentExecutor = () => {
 	useEffect( () => {
 		if ( activeAgent && toolkitsLoaded ) {
 			// deduplicate and convert to OpenAI format
-			console.warn( 'all tools', allTools );
 			const newTools = allTools
 				.filter(
 					( tool, index, self ) =>
@@ -257,8 +254,6 @@ const useAgentExecutor = () => {
 						parameters: tool.parameters,
 					},
 				} ) );
-
-			console.warn( 'new tools', newTools );
 
 			const newInstructions =
 				typeof activeAgent.instructions === 'function'

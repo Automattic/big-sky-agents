@@ -52,7 +52,6 @@ class WapuuAgent extends BasicAgent {
 	}
 
 	onStart( invoke ) {
-		console.warn( 'WapuuAgent.onStart', invoke );
 		invoke.askUser( {
 			question: defaultQuestion,
 			choices: defaultChoices,

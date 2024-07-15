@@ -93,6 +93,12 @@ export default function useToolkits() {
 	}, [ toolkits ] );
 
 	// flattened array of tools, avoiding duplicates
+	// tools work like this:
+	// - if the agent has a tools() function, it's called with the context and all toolkit tools
+	// - if the agent has a tools property, it's used as-is
+	// - tools that are strings (e.g. 'askUser') are resolved to the same-named toolkit tool
+	// - tools that are objects are used as-is
+	// - agents with no tools property will use all toolkit tools
 	const tools = useMemo( () => {
 		if ( ! activeAgent ) {
 			return [];

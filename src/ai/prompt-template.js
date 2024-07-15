@@ -42,7 +42,6 @@ export class StringPromptTemplate extends Formatter {
 
 	format( values ) {
 		// apply formatters
-		console.log( 'formatting', values );
 		const formattedValues = this.inputVariables.reduce( ( acc, v ) => {
 			if ( v in this.formatters ) {
 				acc[ v ] = this.formatters[ v ].format( values );

@@ -26,10 +26,13 @@ import {
 } from '../ai/agents/wapuu-agent.js';
 import './chat-demo-ui.scss';
 import PopUpControls from './popup-controls.jsx';
-import useAgentsToolkit from '../hooks/use-agents-toolkit.js';
 import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 import useAgentExecutor from '../hooks/use-agent-executor.js';
+import useAgentsToolkit from '../hooks/use-agents-toolkit.js';
 import useSiteToolkit from '../hooks/use-site-toolkit.js';
+import useGoalToolkit from '../hooks/use-goal-toolkit.js';
+import useInformToolkit from '../hooks/use-inform-toolkit.js';
+import useAskUserToolkit from '../hooks/use-ask-user-toolkit.js';
 
 /**
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
@@ -58,6 +61,9 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	useAgentsToolkit();
 	useAnalyzeSiteToolkit( { apiKey } );
 	useSiteToolkit( { pageId: selectedPageId } );
+	useAskUserToolkit();
+	useGoalToolkit();
+	useInformToolkit();
 	useAgentExecutor();
 
 	const { setActiveAgent } = useAgents();
