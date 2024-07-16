@@ -7,7 +7,7 @@ import { dispatch, select } from '@wordpress/data';
 import { store } from './src/store/index.js';
 
 // Agents
-import WapuuAgent, { WAPUU_AGENT_ID } from './src/ai/agents/cli/wapuu-agent.js';
+import WapuuAgent from './src/ai/agents/cli/wapuu-agent.js';
 import SiteSpecAgent from './src/ai/agents/cli/site-spec-agent.js';
 
 // Tools
@@ -27,6 +27,10 @@ import {
 	SetSiteTypeTool,
 } from './src/ai/tools/site-tools.js';
 
+const wapuuAgent = new WapuuAgent();
+const siteSpecAgent = new SiteSpecAgent();
+const agents = [ wapuuAgent, siteSpecAgent ];
+
 dotenv.config();
 const defaultModel = ChatModelService.OPENAI;
 const args = minimist( process.argv.slice( 2 ) );
@@ -37,6 +41,10 @@ Usage: node ./agent-cli.js [options]
 
 Options:
   --help              Show this help message and exit
+  --agent             The agent to use (default: ${ wapuuAgent.id }).
+                      Options: ${ agents
+							.map( ( agent ) => agent.id )
+							.join( ', ' ) }
   --model-service     The model to use (default: ${ defaultModel }).
                       Options: ${ ChatModelService.getAvailable().join( ', ' ) }
   --verbose           Enable verbose logging mode
@@ -267,10 +275,18 @@ async function runCompletion() {
 }
 
 // register agents
-dispatch( store ).registerAgent( new WapuuAgent() );
-dispatch( store ).registerAgent( new SiteSpecAgent() );
+for ( const agent of agents ) {
+	dispatch( store ).registerAgent( agent );
+}
 // set default agent
-setActiveAgent( WAPUU_AGENT_ID );
+const argsAgent =
+	args.agent && agents.find( ( agent ) => agent.id === args.agent );
+if ( ! argsAgent && args.agent ) {
+	console.warn(
+		`⚠️  Agent "${ args.agent }" not found, defaulting to ${ wapuuAgent.id }`
+	);
+}
+setActiveAgent( argsAgent ? argsAgent.id : wapuuAgent.id );
 
 // register toolkits
 dispatch( store ).registerToolkit( {
