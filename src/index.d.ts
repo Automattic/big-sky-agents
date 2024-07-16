@@ -10,8 +10,6 @@ export type {
 	WPCOMOpenAIChatModel,
 } from './ai/chat-model';
 
-import { ChatModelType, ChatModelService } from './ai/chat-model';
-
 export declare function useChatModel( options: {
 	apiKey: string | undefined;
 	service: string;
@@ -29,11 +27,9 @@ interface ChatIconHook {
 }
 
 export declare function useChatIcon(): ChatIconHook;
-export declare function useChat( options: ChatOptions ): Chat;
-export declare function useToolkit(): AgentToolkit;
-export declare function useAgentToolkit( options: {
-	agents: AgentConfig[];
-} ): AgentToolkit;
+export declare function useChat(): Chat;
+export declare function useToolkit( toolkit: Toolkit ): void;
+export declare function useAgentsToolkit(): void;
 
 export declare function AskUserComponent(): any;
 export declare function ConfirmComponent(): any;
@@ -49,16 +45,8 @@ export declare function withToolCall(
  * Chat
  */
 
-interface ChatOptions {
-	apiKey: string | undefined;
-	service: ChatModelService;
-	model: ChatModelType;
-	temperature?: number;
-	feature?: string;
-}
-
 // define MessageRole enum
-enum MessageRole {
+declare enum MessageRole {
 	ASSISTANT = 'assistant',
 	USER = 'user',
 	TOOL = 'tool',
@@ -118,12 +106,6 @@ export interface Tool {
 	type: 'function';
 }
 
-interface AgentConfig {
-	id: string;
-	name: string;
-	description: string;
-}
-
 interface Chat {
 	running: boolean;
 	enabled: boolean;
@@ -175,38 +157,28 @@ export declare class DotPromptTemplate extends StringPromptTemplate {
 	constructor( options: { template: string; inputVariables: string[] } );
 	static fromString(
 		tmpl: string,
-		templateVariables?: Array,
+		templateVariables?: string[],
 		options?: any
 	): FStringPromptTemplate;
 }
+
+type InvokeTools = { [ key: string ]: () => void }
 
 /**
  * Agents
  */
 
-declare class Agent {
+export declare class Agent {
 	constructor();
 	get id(): string;
 	get description(): string;
 	get assistantId(): string;
 	tools( context: any ): Tool[];
+	toolkits( context: any ): Array<Toolkit | string>;
 	instructions( context: any ): string;
 	additionalInstructions( context: any ): string;
-	onStart( chat: any, context: any ): void;
-}
-
-interface AgentState {
-	tools: Tool[];
-	instructions: string;
-	additionalInstructions: string;
-	onStart: () => void;
-	onConfirm?: ( args: any ) => string;
-}
-
-export declare class StandardAgent extends Agent {
-	askUser( options: { question: string; choices: string[] } ): void;
-	informUser( message: string ): void;
-	setGoal( goal: any ): void;
+	onToolResult( toolName: string, value: any, invoke: InvokeTools, context: any ): void;
+	onStart( invoke: InvokeTools ): void;
 }
 
 /**
@@ -219,41 +191,20 @@ interface ToolkitCallbacks {
 
 interface Toolkit {
 	reset: () => void;
-	tools: Tool[]; // TODO: Tool
+	tools: Tool[] | (( context: any ) => Tool[]);
 	context: any;
-	callbacks: ToolkitCallbacks;
-}
-
-interface AgentToolkit extends Toolkit {
-	context: {
-		agents: any[]; // TODO: define this agent config
-		agent: {
-			assistantId: string;
-			id: string;
-			name: string;
-			goal: string;
-			thought: string;
-		};
-	};
 	callbacks: ToolkitCallbacks;
 }
 
 /**
  * Agent UI
  */
-
-type AgentUIProps = {
-	chat: Chat;
-	agent: AgentState;
-	toolkit: AgentToolkit;
-};
-
-export declare function AgentUI( props: AgentUIProps ): JSX.Element;
+export declare function AgentUI(): JSX.Element;
 
 /**
  * Chat UI
  */
-export declare function AgentControls( props: AgentUIProps ): JSX.Element;
+export declare function AgentControls(): JSX.Element;
 export declare function ChatModelControls( props: {
 	onApiKeyChanged: ( apiKey: string ) => void;
 } ): JSX.Element;
