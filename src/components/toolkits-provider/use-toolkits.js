@@ -199,9 +199,18 @@ export default function useToolkits() {
 	const hasToolkits = useCallback(
 		( requestedToolkits ) => {
 			return requestedToolkits.every( ( requestedToolkit ) =>
-				toolkits.some(
-					( toolkit ) => toolkit.name === requestedToolkit
-				)
+				toolkits.some( ( toolkit ) => {
+					if ( typeof toolkit === 'string' ) {
+						return toolkit.name === requestedToolkit;
+					} else if (
+						typeof requestedToolkit === 'object' &&
+						requestedToolkit
+					) {
+						return toolkit.name === requestedToolkit.name;
+					}
+
+					return false;
+				} )
 			);
 		},
 		[ toolkits ]
