@@ -5,7 +5,6 @@
 /**
  * Internal dependencies
  */
-import AgentUI from './agent-ui.jsx';
 import ChatHistory from './chat-history.jsx';
 import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
 import './chat-demo-ui.scss';
@@ -19,14 +18,23 @@ import { ToolkitsProvider } from './toolkits-provider/index.js';
 // the Agent Toolkit supports core functionality like determining the current agent and switching agents
 import useAgentExecutor from '../hooks/use-agent-executor.js';
 import PopUpControls from './popup-controls.jsx';
+import UserMessageInput from './user-message-input.jsx';
+import MessageContent from './message-content.jsx';
+import useChat from './chat-provider/use-chat.js';
 
 const AllInOneDemo = () => {
 	useAgent( WeatherAgent );
 	useAgentExecutor();
+	const { assistantMessage } = useChat();
 
 	return (
 		<>
-			<AgentUI />
+			{ assistantMessage && (
+				<>
+					<MessageContent content={ assistantMessage } />
+					<UserMessageInput />
+				</>
+			) }
 			<PopUpControls />
 			<ChatHistory />
 		</>
