@@ -48,6 +48,7 @@ const useAgentExecutor = () => {
 		additionalMessages,
 		assistantId,
 		setAssistantId,
+		agentSay,
 	} = useChat();
 
 	const {
@@ -360,6 +361,7 @@ const useAgentExecutor = () => {
 			}
 		}
 	}, [
+		agentSay,
 		activeAgent,
 		invoke,
 		isAvailable,
