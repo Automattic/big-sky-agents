@@ -33,13 +33,13 @@ class BuilderAgent extends BasicAgent {
 	}
 
 	// by overriding this method you can handle almost any kind of lifecycle callback
-	onToolResult( toolName, value, callbacks, context ) {
+	onToolResult( toolName, value, invoke, context ) {
 		switch ( toolName ) {
 			case ConfirmTool.name:
-				this.onConfirm( value, callbacks, context );
+				this.onConfirm( value, invoke, context );
 				break;
 			default:
-				super.onToolResult( toolName, value, callbacks, context );
+				super.onToolResult( toolName, value, invoke, context );
 		}
 	}
 
