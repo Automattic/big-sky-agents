@@ -1,7 +1,7 @@
 /**
  * Internal dependencies
  */
-import log from '../utils/log-debug';
+import log from '../utils/log-debug.js';
 
 // TODO: extract all this to a JSON configuration file
 export const ChatModelService = {

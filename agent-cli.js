@@ -1,17 +1,19 @@
 import dotenv from 'dotenv';
 import minimist from 'minimist';
 import ChatModel, { ChatModelService } from './src/ai/chat-model.js';
-import { WAPUU_AGENT_ID } from './src/ai/agents/wapuu-agent.js';
 import promptSync from 'prompt-sync';
 
-import defaultAgents from './src/ai/agents/default-agents.js';
-import { CONFIRM_TOOL_NAME } from './src/ai/tools/confirm.js';
-
 import { dispatch, select } from '@wordpress/data';
+import { store } from './src/store/index.js';
 
-import AskUserTool, { ASK_USER_TOOL_NAME } from './src/ai/tools/ask-user.js';
+// Agents
+import WapuuAgent, { WAPUU_AGENT_ID } from './src/ai/agents/cli/wapuu-agent.js';
+import SiteSpecAgent from './src/ai/agents/cli/site-spec-agent.js';
+
+// Tools
+import AskUserTool from './src/ai/tools/ask-user.js';
+import ConfirmTool from './src/ai/tools/confirm.js';
 import InformTool from './src/ai/tools/inform-user.js';
-import AnalyzeUrlTool from './src/ai/tools/analyze-url.js';
 import createSetAgentTool, {
 	SET_AGENT_TOOL_NAME,
 } from './src/ai/tools/set-agent.js';
@@ -24,7 +26,6 @@ import {
 	SetSiteTopicTool,
 	SetSiteTypeTool,
 } from './src/ai/tools/site-tools.js';
-import { store } from './src/store/index.js';
 
 dotenv.config();
 const defaultModel = ChatModelService.OPENAI;
@@ -109,8 +110,8 @@ async function runCompletion() {
 			id: select( store ).getActiveAgent()?.id,
 			name: select( store ).getActiveAgent()?.name,
 			assistantId: select( store ).getActiveAgent()?.assistantId,
-			goal: select( store ).getAgentGoal(),
-			thought: select( store ).getAgentThought(),
+			goal: select( store ).getGoal(),
+			thought: select( store ).getThought(),
 		},
 		site: {
 			title: select( store ).getSiteTitle(),
@@ -243,11 +244,11 @@ async function runCompletion() {
 			}
 		} else {
 			switch ( tool_call.function.name ) {
-				case ASK_USER_TOOL_NAME:
+				case AskUserTool.name:
 					assistantMessage = resultArgs.question;
 					setToolResult( tool_call.id, resultArgs.question );
 					break;
-				case CONFIRM_TOOL_NAME:
+				case ConfirmTool.name:
 					assistantMessage = resultArgs.message;
 					setToolResult( tool_call.id, resultArgs.message );
 					break;
@@ -266,10 +267,9 @@ async function runCompletion() {
 }
 
 // register agents
-defaultAgents.forEach( ( agent ) => {
-	dispatch( store ).registerAgent( agent );
-} );
-// set default Wapuu agent
+dispatch( store ).registerAgent( new WapuuAgent() );
+dispatch( store ).registerAgent( new SiteSpecAgent() );
+// set default agent
 setActiveAgent( WAPUU_AGENT_ID );
 
 // register toolkits
@@ -277,18 +277,18 @@ dispatch( store ).registerToolkit( {
 	name: 'agents',
 	tools: [
 		AskUserTool,
+		ConfirmTool,
 		SetGoalTool,
 		InformTool,
 		createSetAgentTool( select( store ).getAgents() ),
-		AnalyzeUrlTool,
 	],
 	callbacks: {
 		[ InformTool.name ]: ( { message } ) => {
-			dispatch( store ).setAgentThought( message );
+			dispatch( store ).setThought( message );
 			return message ? `Agent thinks: "${ message }"` : 'Thought cleared';
 		},
 		[ SetGoalTool.name ]: ( { goal: newGoal } ) => {
-			dispatch( store ).setAgentGoal( newGoal );
+			dispatch( store ).setGoal( newGoal );
 			return `Goal set to "${ newGoal }"`;
 		},
 		[ SET_AGENT_TOOL_NAME ]: ( { agentId } ) => {
