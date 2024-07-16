@@ -12,6 +12,10 @@ export {
 	WPCOMJetpackAIChatModel,
 	WPCOMOpenAIChatModel,
 } from './ai/chat-model.js';
+export {
+	AssistantModelService,
+	AssistantModelType,
+} from './ai/assistant-model.js';
 export { default as useChatModel } from './hooks/use-chat-model.js';
 
 /**
