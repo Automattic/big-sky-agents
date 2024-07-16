@@ -116,7 +116,7 @@ export default function useToolkits() {
 	const { registerToolkit, setCallbacks, setContext, setTools } =
 		useDispatch( toolkitsStore );
 	const { call, agentSay, userSay } = useChat();
-	const toolkits = useSelect( ( select ) =>
+	const registeredToolkits = useSelect( ( select ) =>
 		select( toolkitsStore ).getToolkits()
 	);
 
@@ -126,9 +126,17 @@ export default function useToolkits() {
 		} );
 	}, [ registerToolkit ] );
 
+	const agentToolkits = useMemo( () => {
+		if ( ! activeAgent ) {
+			return [];
+		}
+		// the agents toolkits are the ones that are required by the agent, whether using a string (therefore looked up) or as an instance
+		return resolveAgentToolkits( activeAgent, registeredToolkits );
+	}, [ activeAgent, registeredToolkits ] );
+
 	// used to actually call the tool, e.g. callbacks.getWeather( { location: "Boston, MA" } )
 	const callbacks = useMemo( () => {
-		return toolkits?.reduce( ( acc, toolkit ) => {
+		return agentToolkits?.reduce( ( acc, toolkit ) => {
 			const toolkitCallbacks =
 				typeof toolkit.callbacks === 'function'
 					? toolkit.callbacks()
@@ -138,11 +146,11 @@ export default function useToolkits() {
 				...toolkitCallbacks,
 			};
 		}, {} );
-	}, [ toolkits ] );
+	}, [ agentToolkits ] );
 
 	// merged context from all toolkits
 	const context = useMemo( () => {
-		return toolkits.reduce( ( acc, toolkit ) => {
+		return agentToolkits.reduce( ( acc, toolkit ) => {
 			const toolkitContext =
 				typeof toolkit.context === 'function'
 					? toolkit.context()
@@ -155,7 +163,7 @@ export default function useToolkits() {
 			const result = deepMerge( acc, toolkitContext );
 			return result;
 		}, {} );
-	}, [ toolkits ] );
+	}, [ agentToolkits ] );
 
 	// flattened array of tools, avoiding duplicates
 	// tools work like this:
@@ -169,8 +177,6 @@ export default function useToolkits() {
 			return [];
 		}
 
-		// get the array of agent toolkits
-		const agentToolkits = resolveAgentToolkits( activeAgent, toolkits );
 		// get the full set of tools from those toolkits
 		const toolkitTools = resolveToolkitTools( agentToolkits, context );
 		// get the subset of tools, if any, that the agent chooses
@@ -181,7 +187,7 @@ export default function useToolkits() {
 		);
 
 		return agentTools;
-	}, [ activeAgent, context, toolkits ] );
+	}, [ activeAgent, agentToolkits, context ] );
 
 	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
 	const invoke = useMemo( () => {
@@ -198,23 +204,26 @@ export default function useToolkits() {
 
 	const hasToolkits = useCallback(
 		( requestedToolkits ) => {
-			return requestedToolkits.every( ( requestedToolkit ) =>
-				toolkits.some(
-					( toolkit ) => toolkit.name === requestedToolkit
-				)
-			);
+			return requestedToolkits.every( ( requestedToolkit ) => {
+				if ( typeof requestedToolkit === 'string' ) {
+					return agentToolkits.some(
+						( toolkit ) => toolkit.name === requestedToolkit
+					);
+				}
+				return true;
+			} );
 		},
-		[ toolkits ]
+		[ agentToolkits ]
 	);
 
 	const reset = useCallback( () => {
 		// call reset() on each toolkit if defined and it's a function
-		toolkits.forEach( ( toolkit ) => {
+		agentToolkits.forEach( ( toolkit ) => {
 			if ( toolkit.reset && typeof toolkit.reset === 'function' ) {
 				toolkit.reset();
 			}
 		} );
-	}, [ toolkits ] );
+	}, [ agentToolkits ] );
 
 	return {
 		reset,
