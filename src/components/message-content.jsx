@@ -52,6 +52,12 @@ const MessageContent = ( { content } ) => {
 		return <Markdown>{ content }</Markdown>;
 	}
 
+	if ( ! Array.isArray( content ) ) {
+		return `Unknown content type: ${ typeof content }, content: ${ JSON.stringify(
+			content
+		) }`;
+	}
+
 	return content.map( ( part, index ) => {
 		switch ( part.type ) {
 			case 'text':

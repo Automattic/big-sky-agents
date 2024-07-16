@@ -17,15 +17,6 @@
 	}
 }
 
-.big-sky__agent-debug {
-	position: absolute;
-	right: 16px;
-	bottom: 16px;
-	background-color: #fff;
-	padding: 8px;
-	box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
-}
-
 // select .wp-block where data-type=big-sky/placeholder
 .wp-block[data-type="big-sky/section"],
 .wp-block[data-type="big-sky/page"] {

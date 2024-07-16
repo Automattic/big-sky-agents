@@ -1,11 +1,11 @@
-import Agent from './agent.js';
+import BasicAgent from './basic-agent.js';
 import { DotPromptTemplate } from '../prompt-template.js';
 
 const instructions = DotPromptTemplate.fromString(
 	`You are a helpful WordPress tutor. You are an expert in all things WordPress.`
 );
 
-class TutorAgent extends Agent {
+class TutorAgent extends BasicAgent {
 	id = 'WPTutor';
 	name = 'WordPress Tutor';
 	description = 'Here to help you learn WordPress.';
@@ -14,8 +14,8 @@ class TutorAgent extends Agent {
 		return instructions.format( context );
 	}
 
-	onStart( invoke ) {
-		invoke.askUser( {
+	onStart( { askUser } ) {
+		askUser( {
 			question: 'What can I help you with?',
 			choices: [
 				'How do I add a page?',

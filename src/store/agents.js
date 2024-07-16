@@ -1,12 +1,8 @@
-import { createReduxStore } from '@wordpress/data';
-
-const DEFAULT_GOAL = "Find out the user's goal";
+import { createReduxStore, createSelector } from '@wordpress/data';
 
 const initialState = {
 	agents: [],
 	activeAgentId: null,
-	agentGoal: DEFAULT_GOAL,
-	agentThought: null,
 	started: false,
 };
 
@@ -21,18 +17,6 @@ export const actions = {
 		return {
 			type: 'SET_ACTIVE_AGENT',
 			agentId,
-		};
-	},
-	setAgentGoal: ( goal ) => {
-		return {
-			type: 'SET_AGENT_GOAL',
-			goal,
-		};
-	},
-	setAgentThought: ( thought ) => {
-		return {
-			type: 'SET_AGENT_THOUGHT',
-			thought,
 		};
 	},
 	registerAgent: ( agent ) => {
@@ -59,10 +43,6 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, agents: [ ...state.agents, agent ] };
 		case 'SET_ACTIVE_AGENT':
 			return { ...state, activeAgentId: action.agentId };
-		case 'SET_AGENT_GOAL':
-			return { ...state, agentGoal: action.goal };
-		case 'SET_AGENT_THOUGHT':
-			return { ...state, agentThought: action.thought };
 		case 'SET_AGENT_STARTED':
 			return { ...state, started: action.started };
 		default:
@@ -71,28 +51,26 @@ export const reducer = ( state = initialState, action ) => {
 };
 
 export const selectors = {
-	getActiveAgentId: ( state ) => {
-		return state.activeAgentId;
-	},
-	getActiveAgent: ( state ) => {
-		return state.agents.find(
-			( agent ) => agent.id === state.activeAgentId
-		);
-	},
-	getActiveAgentName: ( state ) => {
-		const activeAgent = selectors.getActiveAgent( state );
-		return activeAgent?.name;
-	},
-	getAgents: ( state ) => {
-		return state.agents;
-	},
-	getAgentGoal: ( state ) => {
-		return state.agentGoal;
-	},
-	getAgentThought: ( state ) => {
-		return state.agentThought;
-	},
+	getActiveAgentId: ( state ) => state.activeAgentId,
+	getAgents: ( state ) => state.agents,
 	isAgentStarted: ( state ) => state.started,
+
+	getActiveAgent: createSelector(
+		( state ) =>
+			state.agents.find( ( agent ) => agent.id === state.activeAgentId ),
+		( state ) => [ state.agents, state.activeAgentId ]
+	),
+
+	getActiveAgentName: createSelector(
+		( state ) => selectors.getActiveAgent( state )?.name,
+		( state ) => [ state.agents, state.activeAgentId ]
+	),
+};
+
+export const slice = {
+	reducer,
+	actions,
+	selectors,
 };
 
 export function createAgentsStore( name, defaultValues ) {

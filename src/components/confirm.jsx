@@ -1,7 +1,31 @@
 import { Button, Card, CardBody, CardFooter } from '@wordpress/components';
 import MessageContent from './message-content.jsx';
+import { CONFIRM_TOOL_NAME } from '../ai/tools/confirm.js';
+import { useCallback } from 'react';
+import withToolCall from './with-tool-call.jsx';
 
-function Confirm( { message, onConfirm } ) {
+function Confirm( { args, respond, onConfirm } ) {
+	const onSubmit = useCallback(
+		( value ) => {
+			respond(
+				value,
+				value
+					? 'The user confirmed the changes'
+					: 'The user rejected the changes'
+			);
+			if ( onConfirm ) {
+				onConfirm( value );
+			}
+		},
+		[ onConfirm, respond ]
+	);
+
+	if ( ! args ) {
+		return null;
+	}
+
+	const { message } = args;
+
 	return (
 		<div className="big-sky__agent-input">
 			<Card size="medium">
@@ -15,17 +39,13 @@ function Confirm( { message, onConfirm } ) {
 				<CardFooter>
 					<Button
 						variant="secondary"
-						onClick={ () => {
-							onConfirm( false );
-						} }
+						onClick={ () => onSubmit( false ) }
 					>
 						Make Changes
 					</Button>
 					<Button
 						variant="primary"
-						onClick={ () => {
-							onConfirm( true );
-						} }
+						onClick={ () => onSubmit( true ) }
 					>
 						OK
 					</Button>
@@ -35,4 +55,4 @@ function Confirm( { message, onConfirm } ) {
 	);
 }
 
-export default Confirm;
+export default withToolCall( CONFIRM_TOOL_NAME, Confirm );

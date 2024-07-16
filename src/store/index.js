@@ -7,10 +7,16 @@ import {
 } from './agents.js';
 
 import {
-	actions as toolsActions,
-	reducer as toolsReducer,
-	selectors as toolsSelectors,
-} from './tools.js';
+	actions as goalsActions,
+	reducer as goalsReducer,
+	selectors as goalsSelectors,
+} from './goals.js';
+
+import {
+	actions as thoughtActions,
+	reducer as thoughtReducer,
+	selectors as thoughtSelectors,
+} from './thought.js';
 
 import {
 	actions as toolkitsActions,
@@ -51,7 +57,8 @@ import {
 const store = createReduxStore( 'big-sky-agents', {
 	reducer: combineReducers( {
 		agents: agentsReducer,
-		tools: toolsReducer,
+		goals: goalsReducer,
+		thought: thoughtReducer,
 		toolkits: toolkitsReducer,
 		chat: chatReducer,
 		site: siteReducer,
@@ -61,7 +68,8 @@ const store = createReduxStore( 'big-sky-agents', {
 	} ),
 	actions: {
 		...createNamespacedActions( 'agents', agentsActions ),
-		...createNamespacedActions( 'tools', toolsActions ),
+		...createNamespacedActions( 'goals', goalsActions ),
+		...createNamespacedActions( 'thought', thoughtActions ),
 		...createNamespacedActions( 'toolkits', toolkitsActions ),
 		...createNamespacedActions( 'chat', chatActions ),
 		...createNamespacedActions( 'site', siteActions ),
@@ -71,7 +79,8 @@ const store = createReduxStore( 'big-sky-agents', {
 	},
 	selectors: {
 		...createNamespacedSelectors( 'agents', agentsSelectors ),
-		...createNamespacedSelectors( 'tools', toolsSelectors ),
+		...createNamespacedSelectors( 'goals', goalsSelectors ),
+		...createNamespacedSelectors( 'thought', thoughtSelectors ),
 		...createNamespacedSelectors( 'toolkits', toolkitsSelectors ),
 		...createNamespacedSelectors( 'chat', chatSelectors ),
 		...createNamespacedSelectors( 'site', siteSelectors ),

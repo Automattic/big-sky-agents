@@ -20,13 +20,19 @@ import {
 	AssistantModelService,
 	AssistantModelType,
 } from '../ai/assistant-model.js';
-import { WAPUU_AGENT_ID } from '../ai/agents/wapuu-agent.js';
+import {
+	WAPUU_AGENT_ID,
+	WAPUU_ASSISTANT_ID,
+} from '../ai/agents/wapuu-agent.js';
 import './chat-demo-ui.scss';
 import PopUpControls from './popup-controls.jsx';
-import useAgentToolkit from '../hooks/use-agent-toolkit.js';
 import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 import useAgentExecutor from '../hooks/use-agent-executor.js';
+import useAgentsToolkit from '../hooks/use-agents-toolkit.js';
 import useSiteToolkit from '../hooks/use-site-toolkit.js';
+import useGoalToolkit from '../hooks/use-goal-toolkit.js';
+import useInformToolkit from '../hooks/use-inform-toolkit.js';
+import useAskUserToolkit from '../hooks/use-ask-user-toolkit.js';
 
 /**
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
@@ -48,11 +54,16 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		assistantEnabled: true,
 		service: AssistantModelService.OPENAI,
 		model: AssistantModelType.GPT_4O,
+		initialAgentId: WAPUU_AGENT_ID,
+		defaultAssistantId: WAPUU_ASSISTANT_ID,
 	} );
 
-	useAgentToolkit();
+	useAgentsToolkit();
 	useAnalyzeSiteToolkit( { apiKey } );
 	useSiteToolkit( { pageId: selectedPageId } );
+	useAskUserToolkit();
+	useGoalToolkit();
+	useInformToolkit();
 	useAgentExecutor();
 
 	const { setActiveAgent } = useAgents();

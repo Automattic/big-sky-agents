@@ -1,10 +1,10 @@
 {
   "name": "@automattic/big-sky-agents",
-  "version": "1.1.16",
+  "version": "1.1.29",
   "description": "The Big Sky Agents SDK",
   "repository": {
     "type": "git",
-    "url": "git@github.com:Automattic/big-sky-agents.git"
+    "url": "git+ssh://git@github.com/Automattic/big-sky-agents.git"
   },
   "author": "Automattic",
   "license": "GPL-2.0-or-later",
@@ -34,7 +34,7 @@
     "test": "jest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "prepare": "husky && npm run build"
+    "prepare": "husky"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.24.7",

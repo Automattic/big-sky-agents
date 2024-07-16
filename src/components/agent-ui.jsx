@@ -2,19 +2,16 @@
  * WordPress dependencies
  */
 import { Flex, FlexBlock, Notice } from '@wordpress/components';
-import { useMemo } from 'react';
+import { useState } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
-import AskUserQuestion from './ask-question.jsx';
-import Confirm from './confirm.jsx';
+import AskUserComponent from './ask-user.jsx';
+import ConfirmComponent from './confirm.jsx';
 import MessageContent from './message-content.jsx';
-import { ASK_USER_TOOL_NAME } from '../ai/tools/ask-user.js';
-import { CONFIRM_TOOL_NAME } from '../ai/tools/confirm.js';
+import MessageInput from './message-input.jsx';
 import useChat from './chat-provider/use-chat.js';
-// import useToolkits from './toolkits-provider/use-toolkits.js';
-// import useTools from './tools-provider/use-tools.js';
 import useAgents from './agents-provider/use-agents.js';
 import './agent-ui.scss';
 
@@ -59,33 +56,12 @@ const AgentThinking = ( {
 	</div>
 );
 
-const getNextPendingRequest = ( pendingToolCalls, toolName ) => {
-	return pendingToolCalls?.find(
-		( request ) => request.function.name === toolName
-	);
-};
-
 function AgentUI() {
 	const {
 		name: agentName,
-		// goal: agentGoal,
 		thought: agentThought,
+		setAgentThought: informUser,
 	} = useAgents();
-	// console.warn( 'agents', agents );
-	// useAgentToolkit();
-	// const {
-	// 	context: {
-	// 		agent: { name: agentName, thought: agentThought },
-	// 	},
-	// } = useToolkits( [ 'agents' ] );
-	// const agentName = 'Agent';
-	// const agentThought = 'Help the user find out about the weather';
-
-	// const toolkits = useToolkits( [ 'agents' ] );
-	// console.warn( 'toolkits', toolkits );
-	const informUser = ( message ) => {
-		console.warn( '🚀 Informing user', message );
-	};
 
 	const {
 		error,
@@ -94,24 +70,12 @@ function AgentUI() {
 		running,
 		toolRunning,
 		assistantMessage,
-		pendingToolCalls,
 		userSay,
-		setToolResult,
-		onReset: onResetChat,
+		pendingToolRequests,
+		reset: onResetChat,
 	} = useChat();
 
-	const { agentQuestion, agentConfirm } = useMemo( () => {
-		return {
-			agentQuestion: getNextPendingRequest(
-				pendingToolCalls,
-				ASK_USER_TOOL_NAME
-			),
-			agentConfirm: getNextPendingRequest(
-				pendingToolCalls,
-				CONFIRM_TOOL_NAME
-			),
-		};
-	}, [ pendingToolCalls ] );
+	const [ userMessgae, setUserMessage ] = useState( '' );
 
 	return (
 		<div
@@ -139,63 +103,31 @@ function AgentUI() {
 					) }
 					{ assistantMessage && (
 						<AgentMessage message={ assistantMessage }>
-							{ ! agentQuestion && ! agentConfirm ? (
-								<AskUserQuestion
-									onAnswer={ ( answer, files ) => {
-										userSay( answer, files );
-									} }
-									onCancel={ () => {
-										informUser( 'Canceled!' );
-										// onResetTools();
-										onResetChat();
-									} }
-								/>
-							) : null }
+							<MessageInput
+								value={ userMessgae }
+								onChange={ setUserMessage }
+								onSubmit={ ( value, files ) => {
+									userSay( value, files );
+									setUserMessage( '' );
+								} }
+								onCancel={ () => {
+									informUser( 'Canceled!' );
+									onResetChat();
+								} }
+								fileUploadEnabled={ true }
+							/>
 						</AgentMessage>
 					) }
-					{ agentQuestion && (
-						<AskUserQuestion
-							{ ...agentQuestion.function.arguments }
-							onCancel={ () => {
-								setToolResult( agentQuestion.id, '(canceled)' );
-								// onResetTools();
-								onResetChat();
-							} }
-							onAnswer={ ( answer, files ) => {
-								// clear the current thought
-								informUser( {} );
-								setToolResult( agentQuestion.id, answer );
-								userSay( answer, files );
-							} }
+					<AskUserComponent />
+					<ConfirmComponent />
+					{ ! assistantMessage && ! pendingToolRequests?.length && (
+						<AgentThinking
+							enabled={ enabled }
+							loading={ loading }
+							running={ running }
+							toolRunning={ toolRunning }
 						/>
 					) }
-					{ agentConfirm && (
-						<Confirm
-							{ ...agentConfirm.function.arguments }
-							onConfirm={ ( confirmed ) => {
-								informUser( {} );
-								setToolResult(
-									agentConfirm.id,
-									confirmed
-										? 'The user confirmed the proposed changes'
-										: 'The user rejected the proposed changes'
-								);
-								// TODO:
-								// onConfirm( confirmed );
-							} }
-						/>
-					) }
-					{ /* fallback if nothing else is showing */ }
-					{ ! assistantMessage &&
-						! agentQuestion &&
-						! agentConfirm && (
-							<AgentThinking
-								enabled={ enabled }
-								loading={ loading }
-								running={ running }
-								toolRunning={ toolRunning }
-							/>
-						) }
 				</FlexBlock>
 			</Flex>
 		</div>

@@ -8,6 +8,8 @@ import {
 	SetSiteTypeTool,
 } from '../tools/site-tools.js';
 import { DotPromptTemplate } from '../prompt-template.js';
+import { SITE_TOOLKIT_ID } from '../../hooks/use-site-toolkit.js';
+import { ANALYZE_SITE_TOOLKIT_ID } from '../../hooks/use-analyze-site-toolkit.js';
 
 const defaultQuestion = 'What would you like to do with your site settings?';
 
@@ -47,10 +49,39 @@ const additionalInstructions = new DotPromptTemplate( {
 	inputVariables: [ 'agent', 'site' ],
 } );
 
+const getChoicesForSite = ( site ) => {
+	const choices = [];
+
+	if ( ! site.title ) {
+		choices.push( 'Set the title' );
+	}
+
+	if ( ! site.description ) {
+		choices.push( 'Set the description' );
+	}
+
+	if ( ! site.category ) {
+		choices.push( 'Set the category' );
+	}
+
+	if ( ! site.topic ) {
+		choices.push( 'Set the topic' );
+	}
+
+	if ( ! site.location ) {
+		choices.push( 'Set the location' );
+	}
+
+	return choices;
+};
+
 class SiteSpecAgent extends BuilderAgent {
 	id = 'WPSiteSpec';
 	name = 'Site Building Assistant';
 	description = 'Here to help you update your site settings.';
+	get toolkits() {
+		return [ ...super.toolkits, ANALYZE_SITE_TOOLKIT_ID, SITE_TOOLKIT_ID ];
+	}
 
 	instructions( context ) {
 		return instructions.format( context );
@@ -80,32 +111,30 @@ class SiteSpecAgent extends BuilderAgent {
 		return defaultChoices;
 	}
 
-	onStart( invoke ) {
-		invoke.askUser( {
+	onStart( { askUser } ) {
+		askUser( {
 			question: defaultQuestion,
 			choices: defaultChoices,
 		} );
 	}
 
-	onConfirm( confirmed, invoke ) {
+	onConfirm(
+		confirmed,
+		{ setGoal, informUser, askUser, userSay },
+		{ site }
+	) {
 		if ( confirmed ) {
-			invoke.setGoal( 'Find out what the user wants to do next' );
-			invoke.informUser( 'Got it!' );
-			invoke.askUser( {
+			setGoal( { goal: 'Find out what the user wants to do next' } );
+			informUser( { message: 'Got it!' } );
+			askUser( {
 				question: 'What would you like to do next?',
-				choices: defaultChoices,
+				choices: getChoicesForSite( site ),
 			} );
 		} else {
-			invoke.userSay( 'I would like to make some changes' );
-			invoke.informUser( 'Looks like you requested some changes' );
-			invoke.askUser( {
+			userSay( 'I would like to make some changes' );
+			informUser( { message: 'Looks like you requested some changes' } );
+			askUser( {
 				question: 'What would you like to change?',
-				choices: [
-					'Change the title',
-					'Change the description',
-					'Change the category',
-					'Add a section',
-				],
 			} );
 		}
 	}

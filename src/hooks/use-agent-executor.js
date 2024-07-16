@@ -17,7 +17,6 @@ const useAgentExecutor = () => {
 		messages,
 		isAssistantAvailable,
 		isChatAvailable,
-		call,
 		loading,
 		running,
 		isAvailable,
@@ -49,22 +48,22 @@ const useAgentExecutor = () => {
 		additionalMessages,
 		assistantId,
 		setAssistantId,
+		agentSay,
 	} = useChat();
 
-	const { tools: allTools, hasToolkits, context, callbacks } = useToolkits();
+	const {
+		tools: allTools,
+		invoke,
+		hasToolkits,
+		context,
+		callbacks,
+	} = useToolkits();
 
 	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =
 		useState( '' );
-
-	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
-	const invoke = useMemo( () => {
-		return allTools.reduce( ( acc, tool ) => {
-			acc[ tool.name ] = ( args, id ) => call( tool.name, args, id );
-			return acc;
-		}, {} );
-	}, [ call, allTools ] );
+	const [ prevToolOutputsLength, setPrevToolOutputsLength ] = useState( 0 );
 
 	// update thread runs if they haven't been updated
 	useEffect( () => {
@@ -152,15 +151,6 @@ const useAgentExecutor = () => {
 			pendingToolCalls.length > 0
 		) {
 			pendingToolCalls.forEach( ( tool_call ) => {
-				if ( tool_call.inProgress ) {
-					return;
-				}
-
-				if ( tool_call.error ) {
-					throw new Error( tool_call.error );
-				}
-
-				// parse arguments if they're a string
 				const args =
 					typeof tool_call.function.arguments === 'string'
 						? JSON.parse( tool_call.function.arguments )
@@ -172,9 +162,8 @@ const useAgentExecutor = () => {
 					 * Looks like this:
 					 * multi_tool_use.parallel({"tool_uses":[{"recipient_name":"WPSiteSpec","parameters":{"title":"Lorem Ipsum","description":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.","type":"Blog","topic":"Lorem Ipsum","location":"Lorem Ipsum"}}]})
 					 *
-					 * I assume the result is supposed to be an array...
+					 * I assume the result is supposed to be an array... but I could be wrong.
 					 */
-					// create an array of promises for the tool uses
 					const promises = args.tool_uses.map( ( tool_use ) => {
 						const callback = callbacks[ tool_use.recipient_name ];
 
@@ -188,8 +177,9 @@ const useAgentExecutor = () => {
 						return `Unknown tool ${ tool_use.recipient_name }`;
 					} );
 
-					// set to tool result to the promise
-					setToolResult( tool_call.id, Promise.all( promises ) );
+					const toolResult = Promise.all( promises );
+
+					setToolResult( tool_call.id, toolResult );
 				}
 
 				const callback = callbacks[ tool_call.function.name ];
@@ -211,13 +201,18 @@ const useAgentExecutor = () => {
 
 	// while threadRun.status is queued or in_progress, poll for thread run status
 	useEffect( () => {
-		if ( ! running && isThreadRunInProgress ) {
+		if ( isAssistantAvailable && ! running && isThreadRunInProgress ) {
 			const interval = setInterval( () => {
 				updateThreadRun();
 			}, 1000 );
 			return () => clearInterval( interval );
 		}
-	}, [ updateThreadRun, isThreadRunInProgress, running ] );
+	}, [
+		isAssistantAvailable,
+		updateThreadRun,
+		isThreadRunInProgress,
+		running,
+	] );
 
 	// if there are pendingThreadMessages, send them using addMessageToThread
 	useEffect( () => {
@@ -239,49 +234,36 @@ const useAgentExecutor = () => {
 		isAssistantAvailable,
 	] );
 
-	const loaded = useMemo( () => {
+	const toolkitsLoaded = useMemo( () => {
 		return ! activeAgent?.toolkits || hasToolkits( activeAgent?.toolkits );
 	}, [ hasToolkits, activeAgent ] );
 
 	useEffect( () => {
-		if ( activeAgent && loaded ) {
-			let newTools =
-				typeof activeAgent.tools === 'function'
-					? activeAgent.tools( context )
-					: activeAgent.tools;
-
-			// for any tools that are a string, look up the definition from allTools by name
-
-			if ( ! newTools ) {
-				// use all tools if none specified
-				newTools = allTools;
-			}
-
-			// map string tools to globally registered tool definitions
-			newTools = newTools
-				.map( ( tool ) => {
-					if ( typeof tool === 'string' ) {
-						const registeredTool = allTools.find(
-							( t ) => t.name === tool
-						);
-						if ( ! registeredTool ) {
-							console.warn( '🧠 Tool not found', tool );
-						}
-						return registeredTool;
-					}
-					return tool;
-				} )
-				.filter( Boolean );
-
-			// remap to an OpenAI tool
-			newTools = newTools.map( ( tool ) => ( {
-				type: 'function',
-				function: {
-					name: tool.name,
-					description: tool.description,
-					parameters: tool.parameters,
-				},
-			} ) );
+		if ( activeAgent && toolkitsLoaded ) {
+			// deduplicate and convert to OpenAI format
+			const newTools = allTools
+				.filter(
+					( tool, index, self ) =>
+						index ===
+						self.findIndex( ( t ) => t.name === tool.name )
+				)
+				.map( ( tool ) => ( {
+					type: 'function',
+					function: {
+						name: tool.name,
+						description: tool.description,
+						// default to a single string parameter called "value"
+						parameters: tool.parameters ?? {
+							type: 'object',
+							properties: {
+								value: {
+									type: 'string',
+								},
+							},
+							required: [ 'value' ],
+						},
+					},
+				} ) );
 
 			const newInstructions =
 				typeof activeAgent.instructions === 'function'
@@ -318,7 +300,7 @@ const useAgentExecutor = () => {
 		tools,
 		allTools,
 		context,
-		loaded,
+		toolkitsLoaded,
 	] );
 
 	useEffect( () => {
@@ -329,6 +311,7 @@ const useAgentExecutor = () => {
 
 	useEffect( () => {
 		if (
+			! running &&
 			instructions &&
 			isAssistantAvailable &&
 			isThreadRunComplete &&
@@ -342,10 +325,11 @@ const useAgentExecutor = () => {
 				instructions,
 				additionalInstructions,
 				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
-				additionalMessages,
+				// additionalMessages,
 			} );
 		}
 	}, [
+		running,
 		isAssistantAvailable,
 		additionalInstructions,
 		additionalMessages,
@@ -355,6 +339,7 @@ const useAgentExecutor = () => {
 		isThreadRunComplete,
 		createThreadRun,
 		tools,
+		isThreadDataLoaded,
 	] );
 
 	/**
@@ -363,23 +348,25 @@ const useAgentExecutor = () => {
 	useEffect( () => {
 		if (
 			isAvailable &&
-			loaded &&
+			toolkitsLoaded &&
 			! isAwaitingUserInput &&
 			! running &&
 			! loading &&
 			! started &&
-			activeAgent &&
-			activeAgent.onStart
+			activeAgent
 		) {
 			setAgentStarted( true );
-			activeAgent.onStart( invoke );
+			if ( typeof activeAgent.onStart === 'function' ) {
+				activeAgent.onStart( invoke );
+			}
 		}
 	}, [
+		agentSay,
 		activeAgent,
 		invoke,
 		isAvailable,
 		isAwaitingUserInput,
-		loaded,
+		toolkitsLoaded,
 		loading,
 		running,
 		setAgentStarted,
@@ -416,6 +403,41 @@ const useAgentExecutor = () => {
 		runChatCompletion,
 		running,
 		tools,
+	] );
+
+	useEffect( () => {
+		if ( toolOutputs.length > prevToolOutputsLength && activeAgent ) {
+			const newToolOutputs = toolOutputs.slice( prevToolOutputsLength );
+
+			newToolOutputs.forEach( ( toolOutput ) => {
+				const toolCall = toolOutputs.find(
+					( tc ) => tc.id === toolOutput.tool_call_id
+				);
+
+				if ( toolCall ) {
+					const toolName = toolCall.toolName;
+					const value = toolOutput.output;
+
+					if ( typeof activeAgent.onToolResult === 'function' ) {
+						activeAgent.onToolResult(
+							toolName,
+							value,
+							callbacks,
+							context
+						);
+					}
+				}
+			} );
+
+			setPrevToolOutputsLength( toolOutputs.length );
+		}
+	}, [
+		toolOutputs,
+		requiredToolOutputs,
+		activeAgent,
+		callbacks,
+		prevToolOutputsLength,
+		context,
 	] );
 };
 

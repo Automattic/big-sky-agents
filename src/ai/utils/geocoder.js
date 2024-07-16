@@ -1,4 +1,9 @@
 /**
+ * Internal dependencies
+ */
+import log from '../../utils/log-debug.js';
+
+/**
  * TODO
  */
 class Geocoder {
@@ -16,7 +21,7 @@ class Geocoder {
 
 		const data = await response.json();
 
-		console.log( 'Geocode Response', data );
+		log.info( 'Geocode Response', data );
 
 		// actually let's map a list of locations from the existing data.features array
 		const featuresResponse = data?.features?.map( ( feature ) => {

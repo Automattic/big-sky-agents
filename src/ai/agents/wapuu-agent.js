@@ -1,6 +1,7 @@
-import Agent from './agent.js';
+import BasicAgent from './basic-agent.js';
 import AnalyzeUrlTool from '../tools/analyze-url.js';
 import { DotPromptTemplate } from '../prompt-template.js';
+import { ANALYZE_SITE_TOOLKIT_ID } from '../../hooks/use-analyze-site-toolkit.js';
 
 export const WAPUU_AGENT_ID = 'Wapuu';
 export const WAPUU_ASSISTANT_ID = 'asst_lk7tPSgLWShOx6N0LJuxQGVe';
@@ -23,14 +24,16 @@ const instructions = DotPromptTemplate.fromString(
 	`You are a helpful AI assistant. Your mission is to find out what the user needs, clearly set goal and choose an appropriate agent to help them.`
 );
 
-class WapuuAgent extends Agent {
+class WapuuAgent extends BasicAgent {
 	id = WAPUU_AGENT_ID;
 	name = 'Wapuu';
 	assistantId = WAPUU_ASSISTANT_ID;
 	description =
 		'Here to understand your goal and choose the best agent to help you.';
 
-	toolkits = [ 'agents', 'analyzeSite' ];
+	get toolkits() {
+		return [ ...super.toolkits, ANALYZE_SITE_TOOLKIT_ID ];
+	}
 
 	instructions( context ) {
 		return instructions.format( context );
@@ -48,8 +51,8 @@ class WapuuAgent extends Agent {
 		return defaultChoices;
 	}
 
-	onStart( { askUser } ) {
-		askUser( {
+	onStart( invoke ) {
+		invoke.askUser( {
 			question: defaultQuestion,
 			choices: defaultChoices,
 		} );

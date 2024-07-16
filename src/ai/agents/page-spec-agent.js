@@ -9,6 +9,8 @@ import {
 	SetSitePagesTool,
 } from '../tools/site-tools.js';
 import { DotPromptTemplate } from '../prompt-template.js';
+import { SITE_TOOLKIT_ID } from '../../hooks/use-site-toolkit.js';
+import { ANALYZE_SITE_TOOLKIT_ID } from '../../hooks/use-analyze-site-toolkit.js';
 
 const defaultChoices = [ 'Update the site description', 'Add a page' ];
 
@@ -49,6 +51,9 @@ class PageSpecAgent extends BuilderAgent {
 	id = 'WPPageSpec';
 	name = 'Page Building Assistant';
 	description = 'Here to help you update a page.';
+	get toolkits() {
+		return [ ...super.toolkits, ANALYZE_SITE_TOOLKIT_ID, SITE_TOOLKIT_ID ];
+	}
 
 	instructions( context ) {
 		return SystemPrompt.format( context );
@@ -79,18 +84,18 @@ class PageSpecAgent extends BuilderAgent {
 		} );
 	}
 
-	onConfirm( confirmed, invoke ) {
+	onConfirm( confirmed, { setGoal, informUser, askUser, userSay } ) {
 		if ( confirmed ) {
-			invoke.setGoal( 'Find out what the user wants to do next' );
-			invoke.informUser( 'Got it!' );
-			invoke.askUser( {
+			setGoal( 'Find out what the user wants to do next' );
+			informUser( 'Got it!' );
+			askUser( {
 				question: 'What would you like to do next?',
 				choices: defaultChoices,
 			} );
 		} else {
-			invoke.userSay( 'I would like to make some changes' );
-			invoke.informUser( 'Looks like you requested some changes' );
-			invoke.askUser( {
+			userSay( 'I would like to make some changes' );
+			informUser( 'Looks like you requested some changes' );
+			askUser( {
 				question: 'What would you like to change?',
 				choices: [
 					'Change the title',

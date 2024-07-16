@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Flex } from '@wordpress/components';
 
 /**
@@ -16,14 +16,18 @@ import PageList from './page-list.jsx';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChatSettings from '../hooks/use-chat-settings.js';
-import useAgents from './agents-provider/use-agents.js';
-import { WAPUU_AGENT_ID } from '../ai/agents/wapuu-agent.js';
+import {
+	WAPUU_AGENT_ID,
+	WAPUU_ASSISTANT_ID,
+} from '../ai/agents/wapuu-agent.js';
 import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
 import './chat-demo-ui.scss';
-import useAgentToolkit from '../hooks/use-agent-toolkit.js';
+import useAgentsToolkit from '../hooks/use-agents-toolkit.js';
 import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 import useAgentExecutor from '../hooks/use-agent-executor.js';
 import useSiteToolkit from '../hooks/use-site-toolkit.js';
+import useGoalToolkit from '../hooks/use-goal-toolkit.js';
+import useInformToolkit from '../hooks/use-inform-toolkit.js';
 
 /**
  * Renders the Chat Demo UI component - a simple chat without persistence.
@@ -43,19 +47,16 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		feature: 'big-sky',
 		service: ChatModelService.OPENAI,
 		model: ChatModelType.GPT_4O,
+		initialAgentId: WAPUU_AGENT_ID,
+		defaultAssistantId: WAPUU_ASSISTANT_ID,
 	} );
 
-	useAgentToolkit();
+	useAgentsToolkit();
 	useSiteToolkit( { pageId: selectedPageId } );
 	useAnalyzeSiteToolkit( { apiKey } );
+	useGoalToolkit();
+	useInformToolkit();
 	useAgentExecutor();
-
-	const { setActiveAgent } = useAgents();
-
-	// set the initial agent
-	useEffect( () => {
-		setActiveAgent( WAPUU_AGENT_ID );
-	}, [ setActiveAgent ] );
 
 	const { pages } = useSelect( ( select ) => {
 		return {

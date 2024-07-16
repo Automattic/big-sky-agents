@@ -1,5 +1,3 @@
-import { createTool } from './tool.js';
-
 export const ANALYZE_URL_TOOL_NAME = 'analyzeUrl';
 
 /**
@@ -24,7 +22,7 @@ export const makeAnalyzeUrlRequest = async ( { url, apiKey } ) => {
 	return await response.json();
 };
 
-export default createTool( {
+export default {
 	name: ANALYZE_URL_TOOL_NAME,
 	description:
 		'Analyze a remote site to extract sections, colors, fonts, layout, metadata, content, and other elements.',
@@ -39,4 +37,4 @@ export default createTool( {
 		},
 		required: [ 'url' ],
 	},
-} );
+};
