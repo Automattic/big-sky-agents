@@ -1207,7 +1207,7 @@ const addMessage = ( message ) => {
 	};
 };
 
-const addAssistantMessage = ( content ) => {
+const agentSay = ( content ) => {
 	return addMessage( {
 		role: 'assistant',
 		content: [
@@ -1286,7 +1286,7 @@ export const actions = {
 	addMessageToThread,
 	updateThreadMessages,
 	addMessage,
-	addAssistantMessage,
+	agentSay,
 	reset,
 	clearMessages,
 	userSay: ( content, image_urls = [] ) =>

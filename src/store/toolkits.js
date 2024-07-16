@@ -11,21 +11,21 @@ export const actions = {
 			toolkit,
 		};
 	},
-	registerToolkitCallbacks: ( name, callbacks ) => {
+	setCallbacks: ( name, callbacks ) => {
 		return {
 			type: 'REGISTER_TOOLKIT_CALLBACKS',
 			name,
 			callbacks,
 		};
 	},
-	registerToolkitContext: ( name, context ) => {
+	setContext: ( name, context ) => {
 		return {
 			type: 'REGISTER_TOOLKIT_CONTEXT',
 			name,
 			context,
 		};
 	},
-	registerToolkitTools: ( name, tools ) => {
+	setTools: ( name, tools ) => {
 		return {
 			type: 'REGISTER_TOOLKIT_TOOLS',
 			name,
@@ -49,7 +49,7 @@ const registerToolkit = ( state, action ) => {
 	return { ...state, toolkits: [ ...state.toolkits, toolkit ] };
 };
 
-const registerToolkitCallbacks = ( state, action ) => {
+const setCallbacks = ( state, action ) => {
 	const { name, callbacks } = action;
 	const toolkitIndex = state.toolkits.findIndex( ( a ) => a.name === name );
 	if ( toolkitIndex === -1 ) {
@@ -66,7 +66,7 @@ const registerToolkitCallbacks = ( state, action ) => {
 	return { ...state, toolkits: updatedToolkits };
 };
 
-const registerToolkitContext = ( state, action ) => {
+const setContext = ( state, action ) => {
 	const { name, context } = action;
 	const toolkitIndex = state.toolkits.findIndex( ( a ) => a.name === name );
 	if ( toolkitIndex === -1 ) {
@@ -83,13 +83,12 @@ const registerToolkitContext = ( state, action ) => {
 	return { ...state, toolkits: updatedToolkits };
 };
 
-const registerToolkitTools = ( state, action ) => {
+const setTools = ( state, action ) => {
 	const { name, tools } = action;
 	const toolkitIndex = state.toolkits.findIndex( ( a ) => a.name === name );
 	if ( toolkitIndex === -1 ) {
-		throw new Error(
-			`toolkit not found then registering tools: ${ name }`
-		);
+		// register the toolkit instead
+		return registerToolkit( state, { toolkit: { name, tools } } );
 	}
 	const toolkitToUpdate = state.toolkits[ toolkitIndex ];
 	const updatedToolkit = {
@@ -106,11 +105,11 @@ export const reducer = ( state = initialState, action ) => {
 		case 'REGISTER_TOOLKIT':
 			return registerToolkit( state, action );
 		case 'REGISTER_TOOLKIT_CALLBACKS':
-			return registerToolkitCallbacks( state, action );
+			return setCallbacks( state, action );
 		case 'REGISTER_TOOLKIT_CONTEXT':
-			return registerToolkitContext( state, action );
+			return setContext( state, action );
 		case 'REGISTER_TOOLKIT_TOOLS':
-			return registerToolkitTools( state, action );
+			return setTools( state, action );
 		default:
 			return state;
 	}

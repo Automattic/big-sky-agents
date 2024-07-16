@@ -10,7 +10,7 @@ export default defineConfig( {
 	resolve: {
 		alias: hq.get( 'rollup' ),
 	},
-	assetsInclude: [ '**/*.riv' ],
+	assetsInclude: [ '**/*.riv', '**/*.svg' ],
 	optimizeDeps: {
 		include: [ '@rive-app/react-canvas', 'preline' ],
 	},

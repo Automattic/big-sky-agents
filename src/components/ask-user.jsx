@@ -12,7 +12,7 @@ import {
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import UserMessageInput from './user-message-input.jsx';
+import MessageInput from './message-input.jsx';
 import AskUserTool from '../ai/tools/ask-user.js';
 import withToolCall from './with-tool-call.jsx';
 import useThought from './thought-provider/use-thought.js';
@@ -124,8 +124,9 @@ function AskUser( { args, respond } ) {
 		<div className="big-sky__agent-input">
 			<Card size="medium">
 				<CardBody>
-					<UserMessageInput
+					<MessageInput
 						label={ question }
+						value={ currentAnswer }
 						placeholder={ placeholder }
 						onSubmit={ onSubmit }
 						onChange={ setCurrentAnswer }
@@ -136,10 +137,8 @@ function AskUser( { args, respond } ) {
 						<UserChoices
 							choices={ choices }
 							multiChoice={ multiChoice }
-							onChange={ ( value ) => {
-								setCurrentAnswer( value );
-							} }
-							onSubmit={ onSubmit }
+							onChange={ setCurrentAnswer }
+							onSubmit={ setCurrentAnswer }
 						/>
 					) }
 				</CardBody>

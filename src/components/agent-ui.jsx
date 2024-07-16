@@ -2,6 +2,7 @@
  * WordPress dependencies
  */
 import { Flex, FlexBlock, Notice } from '@wordpress/components';
+import { useState } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -9,7 +10,7 @@ import { Flex, FlexBlock, Notice } from '@wordpress/components';
 import AskUserComponent from './ask-user.jsx';
 import ConfirmComponent from './confirm.jsx';
 import MessageContent from './message-content.jsx';
-import UserMessageInput from './user-message-input.jsx';
+import MessageInput from './message-input.jsx';
 import useChat from './chat-provider/use-chat.js';
 import useAgents from './agents-provider/use-agents.js';
 import './agent-ui.scss';
@@ -74,6 +75,8 @@ function AgentUI() {
 		reset: onResetChat,
 	} = useChat();
 
+	const [ userMessgae, setUserMessage ] = useState( '' );
+
 	return (
 		<div
 			className={ `big-sky__agent-ui big-sky__agent-ui-${
@@ -100,14 +103,18 @@ function AgentUI() {
 					) }
 					{ assistantMessage && (
 						<AgentMessage message={ assistantMessage }>
-							<UserMessageInput
-								onSubmit={ userSay }
+							<MessageInput
+								value={ userMessgae }
+								onChange={ setUserMessage }
+								onSubmit={ ( value, files ) => {
+									userSay( value, files );
+									setUserMessage( '' );
+								} }
 								onCancel={ () => {
 									informUser( 'Canceled!' );
-									// onResetTools();
 									onResetChat();
 								} }
-								fileUploadEnabled={ false }
+								fileUploadEnabled={ true }
 							/>
 						</AgentMessage>
 					) }
