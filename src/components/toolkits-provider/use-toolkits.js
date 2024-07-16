@@ -180,12 +180,6 @@ export default function useToolkits() {
 			toolkitTools
 		);
 
-		console.warn( 'tools', {
-			agentToolkits,
-			toolkitTools,
-			agentTools,
-		} );
-
 		return agentTools;
 	}, [ activeAgent, context, toolkits ] );
 
