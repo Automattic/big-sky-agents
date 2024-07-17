@@ -1,7 +1,10 @@
 import { createReduxStore } from '@wordpress/data';
 
 const initialState = {
-	toolkits: [],
+	toolkits: {},
+	contexts: {},
+	callbacks: {},
+	tools: {},
 };
 
 export const actions = {
@@ -36,68 +39,74 @@ export const actions = {
 
 const registerToolkit = ( state, action ) => {
 	const { toolkit } = action;
-	const existingToolkitIndex = state.toolkits.findIndex(
-		( a ) => a.name === toolkit.name
-	);
 
-	if ( existingToolkitIndex !== -1 ) {
-		const updatedToolkits = [ ...state.toolkits ];
-		updatedToolkits[ existingToolkitIndex ] = toolkit;
-		return { ...state, toolkits: updatedToolkits };
+	// if the toolkit includes callbacks, register the callbacks
+	if ( toolkit.callbacks ) {
+		state = setCallbacks( state, {
+			name: toolkit.name,
+			callbacks: toolkit.callbacks,
+		} );
 	}
-	// If tool with the same ID doesn't exist, add the new tool to the array
-	return { ...state, toolkits: [ ...state.toolkits, toolkit ] };
+
+	// if the toolkit includes context, register the context
+	if ( toolkit.context ) {
+		state = setContext( state, {
+			name: toolkit.name,
+			context: toolkit.context,
+		} );
+	}
+
+	// if the toolkit includes tools, register the tools
+	if ( toolkit.tools ) {
+		state = setTools( state, {
+			name: toolkit.name,
+			tools: toolkit.tools,
+		} );
+	}
+
+	return {
+		...state,
+		toolkits: {
+			...state.toolkits,
+			[ toolkit.name ]: {
+				name: toolkit.name,
+				description: toolkit.description,
+			},
+		},
+	};
 };
 
 const setCallbacks = ( state, action ) => {
 	const { name, callbacks } = action;
-	const toolkitIndex = state.toolkits.findIndex( ( a ) => a.name === name );
-	if ( toolkitIndex === -1 ) {
-		// register the toolkit instead
-		return registerToolkit( state, { toolkit: { name, callbacks } } );
-	}
-	const toolkitToUpdate = state.toolkits[ toolkitIndex ];
-	const updatedToolkit = {
-		...toolkitToUpdate,
-		callbacks,
+	return {
+		...state,
+		callbacks: {
+			...state.callbacks,
+			[ name ]: callbacks,
+		},
 	};
-	const updatedToolkits = [ ...state.toolkits ];
-	updatedToolkits[ toolkitIndex ] = updatedToolkit;
-	return { ...state, toolkits: updatedToolkits };
 };
 
 const setContext = ( state, action ) => {
 	const { name, context } = action;
-	const toolkitIndex = state.toolkits.findIndex( ( a ) => a.name === name );
-	if ( toolkitIndex === -1 ) {
-		// register the toolkit instead
-		return registerToolkit( state, { toolkit: { name, context } } );
-	}
-	const toolkitToUpdate = state.toolkits[ toolkitIndex ];
-	const updatedToolkit = {
-		...toolkitToUpdate,
-		context,
+	return {
+		...state,
+		contexts: {
+			...state.contexts,
+			[ name ]: context,
+		},
 	};
-	const updatedToolkits = [ ...state.toolkits ];
-	updatedToolkits[ toolkitIndex ] = updatedToolkit;
-	return { ...state, toolkits: updatedToolkits };
 };
 
 const setTools = ( state, action ) => {
 	const { name, tools } = action;
-	const toolkitIndex = state.toolkits.findIndex( ( a ) => a.name === name );
-	if ( toolkitIndex === -1 ) {
-		// register the toolkit instead
-		return registerToolkit( state, { toolkit: { name, tools } } );
-	}
-	const toolkitToUpdate = state.toolkits[ toolkitIndex ];
-	const updatedToolkit = {
-		...toolkitToUpdate,
-		tools,
+	return {
+		...state,
+		tools: {
+			...state.tools,
+			[ name ]: tools,
+		},
 	};
-	const updatedToolkits = [ ...state.toolkits ];
-	updatedToolkits[ toolkitIndex ] = updatedToolkit;
-	return { ...state, toolkits: updatedToolkits };
 };
 
 export const reducer = ( state = initialState, action ) => {
@@ -117,7 +126,19 @@ export const reducer = ( state = initialState, action ) => {
 
 export const selectors = {
 	getToolkits: ( state ) => {
-		return state.toolkits;
+		return Object.values( state.toolkits );
+	},
+	getToolkit: ( state, name ) => {
+		return state.toolkits[ name ];
+	},
+	getContexts: ( state ) => {
+		return state.contexts;
+	},
+	getCallbacks: ( state ) => {
+		return state.callbacks;
+	},
+	getTools: ( state ) => {
+		return state.tools;
 	},
 };
 

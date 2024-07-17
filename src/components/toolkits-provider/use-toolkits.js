@@ -50,15 +50,21 @@ function resolveAgentToolkits( agent, allToolkits ) {
 	const resolvedToolkits =
 		toolkits?.map( ( toolkit ) => {
 			if ( typeof toolkit === 'string' ) {
-				return allToolkits.find( ( t ) => t.name === toolkit );
+				const foundToolkit = allToolkits.find(
+					( t ) => t.name === toolkit
+				);
+				if ( ! foundToolkit ) {
+					console.warn( `Toolkit ${ toolkit } not found.` );
+				}
+				return foundToolkit;
 			}
 			return toolkit;
 		} ) ?? [];
 
-	return resolvedToolkits;
+	return resolvedToolkits.filter( Boolean );
 }
 
-function resolveToolkitTools( toolkits, context ) {
+function resolveToolkitTools( toolkits, allTools, context ) {
 	return (
 		toolkits?.reduce( ( acc, toolkit ) => {
 			// if the toolkit is a string, look up the instance
@@ -73,10 +79,11 @@ function resolveToolkitTools( toolkits, context ) {
 				return acc;
 			}
 
+			const toolkitToolsFunc = toolkit.tools ?? allTools[ toolkit.name ];
 			const toolkitTools =
-				typeof toolkit.tools === 'function'
-					? toolkit.tools( context )
-					: toolkit.tools;
+				typeof toolkitToolsFunc === 'function'
+					? toolkitToolsFunc( context )
+					: toolkitToolsFunc;
 
 			if ( ! toolkitTools ) {
 				return acc;
@@ -93,21 +100,21 @@ function resolveToolkitTools( toolkits, context ) {
 	);
 }
 
-function resolveAgentTools( agent, context, allTools ) {
+function resolveAgentTools( agent, context, toolkitTools ) {
 	const tools =
 		typeof agent.tools === 'function'
-			? agent.tools( context, allTools )
+			? agent.tools( context, toolkitTools )
 			: agent.tools;
 
 	// remap string values to the same-named toolkit tool
 	const resolvedTools = tools?.map( ( tool ) => {
 		if ( typeof tool === 'string' ) {
-			return allTools.find( ( t ) => t.name === tool );
+			return toolkitTools.find( ( t ) => t.name === tool );
 		}
 		return tool;
 	} );
 
-	return resolvedTools ?? allTools;
+	return resolvedTools ?? toolkitTools;
 }
 
 export default function useToolkits() {
@@ -116,9 +123,17 @@ export default function useToolkits() {
 	const { registerToolkit, setCallbacks, setContext, setTools } =
 		useDispatch( toolkitsStore );
 	const { call, agentSay, userSay } = useChat();
-	const registeredToolkits = useSelect( ( select ) =>
-		select( toolkitsStore ).getToolkits()
-	);
+	const {
+		toolkits: allToolkits,
+		contexts: allContexts,
+		callbacks: allCallbacks,
+		tools: allTools,
+	} = useSelect( ( select ) => ( {
+		toolkits: select( toolkitsStore ).getToolkits(),
+		contexts: select( toolkitsStore ).getContexts(),
+		callbacks: select( toolkitsStore ).getCallbacks(),
+		tools: select( toolkitsStore ).getTools(),
+	} ) );
 
 	const registerDefaultToolkits = useCallback( () => {
 		defaultToolkits.forEach( ( tool ) => {
@@ -126,35 +141,37 @@ export default function useToolkits() {
 		} );
 	}, [ registerToolkit ] );
 
-	const agentToolkits = useMemo( () => {
+	// resolve toolkits for the current agent
+	const toolkits = useMemo( () => {
 		if ( ! activeAgent ) {
 			return [];
 		}
 		// the agents toolkits are the ones that are required by the agent, whether using a string (therefore looked up) or as an instance
-		return resolveAgentToolkits( activeAgent, registeredToolkits );
-	}, [ activeAgent, registeredToolkits ] );
+		return resolveAgentToolkits( activeAgent, allToolkits );
+	}, [ activeAgent, allToolkits ] );
 
 	// used to actually call the tool, e.g. callbacks.getWeather( { location: "Boston, MA" } )
 	const callbacks = useMemo( () => {
-		return agentToolkits?.reduce( ( acc, toolkit ) => {
+		return toolkits?.reduce( ( acc, toolkit ) => {
 			const toolkitCallbacks =
-				typeof toolkit.callbacks === 'function'
-					? toolkit.callbacks()
-					: toolkit.callbacks;
+				toolkit.callbacks ?? allCallbacks[ toolkit.name ];
+
+			if ( ! toolkitCallbacks ) {
+				return acc;
+			}
+
 			return {
 				...acc,
 				...toolkitCallbacks,
 			};
 		}, {} );
-	}, [ agentToolkits ] );
+	}, [ toolkits, allCallbacks ] );
 
 	// merged context from all toolkits
 	const context = useMemo( () => {
-		return agentToolkits.reduce( ( acc, toolkit ) => {
+		return toolkits.reduce( ( acc, toolkit ) => {
 			const toolkitContext =
-				typeof toolkit.context === 'function'
-					? toolkit.context()
-					: toolkit.context;
+				toolkit.context ?? allContexts[ toolkit.name ];
 
 			if ( ! toolkitContext ) {
 				return acc;
@@ -163,7 +180,7 @@ export default function useToolkits() {
 			const result = deepMerge( acc, toolkitContext );
 			return result;
 		}, {} );
-	}, [ agentToolkits ] );
+	}, [ toolkits, allContexts ] );
 
 	// flattened array of tools, avoiding duplicates
 	// tools work like this:
@@ -178,7 +195,7 @@ export default function useToolkits() {
 		}
 
 		// get the full set of tools from those toolkits
-		const toolkitTools = resolveToolkitTools( agentToolkits, context );
+		const toolkitTools = resolveToolkitTools( toolkits, allTools, context );
 		// get the subset of tools, if any, that the agent chooses
 		const agentTools = resolveAgentTools(
 			activeAgent,
@@ -187,7 +204,7 @@ export default function useToolkits() {
 		);
 
 		return agentTools;
-	}, [ activeAgent, agentToolkits, context ] );
+	}, [ activeAgent, toolkits, allTools, context ] );
 
 	// used to pretend the agent invoked something, e.g. invoke.askUser( { question: "What would you like to do next?" } )
 	const invoke = useMemo( () => {
@@ -206,24 +223,24 @@ export default function useToolkits() {
 		( requestedToolkits ) => {
 			return requestedToolkits.every( ( requestedToolkit ) => {
 				if ( typeof requestedToolkit === 'string' ) {
-					return agentToolkits.some(
+					return toolkits.some(
 						( toolkit ) => toolkit.name === requestedToolkit
 					);
 				}
 				return true;
 			} );
 		},
-		[ agentToolkits ]
+		[ toolkits ]
 	);
 
 	const reset = useCallback( () => {
 		// call reset() on each toolkit if defined and it's a function
-		agentToolkits.forEach( ( toolkit ) => {
+		toolkits.forEach( ( toolkit ) => {
 			if ( toolkit.reset && typeof toolkit.reset === 'function' ) {
 				toolkit.reset();
 			}
 		} );
-	}, [ agentToolkits ] );
+	}, [ toolkits ] );
 
 	return {
 		reset,
