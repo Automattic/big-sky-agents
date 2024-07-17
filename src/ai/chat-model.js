@@ -215,6 +215,7 @@ class ChatModel {
 		this.apiKey = apiKey;
 		this.feature = feature;
 		this.sessionId = sessionId;
+		this.abortController = null;
 	}
 
 	getApiKey() {
@@ -297,6 +298,7 @@ class ChatModel {
 	async call( request ) {
 		const params = this.getParams( request );
 		const headers = this.getHeaders();
+		this.abortController = new AbortController();
 
 		log.info(
 			`🤖 Calling ${ this.constructor.name } with model ${ params.model }, temperature ${ params.temperature }, max_tokens ${ params.max_tokens }`
@@ -306,6 +308,7 @@ class ChatModel {
 			method: 'POST',
 			headers,
 			body: JSON.stringify( params ),
+			signal: this.abortController.signal,
 		} );
 
 		if ( serviceRequest.status === 401 ) {
@@ -322,8 +325,13 @@ class ChatModel {
 		try {
 			response = await serviceRequest.json();
 		} catch ( error ) {
+			if ( error.name === 'AbortError' ) {
+				return null;
+			}
 			console.error( 'Error parsing response', error );
 			throw new Error( 'Unexpected response format' );
+		} finally {
+			this.abortController = null;
 		}
 
 		// if response.code is set and response.choices is not, assume it's an error
@@ -348,6 +356,12 @@ class ChatModel {
 		}
 
 		return response;
+	}
+
+	abortRequest() {
+		if ( this.abortController ) {
+			this.abortController.abort();
+		}
 	}
 
 	getParams( {
