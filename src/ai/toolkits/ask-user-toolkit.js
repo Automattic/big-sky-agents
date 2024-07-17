@@ -1,4 +1,4 @@
-import AskUserTool from '../tools/ask-user';
+import AskUserTool from '../tools/ask-user.js';
 
 export default {
 	name: 'askUser',

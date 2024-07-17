@@ -1,4 +1,4 @@
-import SetGoalTool from '../tools/set-goal';
+import SetGoalTool from '../tools/set-goal.js';
 
 export default {
 	name: 'goal',

@@ -1,8 +1,8 @@
-import AskUserToolkit from './ask-user-toolkit';
-import InformToolkit from './inform-toolkit';
-import GoalToolkit from './goal-toolkit';
-import AgentsToolkit from './agents-toolkit';
-import ConfirmToolkit from './confirm-toolkit';
+import AskUserToolkit from './ask-user-toolkit.js';
+import InformToolkit from './inform-toolkit.js';
+import GoalToolkit from './goal-toolkit.js';
+import AgentsToolkit from './agents-toolkit.js';
+import ConfirmToolkit from './confirm-toolkit.js';
 
 export default [
 	AgentsToolkit,

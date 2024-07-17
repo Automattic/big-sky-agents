@@ -1,20 +1,74 @@
 import dotenv from 'dotenv';
 import minimist from 'minimist';
-import ChatModel, {
-	ChatModelService,
-	ChatModelType,
-} from './src/ai/chat-model.js';
-import BaseAgentToolkit from './src/ai/toolkits/base-agent.js';
-import CombinedToolkit from './src/ai/toolkits/combined.js';
+import ChatModel, { ChatModelService } from './src/ai/chat-model.js';
 import promptSync from 'prompt-sync';
-import AssistantModel from './src/ai/assistant-model.js';
 
-import agents from './src/ai/agents/default-agents.js';
-import { ASK_USER_TOOL_NAME } from './src/ai/tools/ask-user.js';
-import { CONFIRM_TOOL_NAME } from './src/ai/tools/confirm.js';
+import { dispatch, select } from '@wordpress/data';
+import { store } from './src/store/index.js';
+
+// Agents
+import WapuuAgent from './src/ai/agents/cli/wapuu-agent.js';
+import SiteSpecAgent from './src/ai/agents/cli/site-spec-agent.js';
+
+// Tools
+import AskUserTool from './src/ai/tools/ask-user.js';
+import ConfirmTool from './src/ai/tools/confirm.js';
+import InformTool from './src/ai/tools/inform-user.js';
+import createSetAgentTool, {
+	SET_AGENT_TOOL_NAME,
+} from './src/ai/tools/set-agent.js';
+import SetGoalTool from './src/ai/tools/set-goal.js';
+import {
+	SetSiteDescriptionTool,
+	SetSiteLocationTool,
+	SetSitePagesTool,
+	SetSiteTitleTool,
+	SetSiteTopicTool,
+	SetSiteTypeTool,
+} from './src/ai/tools/site-tools.js';
+
+const wapuuAgent = new WapuuAgent();
+const siteSpecAgent = new SiteSpecAgent();
+const agents = [ wapuuAgent, siteSpecAgent ];
 
 dotenv.config();
+const defaultModel = ChatModelService.OPENAI;
 const args = minimist( process.argv.slice( 2 ) );
+
+if ( args.help ) {
+	console.log( `
+Usage: node ./agent-cli.js [options]
+
+Options:
+  --help              Show this help message and exit
+  --agent             The agent to use (default: ${ wapuuAgent.id }).
+                      Options: ${ agents
+							.map( ( agent ) => agent.id )
+							.join( ', ' ) }
+  --model-service     The model to use (default: ${ defaultModel }).
+                      Options: ${ ChatModelService.getAvailable().join( ', ' ) }
+  --verbose           Enable verbose logging mode
+  ` );
+	process.exit( 0 );
+}
+
+let assistantMessage = '';
+let assistantChoices = null;
+const messages = [];
+const prompt = promptSync();
+const modelService = args[ 'model-service' ] || defaultModel;
+const apiKey = ChatModelService.getDefaultApiKey( modelService );
+if ( apiKey === undefined ) {
+	console.error(
+		`No API key found for model service "${ modelService }". Add the appropriate key to the .env file.`
+	);
+	process.exit( 1 );
+}
+
+const model = ChatModel.getInstance(
+	modelService,
+	ChatModelService.getDefaultApiKey( modelService )
+);
 
 function logVerbose( ...stuffToLog ) {
 	if ( args.verbose ) {
@@ -22,217 +76,302 @@ function logVerbose( ...stuffToLog ) {
 	}
 }
 
-class CLIChat {
-	constructor() {
-		this.assistantMessage = '';
-		this.assistantChoices = [];
-		this.prompt = promptSync();
-		this.model = ChatModel.getInstance(
-			ChatModelService.OPENAI,
-			process.env.OPENAI_API_KEY
-		);
-		this.assistantModel = AssistantModel.getInstance(
-			ChatModelService.OPENAI,
-			process.env.OPENAI_API
-		);
-		this.messages = [];
-		this.agent = null;
+function buildMessage() {
+	let message = assistantMessage;
+	if ( assistantChoices ) {
+		message += '\n\nHere are some choices available to you:\n';
+		message += assistantChoices
+			.map( ( choice, index ) => `${ index + 1 }. ${ choice }` )
+			.join( '\n' );
+		assistantChoices = null;
 	}
+	return message;
+}
 
-	setAgent( agent ) {
-		this.agent = agent;
-		this.assistantMessage = agent.getDefaultQuestion();
-		this.assistantChoices = agent.getDefaultChoices();
-	}
+function setActiveAgent( agentId ) {
+	dispatch( store ).setActiveAgent( agentId );
+	const agent = select( store ).getActiveAgent();
+	agent.onStart( {
+		askUser: ( { question, choices } ) => {
+			assistantMessage = question;
+			assistantChoices = choices;
+		},
+	} );
+}
 
-	findTools( ...toolNames ) {
-		return this.tools.filter( ( tool ) =>
-			toolNames.includes( tool.function.name )
-		);
-	}
+function setToolResult( toolId, result ) {
+	messages.push( {
+		role: 'tool',
+		tool_call_id: toolId,
+		content: result,
+	} );
+}
 
-	setToolResult( toolId, result ) {
-		this.messages.push( {
-			role: 'tool',
-			tool_call_id: toolId,
-			content: result,
-		} );
-	}
+async function runCompletion() {
+	const agent = select( store ).getActiveAgent();
+	const toolkits = select( store ).getToolkits();
 
-	async runCompletion() {
-		const callbacks = this.agent.toolkit.getCallbacks();
-		const request = {
-			model: ChatModelType.GPT_4O,
-			messages: this.messages,
-			tools: this.agent.tools(),
-			instructions: this.agent.instructions(),
-			additionalInstructions: this.agent.additionalInstructions(),
-			temperature: 0,
+	// Build context
+	const context = {
+		agents: select( store ).getAgents(),
+		agent: {
+			id: select( store ).getActiveAgent()?.id,
+			name: select( store ).getActiveAgent()?.name,
+			assistantId: select( store ).getActiveAgent()?.assistantId,
+			goal: select( store ).getGoal(),
+			thought: select( store ).getThought(),
+		},
+		site: {
+			title: select( store ).getSiteTitle(),
+			description: select( store ).getSiteDescription(),
+			type: select( store ).getSiteType(),
+			topic: select( store ).getSiteTopic(),
+			location: select( store ).getSiteLocation(),
+			pages: select( store ).getPages(),
+		},
+	};
+
+	// Get callbacks from toolkits
+	const callbacks = toolkits.reduce( ( acc, toolkit ) => {
+		const toolkitCallbacks =
+			typeof toolkit.callbacks === 'function'
+				? toolkit.callbacks()
+				: toolkit.callbacks;
+		return {
+			...acc,
+			...toolkitCallbacks,
 		};
-		logVerbose( '📡 Request:', request );
-		const result = await this.model.run( request );
-		logVerbose( '🧠 Result:', result, result.tool_calls?.[ 0 ].function );
+	}, {} );
 
-		if ( result.tool_calls ) {
-			// use the first tool call for now
-			this.messages.push( result );
-			const tool_call = result.tool_calls[ 0 ];
-
-			// parse arguments if they're a string
-			const resultArgs =
-				typeof tool_call.function.arguments === 'string'
-					? JSON.parse( tool_call.function.arguments )
-					: tool_call.function.arguments;
-
-			// see: https://community.openai.com/t/model-tries-to-call-unknown-function-multi-tool-use-parallel/490653/7
-			if ( tool_call.function.name === 'multi_tool_use.parallel' ) {
-				/**
-				 * Looks like this:
-				 * multi_tool_use.parallel({"tool_uses":[{"recipient_name":"WPSiteSpec","parameters":{"title":"Lorem Ipsum","description":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.","type":"Blog","topic":"Lorem Ipsum","location":"Lorem Ipsum"}}]})
-				 *
-				 * I assume the result is supposed to be an array...
-				 */
-				// create an array of promises for the tool uses
-				const promises = resultArgs.tool_uses.map( ( tool_use ) => {
-					const callback = callbacks[ tool_use.recipient_name ];
-
-					if ( typeof callback === 'function' ) {
-						logVerbose(
-							'🔧 Parallel tool callback',
-							tool_use.recipient_name
-						);
-						return callback( tool_use.parameters );
-					}
-					return `Unknown tool ${ tool_use.recipient_name }`;
-				} );
-
-				this.setToolResult(
-					tool_call.id,
-					await Promise.all( promises )
+	// Get tools from toolkits
+	const allTools = toolkits.reduce( ( acc, toolkit ) => {
+		const toolkitTools =
+			typeof toolkit.tools === 'function'
+				? toolkit.tools( context )
+				: toolkit.tools;
+		return [
+			...acc,
+			...toolkitTools.filter(
+				( tool ) => ! acc.some( ( t ) => t.name === tool.name )
+			),
+		];
+	}, [] );
+	// Get agent tools
+	let tools =
+		typeof agent.tools === 'function'
+			? agent.tools( context )
+			: agent.tools;
+	// Map string tools to globally registered tool definitions
+	tools = tools
+		.map( ( tool ) => {
+			if ( typeof tool === 'string' ) {
+				const registeredTool = allTools.find(
+					( t ) => t.name === tool
 				);
+				if ( ! registeredTool ) {
+					console.warn( '🧠 Tool not found', tool );
+				}
+				return registeredTool;
 			}
+			return tool;
+		} )
+		.filter( Boolean )
+		// Remap to an OpenAI tool
+		.map( ( tool ) => ( {
+			type: 'function',
+			function: {
+				name: tool.name,
+				description: tool.description,
+				parameters: tool.parameters,
+			},
+		} ) );
 
-			const callback = callbacks[ tool_call.function.name ];
+	const request = {
+		model: model.getDefaultModel(),
+		messages,
+		tools,
+		instructions: agent.instructions( context ),
+		additionalInstructions: agent.additionalInstructions( context ),
+		temperature: 0.2,
+	};
+	logVerbose( '📡 Request:', request );
+	const result = await model.run( request );
+	logVerbose( '🧠 Result:', result, result.tool_calls?.[ 0 ].function );
 
-			if ( typeof callback === 'function' ) {
-				logVerbose(
-					'🔧 Tool callback',
-					tool_call.function.name,
-					resultArgs
-				);
-				this.setToolResult(
-					tool_call.id,
-					await callback( resultArgs )
-				);
-				const agentId = this.agent.toolkit.values.agent.id;
-				if ( agentId && agentId !== this.agent.id ) {
-					logVerbose( `🔄 Switching to new agent ${ agentId }` );
-					const newAgent = agents.find( ( ag ) => ag.id === agentId );
-					if ( newAgent ) {
-						let toolkit;
-						if ( newAgent.toolkit ) {
-							toolkit = new CombinedToolkit( {
-								toolkits: [
-									new newAgent.toolkit(),
-									this.agent.toolkit,
-								],
-							} );
-						} else {
-							toolkit = this.agent.toolkit;
-						}
+	if ( result.tool_calls ) {
+		// use the first tool call for now
+		messages.push( result );
+		const tool_call = result.tool_calls[ 0 ];
 
-						this.setAgent( new newAgent.agent( this, toolkit ) );
-					} else {
-						const defaultAgent = agents.find(
-							( ag ) => ag.id === WAPUU_AGENT_ID
-						);
-						this.setAgent(
-							new defaultAgent.agent( this, this.agent.toolkit )
-						);
-					}
-				} else {
-					await this.runCompletion();
+		// parse arguments if they're a string
+		const resultArgs =
+			typeof tool_call.function.arguments === 'string'
+				? JSON.parse( tool_call.function.arguments )
+				: tool_call.function.arguments;
+
+		// see: https://community.openai.com/t/model-tries-to-call-unknown-function-multi-tool-use-parallel/490653/7
+		if ( tool_call.function.name === 'multi_tool_use.parallel' ) {
+			/**
+			 * Looks like this:
+			 * multi_tool_use.parallel({"tool_uses":[{"recipient_name":"WPSiteSpec","parameters":{"title":"Lorem Ipsum","description":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.","type":"Blog","topic":"Lorem Ipsum","location":"Lorem Ipsum"}}]})
+			 *
+			 * I assume the result is supposed to be an array...
+			 */
+			// create an array of promises for the tool uses
+			const promises = resultArgs.tool_uses.map( ( tool_use ) => {
+				const callback = callbacks[ tool_use.recipient_name ];
+
+				if ( typeof callback === 'function' ) {
+					logVerbose(
+						'🔧 Parallel tool callback',
+						tool_use.recipient_name
+					);
+					return callback( tool_use.parameters );
 				}
+				return `Unknown tool ${ tool_use.recipient_name }`;
+			} );
+
+			setToolResult( tool_call.id, await Promise.all( promises ) );
+		}
+
+		const callback = callbacks[ tool_call.function.name ];
+
+		if ( typeof callback === 'function' ) {
+			logVerbose(
+				'🔧 Tool callback',
+				tool_call.function.name,
+				resultArgs
+			);
+			setToolResult( tool_call.id, await callback( resultArgs ) );
+			const newAgentId = resultArgs.agentId;
+			if ( newAgentId && newAgentId !== agent.id ) {
+				logVerbose( `🔄 Switching to new agent ${ newAgentId }` );
+				setActiveAgent( newAgentId );
 			} else {
-				switch ( tool_call.function.name ) {
-					case ASK_USER_TOOL_NAME:
-						this.assistantMessage = resultArgs.question;
-						this.setToolResult( tool_call.id, resultArgs.question );
-						break;
-					case CONFIRM_TOOL_NAME:
-						this.assistantMessage = resultArgs.message;
-						this.setToolResult( tool_call.id, resultArgs.message );
-						break;
-					default:
-						console.error(
-							'Unknown tool callback',
-							tool_call.function.name,
-							resultArgs
-						);
-						this.setToolResult( tool_call.id, '' );
-				}
+				await runCompletion();
 			}
 		} else {
-			this.assistantMessage = result.content;
-		}
-	}
-
-	buildMessage() {
-		let message = this.assistantMessage;
-		if ( this.assistantChoices ) {
-			message += '\n\nHere are some choices available to you:\n';
-			message += this.assistantChoices
-				.map( ( choice, index ) => `${ index + 1 }. ${ choice }` )
-				.join( '\n' );
-			this.assistantChoices = null;
-		}
-		return message;
-	}
-
-	async call() {
-		while ( true ) {
-			const message = this.buildMessage();
-
-			this.messages.push( {
-				role: 'assistant',
-				content: message,
-			} );
-			console.log(
-				'==========================================================================================================='
-			);
-			console.log( `❓ ${ message }` );
-			console.log(
-				'==========================================================================================================='
-			);
-			const userMessage = this.prompt( '> ' );
-
-			if ( ! userMessage || userMessage.toLowerCase() === 'exit' ) {
-				console.log( 'Goodbye!' );
-				process.exit( 0 );
+			switch ( tool_call.function.name ) {
+				case AskUserTool.name:
+					assistantMessage = resultArgs.question;
+					setToolResult( tool_call.id, resultArgs.question );
+					break;
+				case ConfirmTool.name:
+					assistantMessage = resultArgs.message;
+					setToolResult( tool_call.id, resultArgs.message );
+					break;
+				default:
+					console.error(
+						'Unknown tool callback',
+						tool_call.function.name,
+						resultArgs
+					);
+					setToolResult( tool_call.id, '' );
 			}
-			this.messages.push( { role: 'user', content: userMessage } );
-
-			await this.runCompletion();
 		}
+	} else {
+		assistantMessage = result.content;
 	}
 }
 
-const chat = new CLIChat();
-const baseAgentToolkit = new BaseAgentToolkit( {
-	agents,
+// register agents
+for ( const agent of agents ) {
+	dispatch( store ).registerAgent( agent );
+}
+// set default agent
+const argsAgent =
+	args.agent && agents.find( ( agent ) => agent.id === args.agent );
+if ( ! argsAgent && args.agent ) {
+	console.warn(
+		`⚠️  Agent "${ args.agent }" not found, defaulting to ${ wapuuAgent.id }`
+	);
+}
+setActiveAgent( argsAgent ? argsAgent.id : wapuuAgent.id );
+
+// register toolkits
+dispatch( store ).registerToolkit( {
+	name: 'agents',
+	tools: [
+		AskUserTool,
+		ConfirmTool,
+		SetGoalTool,
+		InformTool,
+		createSetAgentTool( select( store ).getAgents() ),
+	],
+	callbacks: {
+		[ InformTool.name ]: ( { message } ) => {
+			dispatch( store ).setThought( message );
+			return message ? `Agent thinks: "${ message }"` : 'Thought cleared';
+		},
+		[ SetGoalTool.name ]: ( { goal: newGoal } ) => {
+			dispatch( store ).setGoal( newGoal );
+			return `Goal set to "${ newGoal }"`;
+		},
+		[ SET_AGENT_TOOL_NAME ]: ( { agentId } ) => {
+			dispatch( store ).setActiveAgent( agentId );
+			return `Agent set to ${ agentId }`;
+		},
+	},
 } );
-const defaultAgent = args.agent
-	? agents.find( ( ag ) => ag.id === args.agent )
-	: agents.find( ( ag ) => ag.id === WAPUU_AGENT_ID );
+dispatch( store ).registerToolkit( {
+	name: 'site',
+	tools: [
+		SetSiteTitleTool,
+		SetSiteDescriptionTool,
+		SetSiteTypeTool,
+		SetSiteTopicTool,
+		SetSiteLocationTool,
+		SetSitePagesTool,
+	],
+	callbacks: {
+		[ SetSiteTitleTool.name ]: ( { value } ) => {
+			dispatch( store ).setSiteTitle( value );
+			return `Site title set to "${ value }"`;
+		},
+		[ SetSiteTypeTool.name ]: ( { value } ) => {
+			dispatch( store ).setSiteType( value );
+			return `Site type set to "${ value }"`;
+		},
+		[ SetSiteTopicTool.name ]: ( { value } ) => {
+			dispatch( store ).setSiteTopic( value );
+			return `Site topic set to "${ value }"`;
+		},
+		[ SetSiteLocationTool.name ]: ( { value } ) => {
+			dispatch( store ).setSiteLocation( value );
+			return `Site location set to "${ value }"`;
+		},
+		[ SetSiteDescriptionTool.name ]: ( { value } ) => {
+			dispatch( store ).setSiteDescription( value );
+			return `Site description set to "${ value }"`;
+		},
+		[ SetSitePagesTool.name ]: ( { pages } ) => {
+			dispatch( store ).setPages( pages );
+			return 'Site pages set';
+		},
+	},
+} );
 
-const defaultToolkit =
-	defaultAgent.id !== WAPUU_AGENT_ID
-		? new CombinedToolkit( {
-				toolkits: [ new defaultAgent.toolkit(), baseAgentToolkit ],
-		  } )
-		: baseAgentToolkit;
+while ( true ) {
+	const message = buildMessage();
 
-const agent = new defaultAgent.agent( chat, defaultToolkit );
+	messages.push( {
+		role: 'assistant',
+		content: message,
+	} );
+	console.log(
+		'==========================================================================================================='
+	);
+	console.log( `❓ ${ message }` );
+	console.log(
+		'==========================================================================================================='
+	);
+	const userMessage = prompt( '> ' );
 
-chat.setAgent( agent );
-chat.call();
+	if ( ! userMessage || userMessage.toLowerCase() === 'exit' ) {
+		console.log( 'Goodbye!' );
+		process.exit( 0 );
+	}
+	messages.push( { role: 'user', content: userMessage } );
+
+	await runCompletion();
+}
