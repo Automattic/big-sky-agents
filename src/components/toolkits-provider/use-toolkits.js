@@ -196,6 +196,7 @@ export default function useToolkits() {
 
 		// get the full set of tools from those toolkits
 		const toolkitTools = resolveToolkitTools( toolkits, allTools, context );
+
 		// get the subset of tools, if any, that the agent chooses
 		const agentTools = resolveAgentTools(
 			activeAgent,
@@ -223,14 +224,14 @@ export default function useToolkits() {
 		( requestedToolkits ) => {
 			return requestedToolkits.every( ( requestedToolkit ) => {
 				if ( typeof requestedToolkit === 'string' ) {
-					return toolkits.some(
+					return allToolkits.some(
 						( toolkit ) => toolkit.name === requestedToolkit
 					);
 				}
 				return true;
 			} );
 		},
-		[ toolkits ]
+		[ allToolkits ]
 	);
 
 	const reset = useCallback( () => {

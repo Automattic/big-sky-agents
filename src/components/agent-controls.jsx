@@ -107,6 +107,7 @@ const ChatAgentControls = () => {
 		agents,
 		activeAgent,
 		setActiveAgent,
+		setAgentStarted,
 	} = useAgents();
 	const { reset: onResetChat, running, enabled, setEnabled } = useChat();
 	const { reset: onResetToolkit } = useToolkits();
@@ -179,6 +180,7 @@ const ChatAgentControls = () => {
 					onResetChat();
 					onResetToolkit();
 					setActiveAgent( newAgentId );
+					setAgentStarted( false );
 				} }
 			/>
 			<HStack align="center">

@@ -1,6 +1,6 @@
-import SetAgentTool from '../tools/set-agent.js';
+import createSetAgentTool from '../tools/set-agent.js';
 
 export default {
 	name: 'agents',
-	tools: [ SetAgentTool ],
+	tools: ( context ) => [ createSetAgentTool( context.agents ) ],
 };

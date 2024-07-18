@@ -1,7 +1,7 @@
 import { createReduxStore } from '@wordpress/data';
 
 const initialState = {
-	toolkits: {},
+	toolkits: [],
 	contexts: {},
 	callbacks: {},
 	tools: {},
@@ -64,15 +64,25 @@ const registerToolkit = ( state, action ) => {
 		} );
 	}
 
+	// if there's an existing toolkit with the same name, replace it
+	const existingToolkitIndex = state.toolkits.findIndex(
+		( t ) => t.name === toolkit.name
+	);
+	if ( existingToolkitIndex !== -1 ) {
+		return {
+			...state,
+			toolkits: [
+				...state.toolkits.slice( 0, existingToolkitIndex ),
+				toolkit,
+				...state.toolkits.slice( existingToolkitIndex + 1 ),
+			],
+		};
+	}
+
+	// otherwise, add the new toolkit
 	return {
 		...state,
-		toolkits: {
-			...state.toolkits,
-			[ toolkit.name ]: {
-				name: toolkit.name,
-				description: toolkit.description,
-			},
-		},
+		toolkits: [ ...state.toolkits, toolkit ],
 	};
 };
 
@@ -126,7 +136,7 @@ export const reducer = ( state = initialState, action ) => {
 
 export const selectors = {
 	getToolkits: ( state ) => {
-		return Object.values( state.toolkits );
+		return state.toolkits;
 	},
 	getToolkit: ( state, name ) => {
 		return state.toolkits[ name ];

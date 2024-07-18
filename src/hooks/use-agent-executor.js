@@ -10,6 +10,24 @@ import useAgents from '../components/agents-provider/use-agents.js';
 import useChat from '../components/chat-provider/use-chat.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 
+const toOpenAITool = ( tool ) => ( {
+	type: 'function',
+	function: {
+		name: tool.name,
+		description: tool.description,
+		// default to a single string parameter called "value"
+		parameters: tool.parameters ?? {
+			type: 'object',
+			properties: {
+				value: {
+					type: 'string',
+				},
+			},
+			required: [ 'value' ],
+		},
+	},
+} );
+
 const useAgentExecutor = () => {
 	const { activeAgent, started, setAgentStarted } = useAgents();
 
@@ -51,15 +69,8 @@ const useAgentExecutor = () => {
 		agentSay,
 	} = useChat();
 
-	const {
-		tools: allTools,
-		invoke,
-		hasToolkits,
-		context,
-		callbacks,
-	} = useToolkits();
+	const { tools, invoke, hasToolkits, context, callbacks } = useToolkits();
 
-	const [ tools, setTools ] = useState( [] );
 	const [ instructions, setInstructions ] = useState( '' );
 	const [ additionalInstructions, setAdditionalInstructions ] =
 		useState( '' );
@@ -240,31 +251,6 @@ const useAgentExecutor = () => {
 
 	useEffect( () => {
 		if ( activeAgent && toolkitsLoaded ) {
-			// deduplicate and convert to OpenAI format
-			const newTools = allTools
-				.filter(
-					( tool, index, self ) =>
-						index ===
-						self.findIndex( ( t ) => t.name === tool.name )
-				)
-				.map( ( tool ) => ( {
-					type: 'function',
-					function: {
-						name: tool.name,
-						description: tool.description,
-						// default to a single string parameter called "value"
-						parameters: tool.parameters ?? {
-							type: 'object',
-							properties: {
-								value: {
-									type: 'string',
-								},
-							},
-							required: [ 'value' ],
-						},
-					},
-				} ) );
-
 			const newInstructions =
 				typeof activeAgent.instructions === 'function'
 					? activeAgent.instructions( context )
@@ -286,10 +272,6 @@ const useAgentExecutor = () => {
 			if ( newAdditionalInstructions !== additionalInstructions ) {
 				setAdditionalInstructions( newAdditionalInstructions );
 			}
-
-			if ( JSON.stringify( newTools ) !== JSON.stringify( tools ) ) {
-				setTools( newTools );
-			}
 		}
 	}, [
 		additionalInstructions,
@@ -298,7 +280,6 @@ const useAgentExecutor = () => {
 		setAssistantId,
 		instructions,
 		tools,
-		allTools,
 		context,
 		toolkitsLoaded,
 	] );
@@ -320,8 +301,10 @@ const useAgentExecutor = () => {
 			additionalMessages.length === 0 &&
 			messages.length > 0
 		) {
+			// deduplicate and convert to OpenAI format
+			const openAITools = tools.map( toOpenAITool );
 			createThreadRun( {
-				tools,
+				openAITools,
 				instructions,
 				additionalInstructions,
 				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
@@ -384,8 +367,9 @@ const useAgentExecutor = () => {
 			messages.length > 0 &&
 			! isAwaitingUserInput
 		) {
+			const openAITools = tools.map( toOpenAITool );
 			runChatCompletion( {
-				tools,
+				tools: openAITools,
 				instructions,
 				additionalInstructions,
 			} );
