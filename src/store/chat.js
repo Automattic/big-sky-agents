@@ -1100,11 +1100,6 @@ export const selectors = {
 	isThreadRunAwaitingToolOutputs: ( state ) => {
 		const threadRun = getActiveThreadRun( state );
 		const requiredToolOutputs = selectors.getRequiredToolOutputs( state );
-		console.warn( 'isThreadRunAwaitingToolOutputs', {
-			threadRun,
-			requiredToolOutputs,
-			isThreadDataLoaded: selectors.isThreadDataLoaded( state ),
-		} );
 		return (
 			selectors.isThreadDataLoaded( state ) &&
 			! selectors.isRunning( state ) &&
