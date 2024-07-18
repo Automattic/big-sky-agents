@@ -15,7 +15,6 @@ import PageList from './page-list.jsx';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChatSettings from '../hooks/use-chat-settings.js';
-import useAgents from './agents-provider/use-agents.js';
 import {
 	AssistantModelService,
 	AssistantModelType,
@@ -65,13 +64,6 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 	useGoalToolkit();
 	useInformToolkit();
 	useAgentExecutor();
-
-	const { setActiveAgent } = useAgents();
-
-	// set the initial agent
-	useEffect( () => {
-		setActiveAgent( WAPUU_AGENT_ID );
-	}, [ setActiveAgent ] );
 
 	const { pages } = useSelect( ( select ) => {
 		return {

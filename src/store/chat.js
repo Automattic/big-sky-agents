@@ -209,7 +209,7 @@ const reset =
 		dispatch( clearMessages() );
 		dispatch( clearError() );
 		if ( threadId && isAssistantAvailable ) {
-			dispatch( deleteThread() );
+			dispatch( deleteThread );
 		}
 	};
 
@@ -299,7 +299,7 @@ const updateThreadRuns =
 			} );
 		} catch ( error ) {
 			console.error( 'Get Thread Runs Error', error );
-			return { type: 'GET_THREAD_RUNS_ERROR', error: error.message };
+			dispatch( { type: 'GET_THREAD_RUNS_ERROR', error: error.message } );
 		}
 	};
 
@@ -325,7 +325,7 @@ const updateThreadRun =
 			} );
 		} catch ( error ) {
 			console.error( 'Thread error', error );
-			return { type: 'GET_THREAD_RUN_ERROR', error: error.message };
+			dispatch( { type: 'GET_THREAD_RUN_ERROR', error: error.message } );
 		}
 	};
 
@@ -351,17 +351,22 @@ const updateThreadMessages =
 			} );
 		} catch ( error ) {
 			console.error( 'Get Thread Messages Error', error );
-			return { type: 'GET_THREAD_MESSAGES_ERROR', error: error.message };
+			dispatch( {
+				type: 'GET_THREAD_MESSAGES_ERROR',
+				error: error.message,
+			} );
 		}
 	};
 
 const getAssistantModel = ( select ) => {
-	const { service, apiKey, assistantId, feature } = select( ( state ) => ( {
-		service: state.root.service,
-		apiKey: state.root.apiKey,
-		assistantId: selectors.getAssistantId( state.root ),
-		feature: state.root.feature,
-	} ) );
+	const { service, apiKey, assistantId, feature } = select( ( state ) => {
+		return {
+			service: state.root.service,
+			apiKey: state.root.apiKey,
+			assistantId: selectors.getAssistantId( state.root ),
+			feature: state.root.feature,
+		};
+	} );
 	if ( ! service || ! apiKey || ! assistantId ) {
 		console.warn( 'Service, API key and assistant ID are required', {
 			service,
@@ -389,7 +394,7 @@ const createThread =
 			} );
 		} catch ( error ) {
 			console.error( 'Thread error', error );
-			return { type: 'CREATE_THREAD_ERROR', error: error.message };
+			dispatch( { type: 'CREATE_THREAD_ERROR', error: error.message } );
 		}
 	};
 
@@ -407,7 +412,7 @@ const deleteThread =
 			dispatch( agentsActions.setAgentStarted( false ) );
 		} catch ( error ) {
 			console.error( 'Thread error', error );
-			return { type: 'DELETE_THREAD_ERROR', error: error.message };
+			dispatch( { type: 'DELETE_THREAD_ERROR', error: error.message } );
 		}
 	};
 
@@ -897,18 +902,22 @@ export const reducer = ( state = initialState, action ) => {
 				( tr ) => tr.id === action.threadRun.id
 			);
 			if ( existingThreadRunIndex !== -1 ) {
-				state.threadRuns[ existingThreadRunIndex ] = action.threadRun;
+				state = {
+					...state,
+					threadRuns: [
+						...state.threadRuns.slice( 0, existingThreadRunIndex ),
+						action.threadRun,
+						...state.threadRuns.slice( existingThreadRunIndex + 1 ),
+					],
+				};
 			} else {
-				state.threadRuns = [
-					...state.threadRuns.filter(
-						( tr ) => tr.id !== action.threadRun.id
-					),
-					action.threadRun,
-				];
+				state = {
+					...state,
+					threadRuns: [ action.threadRun, ...state.threadRuns ],
+				};
 			}
 			return {
 				...state,
-				threadMessagesUpdated: null,
 				isFetchingThreadRun: false,
 			};
 		case 'GET_THREAD_RUN_ERROR':
