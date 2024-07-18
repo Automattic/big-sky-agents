@@ -1,10 +1,12 @@
 // TODO: extract all this to a JSON configuration file
 export const AssistantModelService = {
 	WPCOM_OPENAI: 'wpcom-openai', // the wpcom OpenAI proxy
+	WPCOM: 'wpcom', // WPCOM native
 	OPENAI: 'openai',
 	getAvailable: () => {
 		const services = [
 			AssistantModelService.WPCOM_OPENAI,
+			AssistantModelService.WPCOM,
 			AssistantModelService.OPENAI,
 		];
 		return services;
@@ -291,8 +293,14 @@ class AssistantModel {
 					feature,
 					sessionId,
 				} );
-			case AssistantModelService.WPCOM_OPENAI:
+			case AssistantModelService.WPCOM:
 				return new WPCOMOpenAIAssistantModel( {
+					apiKey,
+					feature,
+					sessionId,
+				} );
+			case AssistantModelService.WPCOM_OPENAI:
+				return new WPCOMOpenAIProxyAssistantModel( {
 					apiKey,
 					feature,
 					sessionId,
@@ -325,6 +333,31 @@ export class WPCOMOpenAIAssistantModel extends AssistantModel {
 
 	getServiceUrl() {
 		return 'https://public-api.wordpress.com/wpcom/v2/big-sky/assistant';
+	}
+}
+
+export class WPCOMOpenAIProxyAssistantModel extends AssistantModel {
+	getHeaders() {
+		const headers = super.getHeaders();
+		if ( this.feature ) {
+			headers[ 'X-WPCOM-AI-Feature' ] = this.feature;
+			headers[ 'Access-Control-Request-Headers' ] =
+				'authorization,content-type,X-WPCOM-AI-Feature';
+		}
+
+		if ( this.sessionId ) {
+			headers[ 'X-WPCOM-Session-ID' ] = this.sessionId;
+		}
+
+		return headers;
+	}
+
+	getDefaultModel() {
+		return AssistantModelType.GPT_4O;
+	}
+
+	getServiceUrl() {
+		return 'https://public-api.wordpress.com/wpcom/v2/openai-proxy/v1';
 	}
 }
 
