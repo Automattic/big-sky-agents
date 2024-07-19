@@ -1,3 +1,5 @@
+import { Button } from '@wordpress/components';
+import { close, settings } from '@wordpress/icons';
 import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
 import ToolCallControls from './tool-call-controls.jsx';
@@ -25,7 +27,7 @@ const PopUpControls = ( { setApiKey } ) => {
 	return (
 		<div className="big-sky__agent-debug">
 			{ controlsVisible ? (
-				<>
+				<div className="big-sky__agent-debug-contents">
 					<AgentControls />
 					<ChatModelControls
 						onApiKeyChanged={ ( newApiKey ) => {
@@ -35,11 +37,18 @@ const PopUpControls = ( { setApiKey } ) => {
 						} }
 					/>
 					<ToolCallControls />
-				</>
+					<div style={ { textAlign: 'right' } }>
+						<Button
+							icon={ close }
+							onClick={ () => setControlsVisible( false ) }
+						/>
+					</div>
+				</div>
 			) : (
-				<button onClick={ () => setControlsVisible( true ) }>
-					Show Debug Controls
-				</button>
+				<Button
+					icon={ settings }
+					onClick={ () => setControlsVisible( true ) }
+				/>
 			) }
 		</div>
 	);

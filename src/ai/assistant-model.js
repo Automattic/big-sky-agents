@@ -42,9 +42,16 @@ export const AssistantModelType = {
 };
 
 class AssistantModel {
-	constructor( { apiKey, assistantId, feature, sessionId } ) {
+	constructor( {
+		apiKey,
+		assistantId,
+		openAiOrganization,
+		feature,
+		sessionId,
+	} ) {
 		this.apiKey = apiKey;
 		this.assistantId = assistantId;
+		this.openAiOrganization = openAiOrganization;
 		this.feature = feature;
 		this.sessionId = sessionId;
 	}
@@ -262,11 +269,17 @@ class AssistantModel {
 	}
 
 	getHeaders() {
-		return {
+		const headers = {
 			Authorization: `Bearer ${ this.apiKey }`,
 			'Content-Type': 'application/json',
 			'OpenAI-Beta': 'assistants=v2',
 		};
+
+		if ( this.openAiOrganization ) {
+			headers[ 'OpenAI-Organization' ] = this.openAiOrganization;
+		}
+
+		return headers;
 	}
 
 	getDefaultMaxTokens() {
@@ -285,25 +298,28 @@ class AssistantModel {
 		throw new Error( 'Not implemented' );
 	}
 
-	static getInstance( service, apiKey, feature, sessionId ) {
+	static getInstance( service, apiKey, feature, sessionId, opts = {} ) {
 		switch ( service ) {
 			case AssistantModelService.OPENAI:
 				return new OpenAIAssistantModel( {
 					apiKey,
 					feature,
 					sessionId,
+					...opts,
 				} );
 			case AssistantModelService.WPCOM:
 				return new WPCOMOpenAIAssistantModel( {
 					apiKey,
 					feature,
 					sessionId,
+					...opts,
 				} );
 			case AssistantModelService.WPCOM_OPENAI:
 				return new WPCOMOpenAIProxyAssistantModel( {
 					apiKey,
 					feature,
 					sessionId,
+					...opts,
 				} );
 			default:
 				throw new Error( `Unknown service: ${ service }` );

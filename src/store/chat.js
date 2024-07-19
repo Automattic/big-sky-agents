@@ -63,6 +63,7 @@ const initialState = {
 	// Assistants-API-related
 	assistantId: null, // The assistant ID
 	defaultAssistantId: null, // The default assistant ID
+	openAiOrganization: null,
 	threadId: isLocalStorageAvailable
 		? localStorage.getItem( 'threadId' )
 		: null, // The assistant thread ID
@@ -359,14 +360,16 @@ const updateThreadMessages =
 	};
 
 const getAssistantModel = ( select ) => {
-	const { service, apiKey, assistantId, feature } = select( ( state ) => {
-		return {
-			service: state.root.service,
-			apiKey: state.root.apiKey,
-			assistantId: selectors.getAssistantId( state.root ),
-			feature: state.root.feature,
-		};
-	} );
+	const { service, apiKey, assistantId, feature, openAiOrganization } =
+		select( ( state ) => {
+			return {
+				service: state.root.service,
+				apiKey: state.root.apiKey,
+				assistantId: selectors.getAssistantId( state.root ),
+				feature: state.root.feature,
+				openAiOrganization: state.root.openAiOrganization,
+			};
+		} );
 	if ( ! service || ! apiKey || ! assistantId ) {
 		console.warn( 'Service, API key and assistant ID are required', {
 			service,
@@ -375,7 +378,9 @@ const getAssistantModel = ( select ) => {
 		} );
 		throw new Error( 'Service, API key and assistant ID are required' );
 	}
-	return AssistantModel.getInstance( service, apiKey, feature );
+	return AssistantModel.getInstance( service, apiKey, feature, null, {
+		openAiOrganization,
+	} );
 };
 
 /**

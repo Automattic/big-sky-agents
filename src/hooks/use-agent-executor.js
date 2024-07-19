@@ -336,6 +336,7 @@ const useAgentExecutor = () => {
 			! running &&
 			! loading &&
 			! started &&
+			messages.length === 0 &&
 			activeAgent
 		) {
 			setAgentStarted( true );
@@ -344,6 +345,7 @@ const useAgentExecutor = () => {
 			}
 		}
 	}, [
+		messages,
 		agentSay,
 		activeAgent,
 		invoke,
