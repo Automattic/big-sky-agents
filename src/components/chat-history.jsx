@@ -3,6 +3,7 @@
  */
 import MessageContent from './message-content.jsx';
 import useChat from './chat-provider/use-chat.js';
+import './chat-history.scss';
 
 function ChatHistory() {
 	const { messages, toolOutputs } = useChat();
