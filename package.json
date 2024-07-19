@@ -122,5 +122,8 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
+  },
+  "dependencies": {
+    "idb": "^8.0.0"
   }
 }

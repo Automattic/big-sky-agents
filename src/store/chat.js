@@ -3,6 +3,7 @@ import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../ai/chat-model.js';
 import AssistantModel from '../ai/assistant-model.js';
 import { actions as agentsActions } from './agents.js';
+import { loadThreadValue, saveThreadValue } from '../utils/db.js';
 
 export const THREAD_RUN_ACTIVE_STATUSES = [
 	'queued',
@@ -41,7 +42,7 @@ export const THREAD_RUN_COMPLETED_STATUSES = [
 	'completed',
 ];
 
-const initialState = {
+const defaultInitialState = {
 	// Global
 	error: null,
 	enabled: true,
@@ -80,6 +81,27 @@ const initialState = {
 	isFetchingThreadMessages: false,
 	isSubmittingToolOutputs: false,
 };
+
+// const loadInitialState = async () => {
+// 	const threadId = defaultInitialState.threadId;
+
+// 	if ( ! threadId ) {
+// 		return defaultInitialState;
+// 	}
+
+// 	const messages =
+// 		( await loadThreadValue( threadId, 'messages' ) )?.value || [];
+// 	const threadRuns =
+// 		( await loadThreadValue( threadId, 'threadRuns' ) )?.value || [];
+
+// 	return {
+// 		...defaultInitialState,
+// 		messages,
+// 		threadRuns,
+// 	};
+// };
+
+const initialState = defaultInitialState; //await loadInitialState();
 
 /**
  * Converts an Chat Completions-formatted message to an Assistants-API-formatted message
@@ -336,8 +358,28 @@ const updateThreadRun =
 const updateThreadMessages =
 	() =>
 	async ( { select, dispatch } ) => {
-		const threadId = select( ( state ) => state.root.threadId );
+		const { threadId, threadMessagesUpdated } = select( ( state ) => ( {
+			threadId: state.root.threadId,
+			threadMessagesUpdated: state.root.threadMessagesUpdated,
+		} ) );
+
+		if ( ! threadMessagesUpdated ) {
+			const cachedMessages = await loadThreadValue(
+				threadId,
+				'messages'
+			);
+
+			if ( cachedMessages ) {
+				console.warn( 'set cached messages', cachedMessages.value );
+				dispatch( {
+					type: 'SET_MESSAGES',
+					messages: cachedMessages.value,
+				} );
+			}
+		}
+
 		dispatch( { type: 'GET_THREAD_MESSAGES_BEGIN_REQUEST' } );
+
 		try {
 			const threadMessagesResponse =
 				await getAssistantModel( select ).getThreadMessages( threadId );
@@ -1214,16 +1256,30 @@ export const selectors = {
  * ACTIONS
  */
 
-const addMessage = ( message ) => {
-	return {
-		type: 'ADD_MESSAGE',
-		message: {
-			...message,
-			id: message.id || uuidv4(),
-			created_at: message.created_at || Date.now(),
-		},
+const addMessage =
+	( message, cache = true ) =>
+	async ( { select, dispatch } ) => {
+		dispatch( {
+			type: 'ADD_MESSAGE',
+			message: {
+				...message,
+				id: message.id || uuidv4(),
+				created_at: message.created_at || Date.now(),
+			},
+		} );
+		const { threadId, isAssistantAvailable, messages } = select(
+			( state ) => ( {
+				threadId: state.root.threadId,
+				isAssistantAvailable: selectors.isAssistantAvailable(
+					state.root
+				),
+				messages: state.root.messages,
+			} )
+		);
+		if ( threadId && isAssistantAvailable && cache ) {
+			await saveThreadValue( threadId, 'messages', messages );
+		}
 	};
-};
 
 const agentSay = ( content ) => {
 	return addMessage( {
@@ -1237,10 +1293,20 @@ const agentSay = ( content ) => {
 	} );
 };
 
-const clearMessages = () => ( {
-	type: 'SET_MESSAGES',
-	messages: [],
-} );
+const clearMessages =
+	() =>
+	async ( { select, dispatch } ) => {
+		dispatch( {
+			type: 'SET_MESSAGES',
+			messages: [],
+		} );
+		const { threadId } = select( ( state ) => ( {
+			threadId: state.root.threadId,
+		} ) );
+		if ( threadId ) {
+			await saveThreadValue( threadId, 'messages', [] );
+		}
+	};
 
 const clearError = () => ( {
 	type: 'CHAT_ERROR',
