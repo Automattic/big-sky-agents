@@ -28,13 +28,18 @@ export const AssistantModelService = {
 export const AssistantModelType = {
 	GPT_4_TURBO: 'gpt-4-turbo',
 	GPT_4O: 'gpt-4o',
+	GPT_4O_MINI: 'gpt-4o-mini',
 	isMultimodal: ( model ) => model === AssistantModelType.GPT_4O,
 	supportsToolMessages: ( model ) =>
 		[ AssistantModelType.GPT_4O, AssistantModelType.GPT_4_TURBO ].includes(
 			model
 		),
 	getAvailable: ( /* service */ ) => {
-		return [ AssistantModelType.GPT_4_TURBO, AssistantModelType.GPT_4O ];
+		return [
+			AssistantModelType.GPT_4O_MINI,
+			AssistantModelType.GPT_4_TURBO,
+			AssistantModelType.GPT_4O,
+		];
 	},
 	getDefault( /* service = null */ ) {
 		return AssistantModelType.GPT_4O;

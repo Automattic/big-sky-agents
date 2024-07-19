@@ -44,6 +44,7 @@ export const ChatModelService = {
 };
 
 export const ChatModelType = {
+	GPT_4O_MINI: 'gpt-4o-mini',
 	GPT_4_TURBO: 'gpt-4-turbo',
 	GPT_4O: 'gpt-4o',
 	LLAMA3_70B_8192: 'llama3-70b-8192',
@@ -57,6 +58,7 @@ export const ChatModelType = {
 		[
 			ChatModelType.GPT_4O,
 			ChatModelType.GPT_4_TURBO,
+			ChatModelType.GPT_4O_MINI,
 			ChatModelType.LLAMA3_70B_8192,
 			ChatModelType.MISTRAL_03,
 			ChatModelType.HERMES_2_PRO_MISTRAL,
@@ -73,6 +75,7 @@ export const ChatModelType = {
 			return [
 				ChatModelType.GPT_4O,
 				ChatModelType.GPT_4_TURBO,
+				ChatModelType.GPT_4O_MINI,
 				ChatModelType.LLAMA3_70B_8192_WPCOM,
 			];
 		} else if ( service === ChatModelService.OLLAMA ) {
@@ -87,7 +90,11 @@ export const ChatModelType = {
 		} else if ( service === ChatModelService.LMSTUDIO ) {
 			return [ ChatModelType.PHI_3_MEDIUM ];
 		}
-		return [ ChatModelType.GPT_4_TURBO, ChatModelType.GPT_4O ];
+		return [
+			ChatModelType.GPT_4O_MINI,
+			ChatModelType.GPT_4_TURBO,
+			ChatModelType.GPT_4O,
+		];
 	},
 	getDefault( service = null ) {
 		if ( ! service ) {

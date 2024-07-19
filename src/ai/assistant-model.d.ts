@@ -11,6 +11,7 @@ declare class AssistantModelService {
 declare class AssistantModelType {
 	static readonly GPT_4_TURBO: 'gpt-4-turbo';
 	static readonly GPT_4O: 'gpt-4o';
+	static readonly GPT_4O_MINI: 'gpt-4o-mini';
 
 	static isMultimodal: ( model: AssistantModelType ) => boolean;
 	static supportsToolMessages: ( model: AssistantModelType ) => boolean;
