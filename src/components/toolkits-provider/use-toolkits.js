@@ -204,6 +204,14 @@ export default function useToolkits() {
 			toolkitTools
 		);
 
+		console.warn( 'tools', {
+			agentTools,
+			toolkitTools,
+			toolkits,
+			context,
+			allTools,
+		} );
+
 		return agentTools;
 	}, [ activeAgent, toolkits, allTools, context ] );
 
