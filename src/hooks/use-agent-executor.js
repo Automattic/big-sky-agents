@@ -302,11 +302,6 @@ const useAgentExecutor = () => {
 			messages.length > 0
 		) {
 			// deduplicate and convert to OpenAI format
-			console.warn( '🧠 Running thread', {
-				tools,
-				instructions,
-				additionalInstructions,
-			} );
 			const openAITools = tools.map( toOpenAITool );
 			createThreadRun( {
 				tools: openAITools,
