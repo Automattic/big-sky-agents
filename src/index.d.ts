@@ -10,6 +10,8 @@ export type {
 	WPCOMOpenAIChatModel,
 } from './ai/chat-model';
 
+export type { AssistantModelService } from './ai/assistant-model';
+
 export declare function useChatModel( options: {
 	apiKey: string | undefined;
 	service: string;

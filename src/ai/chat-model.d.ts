@@ -1,5 +1,5 @@
 import { Message, Tool } from '..';
-declare class ChatModelService {
+export declare class ChatModelService {
 	static readonly WPCOM_JETPACK_AI: 'wpcom-jetpack-ai';
 	static readonly WPCOM_OPENAI: 'wpcom-openai'; // the wpcom OpenAI proxy
 	static readonly OPENAI: 'openai';
@@ -13,7 +13,7 @@ declare class ChatModelService {
 	static getDefaultApiKey: ( service: string ) => string | null;
 }
 
-declare class ChatModelType {
+export declare class ChatModelType {
 	static readonly GPT_4_TURBO: 'gpt-4-turbo';
 	static readonly GPT_4O: 'gpt-4o';
 	static readonly GPT_4O_MINI: 'gpt-4o-mini';
@@ -30,7 +30,7 @@ declare class ChatModelType {
 	static getDefault: ( service?: ChatModelService | null ) => string;
 }
 
-interface ChatCompletionRequest {
+export interface ChatCompletionRequest {
 	model: ChatModelType;
 	messages: Message[];
 	tools: Tool[];
@@ -40,7 +40,7 @@ interface ChatCompletionRequest {
 	feature?: string;
 };
 
-declare class ChatModel {
+export declare class ChatModel {
 	constructor( options: { apiKey?: string } );
 	getDefaultModel(): ChatModelType;
 	getDefaultApiKey(): string | null;
@@ -73,8 +73,6 @@ declare class WPCOMOpenAIChatModel extends ChatModel {}
 
 export default ChatModel;
 export {
-	ChatModelService,
-	ChatModelType,
 	GroqChatModel,
 	OpenAIChatModel,
 	OllamaChatModel,
