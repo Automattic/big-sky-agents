@@ -587,14 +587,7 @@ const addMessageReducer = ( state, message ) => {
 	);
 
 	if ( existingMessageIndex !== -1 ) {
-		return {
-			...state,
-			messages: [
-				...state.messages.slice( 0, existingMessageIndex ),
-				message,
-				...state.messages.slice( existingMessageIndex + 1 ),
-			],
-		};
+		return state;
 	}
 
 	// special processing for tools - add the tool call messages

@@ -1,6 +1,7 @@
 import { Message, Tool } from '..';
-declare class AssistantModelService {
+export declare class AssistantModelService {
 	static readonly WPCOM_OPENAI: 'wpcom-openai'; // the wpcom OpenAI proxy
+	static readonly WPCOM: 'wpcom'; // the OpenAI API
 	static readonly OPENAI: 'openai';
 
 	static getAvailable: () => string[];
@@ -8,7 +9,7 @@ declare class AssistantModelService {
 	static getDefaultApiKey: ( service: string ) => string | null;
 }
 
-declare class AssistantModelType {
+export declare class AssistantModelType {
 	static readonly GPT_4_TURBO: 'gpt-4-turbo';
 	static readonly GPT_4O: 'gpt-4o';
 	static readonly GPT_4O_MINI: 'gpt-4o-mini';
@@ -83,8 +84,6 @@ declare class WPCOMOpenAIAssistantModel extends AssistantModel {}
 
 export default AssistantModel;
 export {
-	AssistantModelService,
-	AssistantModelType,
 	OpenAIAssistantModel,
 	WPCOMOpenAIAssistantModel,
 };

@@ -304,7 +304,7 @@ const useAgentExecutor = () => {
 			// deduplicate and convert to OpenAI format
 			const openAITools = tools.map( toOpenAITool );
 			createThreadRun( {
-				openAITools,
+				tools: openAITools,
 				instructions,
 				additionalInstructions,
 				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
