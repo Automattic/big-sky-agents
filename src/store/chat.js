@@ -587,7 +587,18 @@ const addMessageReducer = ( state, message ) => {
 	);
 
 	if ( existingMessageIndex !== -1 ) {
-		return state;
+		// update thread_id if present
+		return {
+			...state,
+			messages: [
+				...state.messages.slice( 0, existingMessageIndex ),
+				{
+					...state.messages[ existingMessageIndex ],
+					thread_id: message.thread_id,
+				},
+				...state.messages.slice( existingMessageIndex + 1 ),
+			],
+		};
 	}
 
 	// special processing for tools - add the tool call messages
