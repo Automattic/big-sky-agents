@@ -53,6 +53,7 @@ const initialState = {
 	service: null,
 	temperature: 0.1,
 	apiKey: null,
+	stream: true,
 
 	// Chat-API-related
 	messages: [],
@@ -441,34 +442,90 @@ const deleteThread =
 const createThreadRun =
 	( request ) =>
 	async ( { select, dispatch } ) => {
-		const { threadId, assistantId, model, temperature } = select(
+		const { stream, threadId, assistantId, model, temperature } = select(
 			( state ) => ( {
 				threadId: state.root.threadId,
 				assistantId: selectors.getAssistantId( state.root ),
 				model: state.root.model,
 				temperature: state.root.temperature,
+				stream: state.root.stream,
 			} )
 		);
 		dispatch( { type: 'RUN_THREAD_BEGIN_REQUEST' } );
 		try {
-			const createThreadRunResponse = await getAssistantModel(
-				select
-			).createThreadRun( {
-				...request,
-				additionalMessages: request.additionalMessages?.map(
-					chatMessageToThreadMessage
-				),
-				threadId,
-				assistantId,
-				model,
-				temperature,
-			} );
-			dispatch( {
-				type: 'RUN_THREAD_END_REQUEST',
-				ts: Date.now(),
-				additionalMessages: request.additionalMessages,
-				threadRun: createThreadRunResponse,
-			} );
+			if ( stream ) {
+				console.warn( 'streaming' );
+				const threadRunEventStream = await getAssistantModel(
+					select
+				).createThreadRunEventStream( {
+					...request,
+					additionalMessages: request.additionalMessages?.map(
+						chatMessageToThreadMessage
+					),
+					stream,
+					threadId,
+					assistantId,
+					model,
+					temperature,
+				} );
+				for await ( const event of threadRunEventStream ) {
+					switch ( event.event ) {
+						case 'thread.run.created':
+						case 'thread.run.queued':
+						case 'thread.run.in_progress':
+							dispatch( {
+								type: 'GET_THREAD_RUN_END_REQUEST',
+								threadRun: event.data,
+								ts: Date.now(),
+							} );
+							break;
+						case 'thread.run.step.created':
+						case 'thread.run.step.in_progress':
+							// TODO
+							break;
+						case 'thread.message.created':
+							dispatch( {
+								type: 'ADD_MESSAGE',
+								message: event.data,
+							} );
+							break;
+						case 'thread.message.in_progress':
+							break;
+						case 'thread.message.delta':
+							console.warn( 'delta', event.data );
+							dispatch( {
+								type: 'ADD_MESSAGE_CONTENT',
+								id: event.data.id,
+								content: event.data.delta.content,
+							} );
+							break;
+						case 'thread.message.completed':
+						case 'thread.run.step.completed':
+						case 'thread.run.completed':
+						default:
+							console.log( event );
+					}
+				}
+			} else {
+				const createThreadRunResponse = await getAssistantModel(
+					select
+				).createThreadRun( {
+					...request,
+					additionalMessages: request.additionalMessages?.map(
+						chatMessageToThreadMessage
+					),
+					threadId,
+					assistantId,
+					model,
+					temperature,
+				} );
+				dispatch( {
+					type: 'RUN_THREAD_END_REQUEST',
+					ts: Date.now(),
+					additionalMessages: request.additionalMessages,
+					threadRun: createThreadRunResponse,
+				} );
+			}
 		} catch ( error ) {
 			console.error( 'Run Thread Error', error );
 			return dispatch( {
@@ -760,6 +817,37 @@ export const reducer = ( state = initialState, action ) => {
 		// Add and Clear Messages
 		case 'ADD_MESSAGE':
 			return addMessageReducer( state, action.message );
+		case 'ADD_MESSAGE_CONTENT':
+			const id = action.id;
+			const contentDelta = action.content;
+			const messageIndex = state.messages.findIndex(
+				( message ) => message.id === id
+			);
+			if ( messageIndex === -1 ) {
+				return state;
+			}
+			const message = { ...state.messages[ messageIndex ] };
+			console.warn( 'got message', message );
+			contentDelta.forEach( ( delta ) => {
+				const { index, text } = delta;
+				if ( message.content[ index ] ) {
+					message.content[ index ].text += text.value;
+				} else {
+					message.content.push( {
+						type: 'text',
+						text: text.value,
+					} );
+				}
+			} );
+			return {
+				...state,
+				messages: [
+					...state.messages.slice( 0, messageIndex ),
+					message,
+					...state.messages.slice( messageIndex + 1 ),
+				],
+			};
+
 		case 'SET_MESSAGES':
 			return { ...state, messages: action.messages };
 
