@@ -468,23 +468,38 @@ const createThreadRun =
 					model,
 					temperature,
 				} );
-				let threadRun = null;
 				for await ( const event of threadRunEventStream ) {
 					console.warn( 'event', event );
 					switch ( event.event ) {
+						// Thread Run updates
 						case 'thread.run.created':
+							// dispatch( {
+							// 	type: 'GET_THREAD_RUN_BEGIN_REQUEST',
+							// } );
+							break;
 						case 'thread.run.queued':
 						case 'thread.run.in_progress':
-						case 'thread.run.requires_action':
-							threadRun = event.data;
 							dispatch( {
-								type: 'GET_THREAD_RUN_END_REQUEST',
-								threadRun,
+								type: 'UPDATE_THREAD_RUN',
+								threadRun: event.data,
 								ts: Date.now(),
 							} );
 							break;
+						case 'thread.run.requires_action':
+						case 'thread.run.completed':
+							dispatch( {
+								type: 'RUN_THREAD_END_REQUEST',
+								ts: Date.now(),
+								additionalMessages: request.additionalMessages,
+								threadRun: event.data,
+							} );
+							break;
+
+						// Step (aka Tool Call) updates
 						case 'thread.run.step.created':
+							break;
 						case 'thread.run.step.in_progress':
+						case 'thread.run.step.completed':
 							if (
 								event.data.step_details.type === 'tool_calls'
 							) {
@@ -499,11 +514,14 @@ const createThreadRun =
 								} );
 							}
 							break;
-						case 'thread.run.step.completed':
-							console.warn(
-								'thread.run.step.completed',
-								event.data
-							);
+
+						// console.warn(
+						// 	'thread.run.step.completed',
+						// 	event.data
+						// );
+						// break;
+						case 'thread.run.step.delta':
+							// console.warn( 'run step delta', event.data );
 							// if (
 							// 	event.data.delta.step_details.type ===
 							// 	'tool_calls'
@@ -511,31 +529,13 @@ const createThreadRun =
 							// 	event.data.delta.step_details.tool_calls.forEach(
 							// 		( toolCall ) => {
 							// 			dispatch( {
-							// 				type: 'APPLY_MESSAGE_TOOL_CALL_DELTA',
+							// 				type: 'TOOL_UPDATE_REQUEST',
 							// 				ts: Date.now(),
-							// 				id: `tc:${ toolCall.id }`,
 							// 				delta: toolCall,
 							// 			} );
 							// 		}
 							// 	);
 							// }
-							break;
-						case 'thread.run.step.delta':
-							console.warn( 'run step delta', event.data );
-							if (
-								event.data.delta.step_details.type ===
-								'tool_calls'
-							) {
-								event.data.delta.step_details.tool_calls.forEach(
-									( toolCall ) => {
-										dispatch( {
-											type: 'TOOL_UPDATE_REQUEST',
-											ts: Date.now(),
-											delta: toolCall,
-										} );
-									}
-								);
-							}
 							break;
 
 						case 'thread.message.created':
@@ -555,13 +555,9 @@ const createThreadRun =
 							} );
 							break;
 						case 'thread.message.completed':
-							break;
-						case 'thread.run.completed':
 							dispatch( {
-								type: 'RUN_THREAD_END_REQUEST',
-								ts: Date.now(),
-								additionalMessages: request.additionalMessages,
-								threadRun: event.data,
+								type: 'ADD_MESSAGE',
+								message: event.data,
 							} );
 							break;
 						case 'done':
@@ -809,6 +805,48 @@ const setThreadIdReducer = ( state, threadId ) => {
 	};
 };
 
+const updateThreadRunReducer = ( state, action ) => {
+	const threadRun = action.threadRun;
+
+	// now optionally update with tool call messages
+	// this simulates an assistant request with tool calls coming from the Chat Completion API
+	// conversely, when we get a tool call response via TOOL_END_REQUEST, we need to send that to the threads/$threadId/runs/$runId/submit_tool_outputs endpoint
+	if (
+		threadRun.status === 'requires_action' &&
+		threadRun.required_action.type === 'submit_tool_outputs'
+	) {
+		const tool_calls =
+			threadRun.required_action.submit_tool_outputs.tool_calls;
+
+		// add an assistant message with the tool calls
+		state = addMessageReducer( state, {
+			id: `tr:${ threadRun.id }`,
+			role: 'assistant',
+			created_at: action.ts,
+			tool_calls,
+		} );
+	}
+	const existingThreadRunIndex = state.threadRuns.findIndex(
+		( tr ) => tr.id === threadRun.id
+	);
+	if ( existingThreadRunIndex !== -1 ) {
+		state = {
+			...state,
+			threadRuns: [
+				...state.threadRuns.slice( 0, existingThreadRunIndex ),
+				threadRun,
+				...state.threadRuns.slice( existingThreadRunIndex + 1 ),
+			],
+		};
+	} else {
+		state = {
+			...state,
+			threadRuns: [ action.threadRun, ...state.threadRuns ],
+		};
+	}
+	return state;
+};
+
 export const reducer = ( state = initialState, action ) => {
 	switch ( action.type ) {
 		// LLM-related
@@ -1036,6 +1074,13 @@ export const reducer = ( state = initialState, action ) => {
 			const additionalMessageIds =
 				action.additionalMessages?.map( ( m ) => m.id ) ?? [];
 
+			const updatedThreadRuns = state.threadRuns.map( ( tr ) => {
+				if ( tr.id === action.threadRun.id ) {
+					return action.threadRun;
+				}
+				return tr;
+			} );
+
 			return {
 				...state,
 				// for each message in action.additionalMessages, find them by id and set message.thread_id to action.threadRun.id
@@ -1051,7 +1096,7 @@ export const reducer = ( state = initialState, action ) => {
 				isCreatingThreadRun: false,
 				threadRunsUpdated: action.ts,
 				threadMessagesUpdated: null, // force reloading of chat history
-				threadRuns: [ action.threadRun, ...state.threadRuns ],
+				threadRuns: updatedThreadRuns,
 			};
 		case 'RUN_THREAD_ERROR':
 			return {
@@ -1085,47 +1130,8 @@ export const reducer = ( state = initialState, action ) => {
 		case 'GET_THREAD_RUN_BEGIN_REQUEST':
 			return { ...state, isFetchingThreadRun: true };
 		case 'GET_THREAD_RUN_END_REQUEST':
-			// check if action.threadRun has pending tool calls
-			const { threadRun } = action;
-
-			// now optionally update with tool call messages
-			// this simulates an assistant request with tool calls coming from the Chat Completion API
-			// conversely, when we get a tool call response via TOOL_END_REQUEST, we need to send that to the threads/$threadId/runs/$runId/submit_tool_outputs endpoint
-			if (
-				threadRun.status === 'requires_action' &&
-				threadRun.required_action.type === 'submit_tool_outputs'
-			) {
-				const tool_calls =
-					threadRun.required_action.submit_tool_outputs.tool_calls;
-
-				// add an assistant message with the tool calls
-				state = addMessageReducer( state, {
-					id: `tr:${ threadRun.id }`,
-					role: 'assistant',
-					created_at: action.ts,
-					tool_calls,
-				} );
-			}
-			const existingThreadRunIndex = state.threadRuns.findIndex(
-				( tr ) => tr.id === action.threadRun.id
-			);
-			if ( existingThreadRunIndex !== -1 ) {
-				state = {
-					...state,
-					threadRuns: [
-						...state.threadRuns.slice( 0, existingThreadRunIndex ),
-						action.threadRun,
-						...state.threadRuns.slice( existingThreadRunIndex + 1 ),
-					],
-				};
-			} else {
-				state = {
-					...state,
-					threadRuns: [ action.threadRun, ...state.threadRuns ],
-				};
-			}
 			return {
-				...state,
+				...updateThreadRunReducer( state, action ),
 				isFetchingThreadRun: false,
 			};
 		case 'GET_THREAD_RUN_ERROR':
@@ -1135,6 +1141,8 @@ export const reducer = ( state = initialState, action ) => {
 				error: action.error,
 			};
 
+		case 'UPDATE_THREAD_RUN':
+			return updateThreadRunReducer( state, action );
 		// Get All Thread Runs
 		case 'GET_THREAD_RUNS_BEGIN_REQUEST':
 			return { ...state, isFetchingThreadRuns: true };

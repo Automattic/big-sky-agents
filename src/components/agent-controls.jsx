@@ -8,9 +8,10 @@ import {
 	__experimentalHStack as HStack,
 	Icon,
 	SelectControl,
+	Tooltip,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { create, trash, update } from '@wordpress/icons';
+import { create, starFilled, trash, update } from '@wordpress/icons';
 import './agent-controls.scss';
 import useAgents from './agents-provider/use-agents.js';
 import useChat from './chat-provider/use-chat.js';
@@ -109,7 +110,19 @@ const ChatAgentControls = () => {
 		setActiveAgent,
 		setAgentStarted,
 	} = useAgents();
-	const { reset: onResetChat, running, enabled, setEnabled } = useChat();
+	const {
+		reset: onResetChat,
+		running,
+		enabled,
+		setEnabled,
+		isThreadRunInProgress,
+		isThreadDataLoaded,
+		isThreadRunComplete,
+		isAwaitingUserInput,
+		isAvailable,
+		isChatAvailable,
+		isAssistantAvailable,
+	} = useChat();
 	const { reset: onResetToolkit } = useToolkits();
 
 	// const {
@@ -199,6 +212,79 @@ const ChatAgentControls = () => {
 					Reset Toolkit
 				</Button>
 			</HStack>
+			{ /* list out isThreadRunInProgress,
+		isThreadDataLoaded,
+		isThreadRunComplete,
+		isAwaitingUserInput,
+		isAvailable,
+		isChatAvailable,
+		isAssistantAvailable in a simple list with labels */ }
+			<div>
+				<Tooltip text="Running">
+					<Icon
+						icon={ starFilled }
+						style={ {
+							fill: running ? 'orange' : 'green',
+						} }
+					/>
+				</Tooltip>
+				<Tooltip text="Available">
+					<Icon
+						icon={ starFilled }
+						style={ {
+							fill: isAvailable ? 'green' : 'gray',
+						} }
+					/>
+				</Tooltip>
+				<Tooltip text="Chat Available">
+					<Icon
+						icon={ starFilled }
+						style={ {
+							fill: isAvailable ? 'green' : 'gray',
+						} }
+					/>
+				</Tooltip>
+				<Tooltip text="Assistant Available">
+					<Icon
+						icon={ starFilled }
+						style={ {
+							fill: isAssistantAvailable ? 'green' : 'gray',
+						} }
+					/>
+				</Tooltip>
+				<Tooltip text="Thread Data Loaded">
+					<Icon
+						icon={ starFilled }
+						style={ {
+							fill: isThreadDataLoaded ? 'green' : 'orange',
+						} }
+					/>
+				</Tooltip>
+				<Tooltip text="Thread Run In Progress">
+					<Icon
+						icon={ starFilled }
+						style={ {
+							fill: isThreadRunInProgress ? 'orange' : 'green',
+						} }
+					/>
+				</Tooltip>
+				<Tooltip text="Thread Run Complete">
+					<Icon
+						icon={ starFilled }
+						style={ {
+							fill: isThreadRunComplete ? 'green' : 'orange',
+						} }
+					/>
+				</Tooltip>
+				<Tooltip text="Awaiting User Input">
+					<Icon
+						icon={ starFilled }
+						style={ {
+							fill: isAwaitingUserInput ? 'green' : 'orange',
+						} }
+					/>
+				</Tooltip>
+			</div>
 		</VStack>
 	);
 };
