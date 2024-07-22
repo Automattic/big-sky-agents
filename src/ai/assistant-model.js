@@ -189,7 +189,7 @@ class AssistantModel {
 	 * @param {number} request.maxCompletionTokens
 	 * @param {Object} request.truncationStrategy
 	 * @param {Object} request.responseFormat
-	 * @return {AsyncIterable<Object>} An async iterable of events
+	 * @return {*} An async iterable of events
 	 */
 	async *createThreadRunEventStream( request ) {
 		const headers = this.getHeaders();

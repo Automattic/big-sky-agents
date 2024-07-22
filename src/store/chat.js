@@ -468,21 +468,76 @@ const createThreadRun =
 					model,
 					temperature,
 				} );
+				let threadRun = null;
 				for await ( const event of threadRunEventStream ) {
+					console.warn( 'event', event );
 					switch ( event.event ) {
 						case 'thread.run.created':
 						case 'thread.run.queued':
 						case 'thread.run.in_progress':
+						case 'thread.run.requires_action':
+							threadRun = event.data;
 							dispatch( {
 								type: 'GET_THREAD_RUN_END_REQUEST',
-								threadRun: event.data,
+								threadRun,
 								ts: Date.now(),
 							} );
 							break;
 						case 'thread.run.step.created':
 						case 'thread.run.step.in_progress':
-							// TODO
+							if (
+								event.data.step_details.type === 'tool_calls'
+							) {
+								const tool_calls = event.data.tool_calls;
+								tool_calls?.forEach( ( toolCall ) => {
+									dispatch( {
+										type: 'ADD_MESSAGE_TOOL_CALL',
+										ts: Date.now(),
+										id: `tc:${ toolCall.id }`,
+										tool_call_id: toolCall.id,
+									} );
+								} );
+							}
 							break;
+						case 'thread.run.step.completed':
+							console.warn(
+								'thread.run.step.completed',
+								event.data
+							);
+							// if (
+							// 	event.data.delta.step_details.type ===
+							// 	'tool_calls'
+							// ) {
+							// 	event.data.delta.step_details.tool_calls.forEach(
+							// 		( toolCall ) => {
+							// 			dispatch( {
+							// 				type: 'APPLY_MESSAGE_TOOL_CALL_DELTA',
+							// 				ts: Date.now(),
+							// 				id: `tc:${ toolCall.id }`,
+							// 				delta: toolCall,
+							// 			} );
+							// 		}
+							// 	);
+							// }
+							break;
+						case 'thread.run.step.delta':
+							console.warn( 'run step delta', event.data );
+							if (
+								event.data.delta.step_details.type ===
+								'tool_calls'
+							) {
+								event.data.delta.step_details.tool_calls.forEach(
+									( toolCall ) => {
+										dispatch( {
+											type: 'TOOL_UPDATE_REQUEST',
+											ts: Date.now(),
+											delta: toolCall,
+										} );
+									}
+								);
+							}
+							break;
+
 						case 'thread.message.created':
 							dispatch( {
 								type: 'ADD_MESSAGE',
@@ -494,14 +549,30 @@ const createThreadRun =
 						case 'thread.message.delta':
 							console.warn( 'delta', event.data );
 							dispatch( {
-								type: 'ADD_MESSAGE_CONTENT',
+								type: 'APPLY_MESSAGE_CONTENT_DELTA',
 								id: event.data.id,
 								content: event.data.delta.content,
 							} );
 							break;
 						case 'thread.message.completed':
-						case 'thread.run.step.completed':
+							break;
 						case 'thread.run.completed':
+							dispatch( {
+								type: 'RUN_THREAD_END_REQUEST',
+								ts: Date.now(),
+								additionalMessages: request.additionalMessages,
+								threadRun: event.data,
+							} );
+							break;
+						case 'done':
+							console.log( 'DONE' );
+							// dispatch( {
+							// 	type: 'RUN_THREAD_END_REQUEST',
+							// 	ts: Date.now(),
+							// 	additionalMessages: request.additionalMessages,
+							// 	threadRun: event.data,
+							// } );
+							break;
 						default:
 							console.log( event );
 					}
@@ -652,6 +723,9 @@ const addMessageReducer = ( state, message ) => {
 				{
 					...state.messages[ existingMessageIndex ],
 					thread_id: message.thread_id,
+					state: message.state,
+					content: message.content,
+					created_at: message.created_at,
 				},
 				...state.messages.slice( existingMessageIndex + 1 ),
 			],
@@ -778,6 +852,34 @@ export const reducer = ( state = initialState, action ) => {
 				],
 				isToolRunning: true,
 			};
+		case 'TOOL_CALL_UPDATE':
+			return {
+				...state,
+				tool_calls: state.tool_calls.map( ( tc ) => {
+					if ( tc.id === action.tool_call_id ) {
+						return {
+							...tc,
+							...action.update,
+						};
+					}
+					return tc;
+				} ),
+			};
+		case 'TOOL_UPDATE_REQUEST':
+			return {
+				...state,
+				tool_calls: state.tool_calls.map( ( tc ) => {
+					if ( tc.id === action.delta.id ) {
+						return {
+							name: action.delta.function.name ?? tc.name,
+							arguments: action.delta.function.arguments
+								? tc.arguments + action.delta.function.arguments
+								: tc.arguments,
+						};
+					}
+					return tc;
+				} ),
+			};
 		case 'TOOL_END_REQUEST':
 			return {
 				...addMessageReducer( state, {
@@ -817,7 +919,16 @@ export const reducer = ( state = initialState, action ) => {
 		// Add and Clear Messages
 		case 'ADD_MESSAGE':
 			return addMessageReducer( state, action.message );
-		case 'ADD_MESSAGE_CONTENT':
+		case 'ADD_MESSAGE_TOOL_CALL':
+			// add an assistant message with the tool calls
+			state = addMessageReducer( state, {
+				id: action.id,
+				role: 'assistant',
+				created_at: action.ts,
+				tool_calls: action.tool_calls,
+			} );
+			return state;
+		case 'APPLY_MESSAGE_CONTENT_DELTA':
 			const id = action.id;
 			const contentDelta = action.content;
 			const messageIndex = state.messages.findIndex(
@@ -901,11 +1012,11 @@ export const reducer = ( state = initialState, action ) => {
 			return {
 				...state,
 				messages: [
-					...state.messages.map( ( message ) => {
-						if ( message.id === action.originalMessageId ) {
+					...state.messages.map( ( m ) => {
+						if ( m.id === action.originalMessageId ) {
 							return filterChatMessage( action.message );
 						}
-						return message;
+						return m;
 					} ),
 				],
 				syncedThreadMessagesAt: action.ts,
@@ -923,20 +1034,19 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, isCreatingThreadRun: true };
 		case 'RUN_THREAD_END_REQUEST':
 			const additionalMessageIds =
-				action.additionalMessages?.map( ( message ) => message.id ) ??
-				[];
+				action.additionalMessages?.map( ( m ) => m.id ) ?? [];
 
 			return {
 				...state,
 				// for each message in action.additionalMessages, find them by id and set message.thread_id to action.threadRun.id
-				messages: state.messages.map( ( message ) => {
-					if ( additionalMessageIds.includes( message.id ) ) {
+				messages: state.messages.map( ( m ) => {
+					if ( additionalMessageIds.includes( m.id ) ) {
 						return {
-							...message,
+							...m,
 							thread_id: state.threadId,
 						};
 					}
-					return message;
+					return m;
 				} ),
 				isCreatingThreadRun: false,
 				threadRunsUpdated: action.ts,
@@ -990,6 +1100,7 @@ export const reducer = ( state = initialState, action ) => {
 
 				// add an assistant message with the tool calls
 				state = addMessageReducer( state, {
+					id: `tr:${ threadRun.id }`,
 					role: 'assistant',
 					created_at: action.ts,
 					tool_calls,
@@ -1064,9 +1175,9 @@ export const reducer = ( state = initialState, action ) => {
 		case 'GET_THREAD_MESSAGES_END_REQUEST':
 			// use addMessageReducer( state, message ) to add each message to the history
 			// and update the tool_calls
-			action.threadMessages.reverse().forEach( ( message ) => {
+			action.threadMessages.reverse().forEach( ( m ) => {
 				// if the message is already in the history, update it
-				state = addMessageReducer( state, message );
+				state = addMessageReducer( state, m );
 			} );
 			return {
 				...state,
