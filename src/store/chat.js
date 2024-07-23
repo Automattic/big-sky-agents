@@ -486,6 +486,13 @@ const createThreadRun =
 							} );
 							break;
 						case 'thread.run.requires_action':
+							dispatch( {
+								type: 'UPDATE_THREAD_RUN',
+								ts: Date.now(),
+								additionalMessages: request.additionalMessages,
+								threadRun: event.data,
+							} );
+							break;
 						case 'thread.run.completed':
 							dispatch( {
 								type: 'RUN_THREAD_END_REQUEST',
