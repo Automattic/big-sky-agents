@@ -249,13 +249,15 @@ const runChatCompletion =
 				feature: state.root.feature,
 			};
 		} );
-
+		const currentMessages = messages.filter(
+			( message ) => message.role !== 'action'
+		);
 		// dispatch an error if service or apiKey are missing
 		if ( ! model || ! temperature ) {
 			console.error( 'Model and temperature are required', {
 				model,
 				temperature,
-				messages,
+				currentMessages,
 				feature,
 			} );
 			dispatch( {
@@ -269,7 +271,7 @@ const runChatCompletion =
 		try {
 			const assistantMessage = await getChatModel( select ).run( {
 				...request,
-				messages,
+				messages: currentMessages,
 				model,
 				temperature,
 				feature,
@@ -722,14 +724,30 @@ export const reducer = ( state = initialState, action ) => {
 				isToolRunning: true,
 			};
 		case 'TOOL_END_REQUEST':
+			const content = action.result?.output
+				? action.result?.output
+				: action.result;
+			const actionMessages = [];
+			if ( action.result?.actions.length > 0 ) {
+				action.result?.actions.forEach( ( toolAction ) => {
+					actionMessages.push( {
+						role: 'action',
+						created_at: action.ts,
+						content: toolAction,
+					} );
+				} );
+			}
+			const newState = addMessageReducer( state, {
+				role: 'tool',
+				id: action.id,
+				created_at: action.ts,
+				tool_call_id: action.tool_call_id,
+				content,
+				showOutputToUser: action.result?.showOutputToUser,
+			} );
 			return {
-				...addMessageReducer( state, {
-					role: 'tool',
-					id: action.id,
-					created_at: action.ts,
-					tool_call_id: action.tool_call_id,
-					content: action.result,
-				} ),
+				...newState,
+				messages: [ ...newState.messages, ...actionMessages ],
 				error: null,
 				isToolRunning: false,
 				tool_calls: state.tool_calls.filter(
@@ -1105,7 +1123,8 @@ export const selectors = {
 	isAwaitingUserInput: ( state ) =>
 		selectors.getPendingToolCalls( state ).length > 0 ||
 		selectors.getRunningToolCallIds( state ).length > 0 ||
-		selectors.getAssistantMessage( state ),
+		selectors.getAssistantMessage( state ) ||
+		selectors.getActionMessage( state ),
 	isThreadRunAwaitingToolOutputs: ( state ) => {
 		const threadRun = getActiveThreadRun( state );
 		const requiredToolOutputs = selectors.getRequiredToolOutputs( state );
@@ -1128,7 +1147,16 @@ export const selectors = {
 	getAssistantMessage: ( state ) => {
 		// return the last message only if it's an assistant message with content
 		const lastMessage = state.messages[ state.messages.length - 1 ];
-		return lastMessage?.role === 'assistant' && lastMessage.content
+		return ( lastMessage?.role === 'assistant' ||
+			lastMessage?.role === 'action' ) &&
+			lastMessage.content
+			? lastMessage.content
+			: null;
+	},
+	getActionMessage: ( state ) => {
+		// return the last message only if it's an action message with content
+		const lastMessage = state.messages[ state.messages.length - 1 ];
+		return lastMessage?.role === 'action' && lastMessage.content
 			? lastMessage.content
 			: null;
 	},
