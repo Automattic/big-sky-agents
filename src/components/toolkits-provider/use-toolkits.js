@@ -154,7 +154,7 @@ export default function useToolkits() {
 	const callbacks = useMemo( () => {
 		return toolkits?.reduce( ( acc, toolkit ) => {
 			const toolkitCallbacks =
-				toolkit.callbacks ?? allCallbacks[ toolkit.name ];
+				toolkit?.callbacks ?? allCallbacks[ toolkit.name ];
 
 			if ( ! toolkitCallbacks ) {
 				return acc;
