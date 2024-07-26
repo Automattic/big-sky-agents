@@ -19,3 +19,4 @@ llama.log
 # ignore anything in ./models that's NOT a yaml file
 models/*
 !models/*.yaml
+stats.html

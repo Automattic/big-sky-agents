@@ -4,6 +4,7 @@ import hq from 'alias-hq';
 import external from '@yelo/rollup-node-external';
 import dts from 'vite-plugin-dts';
 import postcssPresetEnv from 'postcss-preset-env';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://vitejs.dev/config/
 export default defineConfig( {
@@ -17,6 +18,7 @@ export default defineConfig( {
 	plugins: [
 		react(),
 		dts( { rollupTypes: true, exclude: [ '**/*.stories.(ts|tsx)' ] } ),
+		visualizer(),
 	],
 	build: {
 		sourcemap: true,

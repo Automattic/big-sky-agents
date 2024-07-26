@@ -106,6 +106,7 @@
     "rollup-plugin-ignore": "^1.0.10",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-sass": "^1.12.22",
+    "rollup-plugin-visualizer": "^5.12.0",
     "rollup-preserve-directives": "^1.1.1",
     "storybook": "^8.1.11",
     "tail": "^2.2.6",
@@ -113,8 +114,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
     "vite": "^5.2.13",
-    "vite-plugin-dts": "^4.0.0-beta.0",
-    "webpack": "^5.91.0"
+    "vite-plugin-dts": "^4.0.0-beta.0"
   },
   "peerDependencies": {
     "react": "^18.3.1",
