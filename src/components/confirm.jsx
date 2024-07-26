@@ -1,7 +1,7 @@
 import { Button, Card, CardBody, CardFooter } from '@wordpress/components';
 import MessageContent from './message-content.jsx';
 import { CONFIRM_TOOL_NAME } from '../ai/tools/confirm.js';
-import { useCallback } from 'react';
+import { useCallback } from '@wordpress/element';
 import withToolCall from './with-tool-call.jsx';
 
 function Confirm( { args, respond, onConfirm } ) {

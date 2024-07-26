@@ -7,7 +7,7 @@ import { FakeBrowser } from '@vtaits/react-fake-browser-ui';
  * WordPress dependencies
  */
 import { Card, CardBody } from '@wordpress/components';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 // import {
 // 	BlockCanvas,
