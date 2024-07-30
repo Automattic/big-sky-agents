@@ -40,13 +40,13 @@ export {
 	AgentsProvider,
 	useAgents,
 	useAgent,
-} from './components/agents-provider';
-export { ChatProvider } from './components/chat-provider';
+} from './components/agents-provider/index.js';
+export { ChatProvider } from './components/chat-provider/index.js';
 export {
 	ToolkitsProvider,
 	useToolkits,
 	useToolkit,
-} from './components/toolkits-provider';
+} from './components/toolkits-provider/index.js';
 export { default as ChatHistory } from './components/chat-history.jsx';
 export { default as AskUserComponent } from './components/ask-user.jsx';
 export { default as ConfirmComponent } from './components/confirm.jsx';
