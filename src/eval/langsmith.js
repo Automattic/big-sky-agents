@@ -1,6 +1,6 @@
 import { Client } from 'langsmith';
 import { evaluate } from 'langsmith/evaluation';
-import ChatModel from '../src/ai/chat-model.js';
+import ChatModel from '../ai/chat-model.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -15,14 +15,10 @@ export const createProject = async ( projectName, description ) => {
 	}
 };
 
-export const createChatDataset = async (
-	datasetName,
-	description,
-	examples,
-	metadata = {}
-) => {
-	if ( ! ( await client.hasDataset( { datasetName } ) ) ) {
-		const dataset = await client.createDataset( datasetName, {
+export const createChatDataset = async ( dataset ) => {
+	const { name, description, examples, metadata = {} } = dataset;
+	if ( ! ( await client.hasDataset( { datasetName: name } ) ) ) {
+		const datasetResult = await client.createDataset( name, {
 			data_type: 'chat',
 			description,
 		} );
@@ -32,7 +28,7 @@ export const createChatDataset = async (
 				{ input: example.input },
 				{ output: example.output },
 				{
-					datasetId: dataset.id,
+					datasetId: datasetResult.id,
 					metadata: {
 						...metadata,
 						exampleId: example.id,
@@ -41,11 +37,11 @@ export const createChatDataset = async (
 			);
 		}
 	} else {
-		const dataset = await client.readDataset( { datasetName } );
+		const datasetResult = await client.readDataset( { datasetName: name } );
 
 		// update examples by exampleId.
 		for await ( const example of client.listExamples( {
-			datasetId: dataset.id,
+			datasetId: datasetResult.id,
 		} ) ) {
 			// look up from example using id
 			const ex = examples.find(
@@ -75,8 +71,7 @@ export const evaluateAgent = async (
 	maxTokens
 ) => {
 	const chatModel = ChatModel.getInstance( service, apiKey );
-
-	await evaluate(
+	return await evaluate(
 		async ( example ) => {
 			console.warn( 'input', example );
 			const chatCompletion = await chatModel.run( {
@@ -86,7 +81,7 @@ export const evaluateAgent = async (
 				temperature,
 				maxTokens,
 			} );
-			console.warn( 'returning output', chatCompletion );
+			console.warn( 'output', chatCompletion );
 			return { output: chatCompletion };
 		},
 		{

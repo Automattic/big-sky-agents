@@ -68,6 +68,16 @@ export default [
 		external: [ 'react', 'react-dom', 'prop-types', 'PropTypes' ],
 	},
 	{
+		input: 'src/eval.js',
+		output: [
+			{
+				file: 'dist/eval.js',
+				format: 'cjs',
+				sourcemap: true,
+			},
+		],
+	},
+	{
 		input: 'src/index.d.ts',
 		output: [ { file: 'dist/index.d.ts', format: 'esm' } ],
 		plugins: [ dts() ],
