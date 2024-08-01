@@ -246,7 +246,9 @@ export const runEvaluation = async (
 	for ( const agent of agents ) {
 		const agentNameSlug = agent.name.toLowerCase().replace( / /g, '_' );
 		const evaluationResult = await evaluateAgent(
-			`${ experimentPrefix }-${ agentNameSlug }-v${ agent.version ?? '1' }`,
+			`${ experimentPrefix }-${ agentNameSlug }-v${
+				agent.version ?? '1'
+			}`,
 			agent,
 			dataset,
 			service,
