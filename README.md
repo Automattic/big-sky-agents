@@ -96,7 +96,11 @@ LANGCHAIN_PROJECT="your-project"
 Then run:
 
 ```bash
-node ./langsmith-eval.js
+node bin/eval.js data/site-examples.json
+
+# OR
+
+node bin/eval.js data/name-examples.json
 ```
 
 Right now it runs a trivial example, which you can find in [name-example.json](./eval/name-example.json).

@@ -6,6 +6,34 @@ dotenv.config();
 
 const client = new Client();
 
+function deepEqual( obj1, obj2 ) {
+	if ( obj1 === obj2 ) {
+		return true;
+	}
+	if (
+		typeof obj1 !== 'object' ||
+		typeof obj2 !== 'object' ||
+		obj1 === null ||
+		obj2 === null
+	) {
+		return false;
+	}
+	const keys1 = Object.keys( obj1 );
+	const keys2 = Object.keys( obj2 );
+	if ( keys1.length !== keys2.length ) {
+		return false;
+	}
+	for ( const key of keys1 ) {
+		if (
+			! keys2.includes( key ) ||
+			! deepEqual( obj1[ key ], obj2[ key ] )
+		) {
+			return false;
+		}
+	}
+	return true;
+}
+
 export const createProject = async ( projectName, description ) => {
 	if ( ! ( await client.hasProject( { projectName } ) ) ) {
 		await client.createProject( {
@@ -45,6 +73,7 @@ export const createChatDataset = async ( dataset ) => {
 		for await ( const remoteExample of client.listExamples( {
 			datasetId: datasetResult.id,
 		} ) ) {
+			console.warn( 'remoteExample', remoteExample );
 			existingExampleIds.add( remoteExample.metadata.exampleId );
 
 			// Look up from example using id
@@ -53,11 +82,20 @@ export const createChatDataset = async ( dataset ) => {
 			);
 
 			if ( example ) {
-				console.warn( `updating example ${ remoteExample.id }` );
-				await client.updateExample( remoteExample.id, {
-					inputs: { context: example.context, input: example.input },
-					outputs: { output: example.output },
-				} );
+				if (
+					! deepEqual( example.inputs, remoteExample.inputs ) ||
+					! deepEqual( example.outputs, remoteExample.outputs )
+				) {
+					console.warn( `updating example ${ remoteExample.id }` );
+					await client.updateExample( remoteExample.id, {
+						inputs: example.inputs,
+						outputs: example.outputs,
+					} );
+				} else {
+					console.warn(
+						`example ${ remoteExample.id } is up to date`
+					);
+				}
 			} else {
 				console.warn( `deleting example ${ remoteExample.id }` );
 				await client.deleteExample( remoteExample.id );
@@ -68,17 +106,13 @@ export const createChatDataset = async ( dataset ) => {
 		for ( const example of data ) {
 			if ( ! existingExampleIds.has( example.id ) ) {
 				console.warn( `creating new example ${ example.id }` );
-				await client.createExample(
-					{ input: example.input, context: example.context },
-					{ output: example.output },
-					{
-						datasetId: datasetResult.id,
-						metadata: {
-							...metadata,
-							exampleId: example.id,
-						},
-					}
-				);
+				await client.createExample( example.inputs, example.outputs, {
+					datasetId: datasetResult.id,
+					metadata: {
+						...metadata,
+						exampleId: example.id,
+					},
+				} );
 			}
 		}
 	}
@@ -129,7 +163,8 @@ export const evaluateAgent = async (
 	const evaluators = await loadEvaluators( dataset.evaluators );
 	return await evaluate(
 		async ( example ) => {
-			const { input: messages, context } = example;
+			console.warn( 'processing', example );
+			const { input: messages, context = {} } = example;
 
 			const instructions =
 				typeof agent.instructions === 'function'

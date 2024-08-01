@@ -1,44 +1,52 @@
 {
-	"name": "Wapuu Name",
+	"name": "Wapuu Name Test",
 	"description": "Wapuu Name is a simple example of a Wapuu agent that responds to questions about its name.",
 	"data": [
 		{
 			"id": "1",
-			"context": {
-				"site": {
-					"siteTitle": "Example Site"
-				}
-			},
-			"input": [
-				{
-					"role": "assistant",
-					"content": "How can I help you today?"
+			"inputs": {
+				"context": {
+					"site": {
+						"siteTitle": "Example Site"
+					}
 				},
-				{
-					"role": "user",
-					"content": "What is your name?"
+				"input": [
+					{
+						"role": "assistant",
+						"content": "How can I help you today?"
+					},
+					{
+						"role": "user",
+						"content": "What is your name?"
+					}
+				]
+			},
+			"outputs": {
+				"output": {
+					"role": "assistant",
+					"content": "My name is Wapuu"
 				}
-			],
-			"output": {
-				"role": "assistant",
-				"content": "My name is Wapuu"
 			}
 		},
 		{
 			"id": "2",
-			"input": [
-				{
+			"inputs": {
+				"input": [
+					{
+						"role": "assistant",
+						"content": "How can I help you today?"
+					},
+					{
+						"role": "user",
+						"content": "Who are you?"
+					}
+				]
+			},
+			"outputs": {
+				"output": {
 					"role": "assistant",
-					"content": "How can I help you today?"
-				},
-				{
-					"role": "user",
-					"content": "Who are you?"
+					"content": "My name is Wapuu"
 				}
-			],
-			"output": {
-				"role": "assistant",
-				"content": "My name is Wapuu"
 			}
 		}
 	],
