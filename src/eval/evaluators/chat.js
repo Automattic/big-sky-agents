@@ -185,6 +185,6 @@ export const compareContent = ( key ) => async ( run, example ) => {
 
 	return {
 		key,
-		score: parsedArgs.value === 'true',
+		score: parsedArgs.value === 'similar',
 	};
 };
