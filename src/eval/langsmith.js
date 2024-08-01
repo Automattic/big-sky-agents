@@ -165,6 +165,11 @@ export const evaluateAgent = async (
 					? agent.instructions( context )
 					: agent.instructions;
 
+			const additionalInstructions =
+				typeof agent.additionalInstructions === 'function'
+					? agent.additionalInstructions( context )
+					: agent.additionalInstructions;
+
 			const tools = [];
 			if ( agent.toolkits ) {
 				for ( const toolkit of agent.toolkits ) {
@@ -192,13 +197,19 @@ export const evaluateAgent = async (
 
 			const chatCompletion = await chatModel.run( {
 				instructions,
+				additionalInstructions,
 				tools: openAITools,
 				model,
 				messages,
 				temperature,
 				maxTokens,
 			} );
-			return { output: chatCompletion, instructions, tools };
+			return {
+				output: chatCompletion,
+				instructions,
+				additionalInstructions,
+				tools,
+			};
 		},
 		{
 			experimentPrefix,
@@ -233,8 +244,9 @@ export const runEvaluation = async (
 	const evaluationResults = [];
 
 	for ( const agent of agents ) {
+		const agentNameSlug = agent.name.toLowerCase().replace( / /g, '_' );
 		const evaluationResult = await evaluateAgent(
-			`${ experimentPrefix }-${ agent.name }`,
+			`${ experimentPrefix }-${ agentNameSlug }-v${ agent.version ?? '1' }`,
 			agent,
 			dataset,
 			service,

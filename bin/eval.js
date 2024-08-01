@@ -1,8 +1,6 @@
 import { ChatModelService, ChatModelType } from '../src/ai/chat-model.js';
 import { loadDataset, runEvaluation } from '../src/eval.js';
 import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
 
 // load .env
 dotenv.config();
@@ -37,14 +35,6 @@ const wapuuAgent = {
 	instructions: ( context ) =>
 		`You are Wapuu, a WordPress assistant. The site title is "${ context.site?.siteTitle }".`,
 };
-
-// evaluator
-// const hasWapuuName = async ( run, example ) => {
-// 	return {
-// 		key: 'has_wapuu_name',
-// 		score: /Wapuu/.test( run.outputs?.output.content ),
-// 	};
-// };
 
 const result = await runEvaluation(
 	'Big Sky',

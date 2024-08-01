@@ -46,6 +46,20 @@ export const matchOutput = ( key ) => async ( run, example ) => {
 	};
 };
 
+export const matchToolCall = ( key ) => async ( run, example ) => {
+	const outputMessage = run.outputs?.output;
+	const exampleMessage = example.outputs?.output;
+
+	const exampleToolCall =
+		exampleMessage.tool_calls?.[ 0 ]?.function.name ?? '';
+	const outputToolCall = outputMessage.tool_calls?.[ 0 ]?.function.name ?? '';
+
+	return {
+		key,
+		score: ! exampleToolCall || exampleToolCall === outputToolCall,
+	};
+};
+
 // matches either output.content or output.tool_calls[0].function.name
 export const matchMessageOrToolCall = ( key ) => async ( run, example ) => {
 	const outputMessage = run.outputs?.output;
@@ -63,5 +77,113 @@ export const matchMessageOrToolCall = ( key ) => async ( run, example ) => {
 		score:
 			( ! exampleContent || exampleContent === outputContent ) &&
 			( ! exampleToolCall || exampleToolCall === outputToolCall ),
+	};
+};
+
+// rough match of message content using gpt-4o-mini
+export const compareContent = ( key ) => async ( run, example ) => {
+	const outputMessage = run.outputs?.output?.content ?? '';
+	const exampleMessage = example.outputs?.output?.content ?? '';
+
+	if ( ! exampleMessage && ! outputMessage ) {
+		// nothing to match, so return true
+		return {
+			key,
+			score: true,
+		};
+	}
+
+	if ( ! exampleMessage || ! outputMessage ) {
+		// one is empty, so return false
+		return {
+			key,
+			score: false,
+		};
+	}
+
+	const toolName = 'SimilarityResult';
+
+	const systemMessage = `You are a helpful assistant and an expert in comparing and classifying sentences`;
+
+	const userMessage =
+		`I am going to give you two sentences to compare. You need to tell me if they are similar. Call the ${ toolName } tool with your result.` +
+		`\n\nFor example, these two sentences are similar: "Please give me your location" and "In order to proceed, can you tell me where you are?".` +
+		`\n\nThese two sentences are different: "Let's create a post" and "Let's create a comment".` +
+		`\n\nSentence 1: "${ exampleMessage }"\n\nSentence 2: "${ outputMessage }"`;
+
+	const tool = {
+		type: 'function',
+		function: {
+			name: toolName,
+			description: 'Called with the result of comparing two sentences',
+			parameters: {
+				type: 'object',
+				properties: {
+					value: {
+						type: 'string',
+						description:
+							'true if the sentences are similar, false if they are different',
+						enum: [ 'true', 'false' ],
+					},
+				},
+			},
+		},
+	};
+
+	const messages = [
+		{
+			role: 'system',
+			content: systemMessage,
+		},
+		{
+			role: 'user',
+			content: userMessage,
+		},
+	];
+
+	console.warn( 'messages', JSON.stringify( messages, null, 2 ) );
+
+	const result = await fetch( 'https://api.openai.com/v1/chat/completions', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${ process.env.OPENAI_API_KEY }`,
+		},
+		body: JSON.stringify( {
+			model: 'gpt-4o-mini',
+			messages,
+			tools: [ tool ],
+			max_tokens: 2000,
+			temperature: 0.1,
+		} ),
+	} );
+
+	const resultJson = await result.json();
+
+	console.warn( 'match result', resultJson );
+
+	const finish_reason = resultJson.choices?.[ 0 ]?.finish_reason;
+
+	if ( finish_reason !== 'tool_calls' ) {
+		throw new Error( `Expected tool_call, got ${ finish_reason }` );
+	}
+
+	const message = resultJson.choices?.[ 0 ]?.message;
+
+	console.warn( 'message', JSON.stringify( message, null, 2 ) );
+
+	const toolCall = message.tool_calls?.[ 0 ];
+
+	if ( toolCall.function.name !== 'sentencesMatch' ) {
+		throw new Error(
+			`Expected sentencesMatch, got ${ toolCall.function.name }`
+		);
+	}
+
+	const parsedArgs = JSON.parse( toolCall.function.arguments );
+
+	return {
+		key,
+		score: parsedArgs.value === 'true',
 	};
 };
