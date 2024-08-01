@@ -84,9 +84,12 @@ You can [view the updated package here](https://github.com/Automattic/big-sky-ag
 
 Sign up and get an API key from https://smith.langchain.com/
 
+You'll also need an OpenAI API key for generating responses and running some evaluations.
+
 Add the following to your `.env` file:
 
 ```bash
+OPENAI_API_KEY="sk-..."
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
 LANGCHAIN_API_KEY="your-api-key"
