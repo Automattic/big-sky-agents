@@ -48,22 +48,20 @@ export const matchOutput = ( key ) => async ( run, example ) => {
 
 // matches either output.content or output.tool_calls[0].function.name
 export const matchMessageOrToolCall = ( key ) => async ( run, example ) => {
-	const exampleContent = example.outputs?.output.content;
-	const exampleToolCall =
-		example.outputs?.output.tool_calls[ 0 ]?.function?.name;
-	const outputContent = run.outputs?.output.content;
-	const outputToolCall = run.outputs?.output.tool_calls[ 0 ]?.function?.name;
+	const outputMessage = run.outputs?.output;
+	const exampleMessage = example.outputs?.output;
 
-	console.warn( 'matching message or tool call', {
-		exampleContent,
-		exampleToolCall,
-		outputContent,
-		outputToolCall,
-	} );
+	const exampleContent = exampleMessage.content ?? '';
+	const exampleToolCall =
+		exampleMessage.tool_calls?.[ 0 ]?.function.name ?? '';
+
+	const outputContent = outputMessage.content ?? '';
+	const outputToolCall = outputMessage.tool_calls?.[ 0 ]?.function.name ?? '';
+
 	return {
 		key,
 		score:
-			( exampleContent && exampleContent === outputContent ) ||
-			( exampleToolCall && exampleToolCall === outputToolCall ),
+			( ! exampleContent || exampleContent === outputContent ) &&
+			( ! exampleToolCall || exampleToolCall === outputToolCall ),
 	};
 };
