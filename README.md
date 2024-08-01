@@ -99,11 +99,12 @@ LANGCHAIN_PROJECT="your-project"
 Then run:
 
 ```bash
-node bin/eval.js data/site-examples.json
+node bin/eval-wapuu.js data/site-examples.json
+node bin/eval-wapuu.js data/name-examples.json
 
 # OR
 
-node bin/eval.js data/name-examples.json
+node bin/eval-weather-bot.js data/tool-examples.json
 ```
 
 Right now it runs a trivial example, which you can find in [name-example.json](./eval/name-example.json).
