@@ -2,37 +2,13 @@ import { Client } from 'langsmith';
 import { evaluate } from 'langsmith/evaluation';
 import ChatModel from '../ai/chat-model.js';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { deepEqual } from './evaluators/utils.js';
+import { toOpenAITool } from '../ai/utils/openai.js';
 dotenv.config();
 
 const client = new Client();
-
-function deepEqual( obj1, obj2 ) {
-	if ( obj1 === obj2 ) {
-		return true;
-	}
-	if (
-		typeof obj1 !== 'object' ||
-		typeof obj2 !== 'object' ||
-		obj1 === null ||
-		obj2 === null
-	) {
-		return false;
-	}
-	const keys1 = Object.keys( obj1 );
-	const keys2 = Object.keys( obj2 );
-	if ( keys1.length !== keys2.length ) {
-		return false;
-	}
-	for ( const key of keys1 ) {
-		if (
-			! keys2.includes( key ) ||
-			! deepEqual( obj1[ key ], obj2[ key ] )
-		) {
-			return false;
-		}
-	}
-	return true;
-}
 
 export const createProject = async ( projectName, description ) => {
 	if ( ! ( await client.hasProject( { projectName } ) ) ) {
@@ -41,6 +17,24 @@ export const createProject = async ( projectName, description ) => {
 			description,
 		} );
 	}
+};
+
+export const loadDataset = ( datasetFilePath ) => {
+	let dataset;
+	try {
+		const datasetContent = fs.readFileSync(
+			path.resolve( datasetFilePath ),
+			'utf-8'
+		);
+		dataset = JSON.parse( datasetContent );
+	} catch ( error ) {
+		console.error(
+			'Error reading or parsing the dataset file:',
+			error.message
+		);
+		process.exit( 1 );
+	}
+	return dataset;
 };
 
 export const createChatDataset = async ( dataset ) => {
@@ -171,14 +165,40 @@ export const evaluateAgent = async (
 					? agent.instructions( context )
 					: agent.instructions;
 
+			const tools = [];
+			if ( agent.toolkits ) {
+				for ( const toolkit of agent.toolkits ) {
+					const toolkitTools =
+						typeof toolkit.tools === 'function'
+							? toolkit.tools( context )
+							: toolkit.tools;
+					tools.push( ...toolkitTools );
+				}
+			}
+
+			if ( agent.tools ) {
+				const agentTools =
+					typeof agent.tools === 'function'
+						? agent.tools( context )
+						: agent.tools;
+				tools.push( ...agentTools );
+			}
+
+			console.warn( 'got tools', tools );
+
+			const openAITools = tools.map( toOpenAITool );
+
+			console.warn( 'openAITools', openAITools );
+
 			const chatCompletion = await chatModel.run( {
 				instructions,
+				tools: openAITools,
 				model,
 				messages,
 				temperature,
 				maxTokens,
 			} );
-			return { output: chatCompletion, instructions };
+			return { output: chatCompletion, instructions, tools };
 		},
 		{
 			experimentPrefix,

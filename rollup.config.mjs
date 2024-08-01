@@ -71,10 +71,40 @@ export default [
 		input: 'src/eval.js',
 		output: [
 			{
-				file: 'dist/eval.js',
+				file: 'dist/eval.cjs',
 				format: 'cjs',
 				sourcemap: true,
 			},
+			{
+				file: 'dist/eval.js',
+				format: 'esm',
+				sourcemap: true,
+			},
+		],
+		plugins: [
+			eslint( {
+				throwOnError: true,
+				exclude: [
+					'node_modules/**',
+					'dist/**',
+					'src/**/*.scss',
+					'src/**/*.json',
+					'src/**/*.riv',
+				],
+			} ),
+			resolve(),
+			json(),
+			preserveDirectives(),
+			commonjs(),
+			babel( {
+				babelHelpers: 'bundled',
+				extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
+				exclude: [ '**/*.riv' ],
+			} ),
+			// copy the evaluators, which are loaded dynamically
+			copy( {
+				targets: [ { src: 'src/eval/evaluators', dest: 'dist' } ],
+			} ),
 		],
 	},
 	{

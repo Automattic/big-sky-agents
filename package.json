@@ -9,11 +9,24 @@
   "author": "Automattic",
   "license": "GPL-2.0-or-later",
   "type": "module",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "files": [
-    "dist"
+    "dist",
+    "bin",
+    "eval.js",
+    "eval.cjs"
   ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./eval": {
+      "import": "./dist/eval.js",
+      "require": "./dist/eval.cjs"
+    }
+  },
   "bin": {
     "big-sky-eval": "bin/eval.js"
   },

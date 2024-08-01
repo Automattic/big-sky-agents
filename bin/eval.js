@@ -1,5 +1,5 @@
 import { ChatModelService, ChatModelType } from '../src/ai/chat-model.js';
-import { runEvaluation } from '../src/eval.js';
+import { loadDataset, runEvaluation } from '../src/eval.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -17,21 +17,8 @@ if ( process.argv.length < 3 ) {
 
 const datasetFilePath = process.argv[ 2 ];
 
-// Read and parse the dataset file
-let dataset;
-try {
-	const datasetContent = fs.readFileSync(
-		path.resolve( datasetFilePath ),
-		'utf-8'
-	);
-	dataset = JSON.parse( datasetContent );
-} catch ( error ) {
-	console.error(
-		'Error reading or parsing the dataset file:',
-		error.message
-	);
-	process.exit( 1 );
-}
+// Call the loadDataset function
+const dataset = loadDataset( datasetFilePath );
 
 const apiKey = process.env.OPENAI_API_KEY;
 const temperature = 0.9;
