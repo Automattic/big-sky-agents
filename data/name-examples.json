@@ -1,10 +1,14 @@
-
 {
 	"name": "Wapuu Name",
 	"description": "Wapuu Name is a simple example of a Wapuu agent that responds to questions about its name.",
 	"data": [
 		{
 			"id": "1",
+			"context": {
+				"site": {
+					"siteTitle": "Example Site"
+				}
+			},
 			"input": [
 				{
 					"role": "assistant",
@@ -35,6 +39,16 @@
 			"output": {
 				"role": "assistant",
 				"content": "My name is Wapuu"
+			}
+		}
+	],
+	"evaluators": [
+		{
+			"key": "has_wapuu_name",
+			"description": "Has the name Wapuu",
+			"function": "chat:includeString",
+			"arguments": {
+				"string": "Wapuu"
 			}
 		}
 	]
