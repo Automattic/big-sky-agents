@@ -107,9 +107,10 @@ export const compareContent = ( key ) => async ( run, example ) => {
 
 	const userMessage =
 		`I am going to give you two sentences to compare. You need to tell me if they are similar. Call the ${ toolName } tool with your result.` +
-		`\n\nFor example, these two sentences are similar: "Please give me your location" and "In order to proceed, can you tell me where you are?".` +
-		`\n\nThese two sentences are different: "Let's create a post" and "Let's create a comment".` +
-		`\n\nSentence 1: "${ exampleMessage }"\n\nSentence 2: "${ outputMessage }"`;
+		`\n\nFor example, these two sentences are similar:\nSentence 1: "Please give me your location"\nSentence 2: "In order to proceed, can you tell me where you are?".\nSimilarityResult: similar` +
+		`\n\nThese two sentences are different: \nSentence 1: "Let's create a post"\nSentence 2: "Let's create a comment".\nSimilarityResult: different` +
+		`\n\nNow, here are your sentences:` +
+		`\n\nSentence 1: "${ exampleMessage }"\nSentence 2: "${ outputMessage }"`;
 
 	const tool = {
 		type: 'function',
@@ -122,8 +123,8 @@ export const compareContent = ( key ) => async ( run, example ) => {
 					value: {
 						type: 'string',
 						description:
-							'true if the sentences are similar, false if they are different',
-						enum: [ 'true', 'false' ],
+							'"similar" if the sentences are similar, "different" if they are different',
+						enum: [ 'similar', 'different' ],
 					},
 				},
 			},
@@ -174,9 +175,9 @@ export const compareContent = ( key ) => async ( run, example ) => {
 
 	const toolCall = message.tool_calls?.[ 0 ];
 
-	if ( toolCall.function.name !== 'sentencesMatch' ) {
+	if ( toolCall.function.name !== toolName ) {
 		throw new Error(
-			`Expected sentencesMatch, got ${ toolCall.function.name }`
+			`Expected ${ toolName }, got ${ toolCall.function.name }`
 		);
 	}
 

@@ -95,7 +95,7 @@
 			"outputs": {
 				"output": {
 					"role": "assistant",
-					"content": "What is your current location?"
+					"content": "Could you please provide the name of the location for which you would like to get the weather?"
 				}
 			}
 		}
