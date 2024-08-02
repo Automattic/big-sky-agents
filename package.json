@@ -23,12 +23,9 @@
       "require": "./dist/index.cjs"
     },
     "./eval": {
-      "import": "./dist/eval.js",
+      "import": "./src/eval.js",
       "require": "./dist/eval.cjs"
     }
-  },
-  "bin": {
-    "big-sky-eval": "bin/eval.js"
   },
   "types": "dist/index.d.ts",
   "husky": {

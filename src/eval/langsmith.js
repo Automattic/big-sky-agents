@@ -64,7 +64,6 @@ export const createChatDataset = async ( dataset ) => {
 		for await ( const remoteExample of client.listExamples( {
 			datasetId: datasetResult.id,
 		} ) ) {
-			console.warn( 'remoteExample', remoteExample );
 			existingExampleIds.add( remoteExample.metadata.exampleId );
 
 			// Look up from example using id
@@ -192,12 +191,16 @@ export const evaluateAgent = async (
 
 			const tools = [];
 			if ( agent.toolkits ) {
-				for ( const toolkit of agent.toolkits ) {
-					const toolkitTools =
-						typeof toolkit.tools === 'function'
-							? toolkit.tools( context )
-							: toolkit.tools;
-					tools.push( ...toolkitTools );
+				if ( agent.toolkits && Array.isArray( agent.toolkits ) ) {
+					for ( const toolkit of agent.toolkits ) {
+						const toolkitTools =
+							typeof toolkit.tools === 'function'
+								? toolkit.tools( context )
+								: toolkit.tools;
+						if ( toolkitTools && Array.isArray( toolkitTools ) ) {
+							tools.push( ...toolkitTools );
+						}
+					}
 				}
 			}
 
@@ -206,7 +209,10 @@ export const evaluateAgent = async (
 					typeof agent.tools === 'function'
 						? agent.tools( context )
 						: agent.tools;
-				tools.push( ...agentTools );
+				console.warn( 'agent tools', agent.tools, agentTools );
+				if ( agentTools && Array.isArray( agentTools ) ) {
+					tools.push( ...agentTools );
+				}
 			}
 
 			const openAITools = tools.map( toOpenAITool );
@@ -300,11 +306,11 @@ export const runEvaluation = async (
 			};
 		} );
 
-		let nextResult = await evaluationResult.next();
-		while ( ! nextResult.done ) {
-			results.push( nextResult.value );
-			nextResult = await evaluationResult.next();
-		}
+		// let nextResult = await evaluationResult.next();
+		// while ( ! nextResult.done ) {
+		// 	results.push( nextResult.value );
+		// 	nextResult = await evaluationResult.next();
+		// }
 		evaluationResults.push( {
 			agent: agent.name,
 			version: agent.version,
