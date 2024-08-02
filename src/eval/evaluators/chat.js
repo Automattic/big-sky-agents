@@ -55,10 +55,20 @@ export const matchToolCall = ( key ) => async ( run, example ) => {
 		exampleMessage?.tool_calls?.[ 0 ]?.function.name ?? '';
 	const outputToolCall =
 		outputMessage?.tool_calls?.[ 0 ]?.function.name ?? '';
+	const nameMatch = ! exampleToolCall || exampleToolCall === outputToolCall;
+
+	const exampleToolCallArgs =
+		exampleMessage.tool_calls?.[ 0 ]?.function.arguments ?? {};
+	const outputToolCallArgs = JSON.parse(
+		outputMessage.tool_calls?.[ 0 ]?.function.arguments || '{}'
+	);
+	const argsMatch = ! Object.entries( exampleToolCallArgs ).some(
+		( [ name, value ] ) => value !== outputToolCallArgs[ name ]
+	);
 
 	return {
 		key,
-		score: ! exampleToolCall || exampleToolCall === outputToolCall,
+		score: nameMatch && argsMatch,
 	};
 };
 
