@@ -10,7 +10,7 @@
   "license": "GPL-2.0-or-later",
   "type": "module",
   "main": "dist/index.cjs",
-  "module": "dist/index.js",
+  "module": "src/index.js",
   "files": [
     "dist",
     "bin",
@@ -19,7 +19,7 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
+      "import": "./src/index.js",
       "require": "./dist/index.cjs"
     },
     "./eval": {
