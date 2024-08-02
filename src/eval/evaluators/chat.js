@@ -62,9 +62,7 @@ export const matchToolCall = ( key ) => async ( run, example ) => {
 	const outputToolCallArgs = JSON.parse(
 		outputMessage.tool_calls?.[ 0 ]?.function.arguments || '{}'
 	);
-	const argsMatch = ! Object.entries( exampleToolCallArgs ).some(
-		( [ name, value ] ) => value !== outputToolCallArgs[ name ]
-	);
+	const argsMatch = deepEqual( exampleToolCallArgs, outputToolCallArgs );
 
 	return {
 		key,
