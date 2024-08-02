@@ -1,5 +1,6 @@
 import { Client } from 'langsmith';
 import { evaluate } from 'langsmith/evaluation';
+import { traceable } from 'langsmith/traceable';
 import ChatModel from '../ai/chat-model.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -47,17 +48,13 @@ export const createChatDataset = async ( dataset ) => {
 		} );
 
 		for ( const example of data ) {
-			await client.createExample(
-				{ input: example.input },
-				{ output: example.output },
-				{
-					datasetId: datasetResult.id,
-					metadata: {
-						...metadata,
-						exampleId: example.id,
-					},
-				}
-			);
+			await client.createExample( example.inputs, example.outputs, {
+				datasetId: datasetResult.id,
+				metadata: {
+					...metadata,
+					exampleId: example.id,
+				},
+			} );
 		}
 	} else {
 		const datasetResult = await client.readDataset( { datasetName: name } );
@@ -154,11 +151,34 @@ export const evaluateAgent = async (
 	maxTokens
 ) => {
 	const chatModel = ChatModel.getInstance( service, apiKey );
+	const invokeChatModel = traceable(
+		async ( { instructions, additionalInstructions, messages, tools } ) => {
+			return chatModel.run( {
+				instructions,
+				additionalInstructions,
+				tools,
+				model,
+				messages,
+				temperature,
+				maxTokens,
+			} );
+		},
+		{
+			run_type: 'llm',
+			name: 'chat_completion',
+			metadata: {
+				ls_model_name: model,
+				ls_provider: service,
+				ls_temperature: temperature,
+				ls_max_tokens: maxTokens,
+				ls_model_type: 'chat',
+			},
+		}
+	);
 	const evaluators = await loadEvaluators( dataset.evaluators );
 	return await evaluate(
 		async ( example ) => {
-			console.warn( 'processing', example );
-			const { input: messages, context = {} } = example;
+			const { messages, context = {} } = example;
 
 			const instructions =
 				typeof agent.instructions === 'function'
@@ -189,13 +209,9 @@ export const evaluateAgent = async (
 				tools.push( ...agentTools );
 			}
 
-			console.warn( 'got tools', tools );
-
 			const openAITools = tools.map( toOpenAITool );
 
-			console.warn( 'openAITools', openAITools );
-
-			const chatCompletion = await chatModel.run( {
+			const message = await invokeChatModel( {
 				instructions,
 				additionalInstructions,
 				tools: openAITools,
@@ -205,7 +221,7 @@ export const evaluateAgent = async (
 				maxTokens,
 			} );
 			return {
-				output: chatCompletion,
+				message,
 				instructions,
 				additionalInstructions,
 				tools,
@@ -217,11 +233,13 @@ export const evaluateAgent = async (
 			client,
 			evaluators,
 			metadata: {
-				agentVersion: agent.version,
-				agentName: agent.name,
-				model,
-				temperature,
-				maxTokens,
+				a8c_agent_version: agent.version,
+				a8c_agent_name: agent.name,
+				ls_model_name: model,
+				ls_provider: service,
+				ls_temperature: temperature,
+				ls_max_tokens: maxTokens,
+				ls_model_type: 'chat',
 			},
 		}
 	);
@@ -270,7 +288,6 @@ export const runEvaluation = async (
 		const results = evaluationResult.results.map( ( result ) => {
 			const exampleId = result.example.metadata.exampleId;
 			const scores = {};
-			console.warn( 'result', result.evaluationResults );
 			result.evaluationResults.results.forEach( ( r ) => {
 				scores[ r.key ] = r.score;
 			} );
@@ -285,7 +302,6 @@ export const runEvaluation = async (
 
 		let nextResult = await evaluationResult.next();
 		while ( ! nextResult.done ) {
-			console.warn( 'result', nextResult );
 			results.push( nextResult.value );
 			nextResult = await evaluationResult.next();
 		}

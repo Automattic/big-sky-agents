@@ -9,7 +9,7 @@
 				"context": {
 					"currentLocation": "Boston, MA"
 				},
-				"input": [
+				"messages": [
 					{
 						"role": "assistant",
 						"content": "How can I help you?"
@@ -21,7 +21,7 @@
 				]
 			},
 			"outputs": {
-				"output": {
+				"message": {
 					"role": "assistant",
 					"content": "",
 					"tool_calls": [
@@ -45,7 +45,7 @@
 				"context": {
 					"currentLocation": "Boston, MA"
 				},
-				"input": [
+				"messages": [
 					{
 						"role": "assistant",
 						"content": "How can I help you?"
@@ -57,7 +57,7 @@
 				]
 			},
 			"outputs": {
-				"output": {
+				"message": {
 					"role": "assistant",
 					"content": "",
 					"tool_calls": [
@@ -81,7 +81,7 @@
 				"context": {
 					"currentLocation": ""
 				},
-				"input": [
+				"messages": [
 					{
 						"role": "assistant",
 						"content": "How can I help you?"
@@ -93,7 +93,7 @@
 				]
 			},
 			"outputs": {
-				"output": {
+				"message": {
 					"role": "assistant",
 					"content": "Could you please provide the name of the location for which you would like to get the weather?"
 				}

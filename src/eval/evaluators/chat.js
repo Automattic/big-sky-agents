@@ -7,9 +7,10 @@ const getVar = ( obj, path ) => {
 export const includeString =
 	( key, { string } ) =>
 	async ( run ) => {
+		console.warn( 'includeString', string, run.outputs );
 		return {
 			key,
-			score: run.outputs?.output.content.includes( string ),
+			score: run.outputs.message.content.includes( string ),
 		};
 	};
 
@@ -26,7 +27,7 @@ export const includeContext =
 		}
 		return {
 			key,
-			score: run.outputs?.output.content.includes( varValue ),
+			score: run.outputs.message.content.includes( varValue ),
 		};
 	};
 
@@ -35,7 +36,7 @@ export const matchRegex =
 	async ( run ) => {
 		return {
 			key,
-			score: new RegExp( pattern ).test( run.outputs?.output.content ),
+			score: new RegExp( pattern ).test( run.outputs.message.content ),
 		};
 	};
 
@@ -47,8 +48,8 @@ export const matchOutput = ( key ) => async ( run, example ) => {
 };
 
 export const matchToolCall = ( key ) => async ( run, example ) => {
-	const outputMessage = run.outputs?.output;
-	const exampleMessage = example.outputs?.output;
+	const outputMessage = run.outputs.message;
+	const exampleMessage = example.outputs.message;
 
 	const exampleToolCall =
 		exampleMessage.tool_calls?.[ 0 ]?.function.name ?? '';
@@ -62,8 +63,8 @@ export const matchToolCall = ( key ) => async ( run, example ) => {
 
 // matches either output.content or output.tool_calls[0].function.name
 export const matchMessageOrToolCall = ( key ) => async ( run, example ) => {
-	const outputMessage = run.outputs?.output;
-	const exampleMessage = example.outputs?.output;
+	const outputMessage = run.outputs.message;
+	const exampleMessage = example.outputs.message;
 
 	const exampleContent = exampleMessage.content ?? '';
 	const exampleToolCall =
@@ -82,8 +83,8 @@ export const matchMessageOrToolCall = ( key ) => async ( run, example ) => {
 
 // rough match of message content using gpt-4o-mini
 export const compareContent = ( key ) => async ( run, example ) => {
-	const outputMessage = run.outputs?.output?.content ?? '';
-	const exampleMessage = example.outputs?.output?.content ?? '';
+	const outputMessage = run.outputs.message?.content ?? '';
+	const exampleMessage = example.outputs.message?.content ?? '';
 
 	if ( ! exampleMessage && ! outputMessage ) {
 		// nothing to match, so return true
