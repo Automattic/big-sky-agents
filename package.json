@@ -1,6 +1,6 @@
 {
   "name": "@automattic/big-sky-agents",
-  "version": "1.1.35",
+  "version": "1.1.36",
   "description": "The Big Sky Agents SDK",
   "repository": {
     "type": "git",
@@ -9,11 +9,27 @@
   "author": "Automattic",
   "license": "GPL-2.0-or-later",
   "type": "module",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "files": [
-    "dist"
+    "dist",
+    "bin",
+    "eval.js",
+    "eval.cjs"
   ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./eval": {
+      "import": "./dist/eval.js",
+      "require": "./dist/eval.cjs"
+    }
+  },
+  "bin": {
+    "big-sky-eval": "bin/eval.js"
+  },
   "types": "dist/index.d.ts",
   "husky": {
     "hooks": {
@@ -90,6 +106,8 @@
     "eslint-plugin-react-hooks": "^4.6.2",
     "express": "^4.19.2",
     "husky": "^9.0.11",
+    "langsmith": "^0.1.39",
+    "lodash": "^4.17.21",
     "mini-css-extract-plugin": "^2.9.0",
     "minimist": "^1.2.8",
     "nanoid": "^5.0.7",

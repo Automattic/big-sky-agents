@@ -68,6 +68,46 @@ export default [
 		external: [ 'react', 'react-dom', 'prop-types', 'PropTypes' ],
 	},
 	{
+		input: 'src/eval.js',
+		output: [
+			{
+				file: 'dist/eval.cjs',
+				format: 'cjs',
+				sourcemap: true,
+			},
+			{
+				file: 'dist/eval.js',
+				format: 'esm',
+				sourcemap: true,
+			},
+		],
+		plugins: [
+			eslint( {
+				throwOnError: true,
+				exclude: [
+					'node_modules/**',
+					'dist/**',
+					'src/**/*.scss',
+					'src/**/*.json',
+					'src/**/*.riv',
+				],
+			} ),
+			resolve(),
+			json(),
+			preserveDirectives(),
+			commonjs(),
+			babel( {
+				babelHelpers: 'bundled',
+				extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
+				exclude: [ '**/*.riv' ],
+			} ),
+			// copy the evaluators, which are loaded dynamically
+			copy( {
+				targets: [ { src: 'src/eval/evaluators', dest: 'dist' } ],
+			} ),
+		],
+	},
+	{
 		input: 'src/index.d.ts',
 		output: [ { file: 'dist/index.d.ts', format: 'esm' } ],
 		plugins: [ dts() ],

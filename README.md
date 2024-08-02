@@ -80,6 +80,35 @@ npm publish --access public
 
 You can [view the updated package here](https://github.com/Automattic/big-sky-agents/pkgs/npm/big-sky-agents) to verify.
 
+## Running evaluations using LangSmith
+
+Sign up and get an API key from https://smith.langchain.com/
+
+You'll also need an OpenAI API key for generating responses and running some evaluations.
+
+Add the following to your `.env` file:
+
+```bash
+OPENAI_API_KEY="sk-..."
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
+LANGCHAIN_API_KEY="your-api-key"
+LANGCHAIN_PROJECT="your-project"
+```
+
+Then run:
+
+```bash
+node bin/eval-wapuu.js data/site-examples.json
+node bin/eval-wapuu.js data/name-examples.json
+
+# OR
+
+node bin/eval-weather-bot.js data/tool-examples.json
+```
+
+Right now it runs a trivial example, which you can find in [name-example.json](./eval/name-example.json).
+
 ## LocalAI
 
 Using LocalAI, you can run the Chat Completion inference locally on your machine. This is useful for debugging, experimentation, testing, and just privacy in general.
