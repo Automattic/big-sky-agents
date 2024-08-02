@@ -10,7 +10,7 @@ export const includeString =
 		console.warn( 'includeString', string, run.outputs );
 		return {
 			key,
-			score: run.outputs.message.content.includes( string ),
+			score: run.outputs?.message.content.includes( string ),
 		};
 	};
 
@@ -27,7 +27,7 @@ export const includeContext =
 		}
 		return {
 			key,
-			score: run.outputs.message.content.includes( varValue ),
+			score: run.outputs?.message.content.includes( varValue ),
 		};
 	};
 
@@ -36,7 +36,7 @@ export const matchRegex =
 	async ( run ) => {
 		return {
 			key,
-			score: new RegExp( pattern ).test( run.outputs.message.content ),
+			score: new RegExp( pattern ).test( run.outputs?.message.content ),
 		};
 	};
 
@@ -48,12 +48,13 @@ export const matchOutput = ( key ) => async ( run, example ) => {
 };
 
 export const matchToolCall = ( key ) => async ( run, example ) => {
-	const outputMessage = run.outputs.message;
+	const outputMessage = run.outputs?.message;
 	const exampleMessage = example.outputs.message;
 
 	const exampleToolCall =
-		exampleMessage.tool_calls?.[ 0 ]?.function.name ?? '';
-	const outputToolCall = outputMessage.tool_calls?.[ 0 ]?.function.name ?? '';
+		exampleMessage?.tool_calls?.[ 0 ]?.function.name ?? '';
+	const outputToolCall =
+		outputMessage?.tool_calls?.[ 0 ]?.function.name ?? '';
 
 	return {
 		key,
@@ -63,7 +64,7 @@ export const matchToolCall = ( key ) => async ( run, example ) => {
 
 // matches either output.content or output.tool_calls[0].function.name
 export const matchMessageOrToolCall = ( key ) => async ( run, example ) => {
-	const outputMessage = run.outputs.message;
+	const outputMessage = run.outputs?.message;
 	const exampleMessage = example.outputs.message;
 
 	const exampleContent = exampleMessage.content ?? '';
@@ -83,7 +84,7 @@ export const matchMessageOrToolCall = ( key ) => async ( run, example ) => {
 
 // rough match of message content using gpt-4o-mini
 export const compareContent = ( key ) => async ( run, example ) => {
-	const outputMessage = run.outputs.message?.content ?? '';
+	const outputMessage = run.outputs?.message.content ?? '';
 	const exampleMessage = example.outputs.message?.content ?? '';
 
 	if ( ! exampleMessage && ! outputMessage ) {
@@ -143,8 +144,6 @@ export const compareContent = ( key ) => async ( run, example ) => {
 		},
 	];
 
-	console.warn( 'messages', JSON.stringify( messages, null, 2 ) );
-
 	const result = await fetch( 'https://api.openai.com/v1/chat/completions', {
 		method: 'POST',
 		headers: {
@@ -162,19 +161,18 @@ export const compareContent = ( key ) => async ( run, example ) => {
 
 	const resultJson = await result.json();
 
-	console.warn( 'match result', resultJson );
-
-	const finish_reason = resultJson.choices?.[ 0 ]?.finish_reason;
-
-	if ( finish_reason !== 'tool_calls' ) {
-		throw new Error( `Expected tool_call, got ${ finish_reason }` );
+	if ( resultJson.choices?.[ 0 ]?.finish_reason !== 'tool_calls' ) {
+		throw new Error(
+			`Expected tool_call, got ${ resultJson.choices?.[ 0 ]?.finish_reason }`
+		);
 	}
 
 	const message = resultJson.choices?.[ 0 ]?.message;
-
-	console.warn( 'message', JSON.stringify( message, null, 2 ) );
-
 	const toolCall = message.tool_calls?.[ 0 ];
+
+	if ( ! toolCall ) {
+		throw new Error( `Missing tool call, expected ${ toolName }` );
+	}
 
 	if ( toolCall.function.name !== toolName ) {
 		throw new Error(
