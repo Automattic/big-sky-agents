@@ -69,14 +69,6 @@ const WeatherAgent = {
 	},
 };
 
-// evaluator
-// const hasWapuuName = async ( run, example ) => {
-// 	return {
-// 		key: 'has_wapuu_name',
-// 		score: /Wapuu/.test( run.outputs?.output.content ),
-// 	};
-// };
-
 const result = await runEvaluation(
 	'Big Sky',
 	[ WeatherAgent ],

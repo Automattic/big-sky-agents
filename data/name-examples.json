@@ -10,7 +10,7 @@
 						"siteTitle": "Example Site"
 					}
 				},
-				"input": [
+				"messages": [
 					{
 						"role": "assistant",
 						"content": "How can I help you today?"
@@ -22,7 +22,7 @@
 				]
 			},
 			"outputs": {
-				"output": {
+				"message": {
 					"role": "assistant",
 					"content": "My name is Wapuu"
 				}
@@ -31,7 +31,7 @@
 		{
 			"id": "2",
 			"inputs": {
-				"input": [
+				"messages": [
 					{
 						"role": "assistant",
 						"content": "How can I help you today?"
@@ -43,7 +43,7 @@
 				]
 			},
 			"outputs": {
-				"output": {
+				"message": {
 					"role": "assistant",
 					"content": "My name is Wapuu"
 				}
