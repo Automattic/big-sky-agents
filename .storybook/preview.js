@@ -5,4 +5,4 @@ export const parameters = {
     expanded: true,
   },
 };
-export const tags = ["autodocs"];
+export const tags = ["autodocs", "autodocs"];

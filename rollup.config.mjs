@@ -52,7 +52,7 @@ export default [
 				],
 			} ),
 			babel( {
-				babelHelpers: 'bundled',
+				babelHelpers: 'runtime',
 				extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
 				exclude: [ '**/*.riv' ],
 			} ),
@@ -110,7 +110,7 @@ export default [
 			preserveDirectives(),
 			commonjs(),
 			babel( {
-				babelHelpers: 'bundled',
+				babelHelpers: 'runtime',
 				extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
 				exclude: [ '**/*.riv' ],
 			} ),
