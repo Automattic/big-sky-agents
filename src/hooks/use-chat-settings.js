@@ -1,5 +1,5 @@
 import { useEffect } from '@wordpress/element';
-import useChat from '../components/chat-provider/use-chat';
+import useChat from '../components/chat-provider/use-chat.js';
 import useAgents from '../components/agents-provider/use-agents.js';
 
 const useChatSettings = ( options ) => {
