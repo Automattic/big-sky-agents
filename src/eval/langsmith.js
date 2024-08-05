@@ -20,14 +20,26 @@ export const createProject = async ( projectName, description ) => {
 	}
 };
 
-export const loadDataset = ( datasetFilePath ) => {
+export const loadDataset = async ( datasetFilePath ) => {
+	const fileExtension = path.extname( datasetFilePath );
+
 	let dataset;
 	try {
-		const datasetContent = fs.readFileSync(
-			path.resolve( datasetFilePath ),
-			'utf-8'
-		);
-		dataset = JSON.parse( datasetContent );
+		if ( fileExtension === '.json' ) {
+			const datasetContent = fs.readFileSync(
+				path.resolve( datasetFilePath ),
+				'utf-8'
+			);
+			dataset = JSON.parse( datasetContent );
+		} else if ( fileExtension === '.js' ) {
+			const modulePath = path.resolve( datasetFilePath );
+			const module = await import( modulePath );
+			dataset = module.default;
+		} else {
+			throw new Error(
+				'Unsupported file type. Please provide a .json or .js file.'
+			);
+		}
 	} catch ( error ) {
 		console.error(
 			'Error reading or parsing the dataset file:',
@@ -35,6 +47,7 @@ export const loadDataset = ( datasetFilePath ) => {
 		);
 		process.exit( 1 );
 	}
+
 	return dataset;
 };
 
