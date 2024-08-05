@@ -1,4 +1,3 @@
-import React from '@wordpress/element';
 import { fn } from '@storybook/test';
 
 import Confirm from './confirm';

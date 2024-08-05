@@ -1,5 +1,3 @@
-import React from '@wordpress/element';
-
 import AllInOneDemoUI from './all-in-one-demo-ui.jsx';
 
 export default {
