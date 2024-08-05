@@ -2,7 +2,7 @@
  * External dependencies
  */
 import { useRive, useStateMachineInput } from '@rive-app/react-canvas';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from '@wordpress/element';
 
 /**
  * Internal dependencies

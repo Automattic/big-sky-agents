@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from '@wordpress/element';
 import MessageInput from './message-input.jsx';
 import useChat from './chat-provider/use-chat.js';
 

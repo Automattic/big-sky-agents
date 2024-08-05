@@ -1,4 +1,4 @@
-import React from 'react';
+import React from '@wordpress/element';
 
 import useChatIcon from './use-chat-icon.js';
 

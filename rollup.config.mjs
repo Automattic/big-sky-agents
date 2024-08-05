@@ -65,7 +65,16 @@ export default [
 				],
 			} ),
 		],
-		external: [ 'react', 'react-dom', 'prop-types', 'PropTypes' ],
+		external: [
+			'react',
+			'react-dom',
+			'prop-types',
+			'PropTypes',
+			'@wordpress/components',
+			'@wordpress/element',
+			'@wordpress/data',
+			'@wordpress/icons',
+		],
 	},
 	{
 		input: 'src/eval.js',
