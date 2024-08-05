@@ -15,12 +15,12 @@ export default [
 		input: 'src/index.js',
 		output: [
 			{
-				file: packageJson.main,
+				file: 'dist/index.cjs',
 				format: 'cjs',
 				sourcemap: true,
 			},
 			{
-				file: packageJson.module,
+				file: 'dist/index.js',
 				format: 'esm',
 				sourcemap: true,
 			},

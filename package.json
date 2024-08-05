@@ -1,6 +1,6 @@
 {
   "name": "@automattic/big-sky-agents",
-  "version": "1.1.39",
+  "version": "1.1.40",
   "description": "The Big Sky Agents SDK",
   "repository": {
     "type": "git",
@@ -14,8 +14,7 @@
   "files": [
     "dist",
     "bin",
-    "eval.js",
-    "eval.cjs"
+    "src"
   ],
   "exports": {
     ".": {
@@ -133,7 +132,9 @@
   },
   "peerDependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "@rive-app/react-canvas": "^4.11.3",
+    "@vtaits/react-fake-browser-ui": "^1.0.0"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
