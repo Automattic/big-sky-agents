@@ -1,4 +1,4 @@
-import React from 'react';
+import React from '@wordpress/element';
 
 import AssistantsDemoUI from './assistants-demo-ui';
 

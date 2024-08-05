@@ -2,7 +2,7 @@ import { dispatch, register } from '@wordpress/data';
 import { createContext } from '@wordpress/element';
 import { store as defaultToolkitsStore } from '../../store/index.js';
 import { createToolkitsStore } from '../../store/toolkits.js';
-import defaultToolkits from '../../ai/toolkits/default-toolkits';
+import defaultToolkits from '../../ai/toolkits/default-toolkits.js';
 import uuidv4 from '../../utils/uuid.js';
 
 defaultToolkits.forEach( ( toolkit ) => {

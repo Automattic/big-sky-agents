@@ -11,7 +11,7 @@ import {
 } from '@wordpress/components';
 import { store as siteSpecStore } from '../store/index.js';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useState } from 'react';
+import { useState } from '@wordpress/element';
 
 function CorrectableTextField( { disabled, label, value, onChange } ) {
 	const [ isEditing, setIsEditing ] = useState( false );
