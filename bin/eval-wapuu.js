@@ -16,7 +16,7 @@ if ( process.argv.length < 3 ) {
 const datasetFilePath = process.argv[ 2 ];
 
 // Call the loadDataset function
-const dataset = loadDataset( datasetFilePath );
+const dataset = await loadDataset( datasetFilePath );
 
 const apiKey = process.env.OPENAI_API_KEY;
 const temperature = 0.9;

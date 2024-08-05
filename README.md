@@ -100,7 +100,7 @@ Then run:
 
 ```bash
 node bin/eval-wapuu.js data/site-examples.json
-node bin/eval-wapuu.js data/name-examples.json
+node bin/eval-wapuu.js data/name-examples.js
 
 # OR
 
