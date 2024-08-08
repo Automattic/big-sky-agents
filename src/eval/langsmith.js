@@ -163,6 +163,8 @@ export const evaluateAgent = async (
 	maxTokens
 ) => {
 	const chatModel = ChatModel.getInstance( service, apiKey );
+	const agentMetadata = agent.metadata || {};
+	const agentTags = agent.tags || [];
 	const invokeChatModel = traceable(
 		async ( { instructions, additionalInstructions, messages, tools } ) => {
 			return chatModel.run( {
@@ -178,12 +180,14 @@ export const evaluateAgent = async (
 		{
 			run_type: 'llm',
 			name: 'chat_completion',
+			tags: agentTags,
 			metadata: {
 				ls_model_name: model,
 				ls_provider: service,
 				ls_temperature: temperature,
 				ls_max_tokens: maxTokens,
 				ls_model_type: 'chat',
+				...agentMetadata,
 			},
 		}
 	);
@@ -251,14 +255,15 @@ export const evaluateAgent = async (
 			data: dataset.name,
 			client,
 			evaluators,
+			tags: agentTags,
 			metadata: {
-				a8c_agent_version: agent.version,
 				a8c_agent_name: agent.name,
 				ls_model_name: model,
 				ls_provider: service,
 				ls_temperature: temperature,
 				ls_max_tokens: maxTokens,
 				ls_model_type: 'chat',
+				...agentMetadata,
 			},
 		}
 	);
@@ -284,7 +289,7 @@ export const runEvaluation = async (
 		const agentNameSlug = agent.name.toLowerCase().replace( / /g, '_' );
 		const evaluationResult = await evaluateAgent(
 			`${ experimentPrefix }-${ agentNameSlug }-v${
-				agent.version ?? '1'
+				agent.metadata?.version ?? '1'
 			}`,
 			agent,
 			dataset,
@@ -326,7 +331,8 @@ export const runEvaluation = async (
 		// }
 		evaluationResults.push( {
 			agent: agent.name,
-			version: agent.version,
+			tags: agent.tags,
+			metadata: agent.metadata,
 			results,
 		} );
 	}
