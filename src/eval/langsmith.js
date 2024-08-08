@@ -1,6 +1,5 @@
 import { Client } from 'langsmith';
 import { evaluate } from 'langsmith/evaluation';
-import { traceable } from 'langsmith/traceable';
 import ChatModel from '../ai/chat-model.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -165,32 +164,6 @@ export const evaluateAgent = async (
 	const chatModel = ChatModel.getInstance( service, apiKey );
 	const agentMetadata = agent.metadata || {};
 	const agentTags = agent.tags || [];
-	const invokeChatModel = traceable(
-		async ( { instructions, additionalInstructions, messages, tools } ) => {
-			return chatModel.run( {
-				instructions,
-				additionalInstructions,
-				tools,
-				model,
-				messages,
-				temperature,
-				maxTokens,
-			} );
-		},
-		{
-			run_type: 'llm',
-			name: 'chat_completion',
-			tags: agentTags,
-			metadata: {
-				ls_model_name: model,
-				ls_provider: service,
-				ls_temperature: temperature,
-				ls_max_tokens: maxTokens,
-				ls_model_type: 'chat',
-				...agentMetadata,
-			},
-		}
-	);
 	const evaluators = await loadEvaluators( dataset.evaluators );
 	return await evaluate(
 		async ( example ) => {
@@ -234,7 +207,7 @@ export const evaluateAgent = async (
 
 			const openAITools = tools.map( toOpenAITool );
 
-			const message = await invokeChatModel( {
+			const message = await chatModel.run( {
 				instructions,
 				additionalInstructions,
 				tools: openAITools,
