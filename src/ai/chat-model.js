@@ -1,3 +1,5 @@
+import { traceable } from 'langsmith/traceable';
+
 /**
  * Internal dependencies
  */
@@ -241,6 +243,7 @@ class ChatModel {
 	 * @param {string}        params.additionalInstructions The agent loop prompt
 	 * @param {number}        params.temperature            The temperature to use
 	 * @param {number}        params.maxTokens              The maximum number of tokens to generate
+	 * @param {Array<string>} params.tags                   The tags to use
 	 * @return {Promise<Object>} The response message
 	 */
 	async run( {
@@ -251,6 +254,7 @@ class ChatModel {
 		additionalInstructions,
 		temperature,
 		maxTokens,
+		tags,
 	} ) {
 		if ( ! messages || ! messages.length ) {
 			throw new Error( 'Missing history' );
@@ -267,7 +271,20 @@ class ChatModel {
 		temperature = temperature ?? this.getDefaultTemperature( model );
 		const max_tokens = maxTokens ?? this.getDefaultMaxTokens( model );
 
-		const response = await this.call( {
+		const invokeChatModel = traceable( this.call.bind( this ), {
+			run_type: 'llm',
+			name: 'chat_completion',
+			tags,
+			metadata: {
+				ls_model_name: model,
+				ls_provider: this.service,
+				ls_temperature: temperature,
+				ls_max_tokens: max_tokens,
+				ls_model_type: 'llm',
+			},
+		} );
+
+		const response = await invokeChatModel( {
 			model,
 			temperature,
 			max_tokens,

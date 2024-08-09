@@ -26,12 +26,19 @@ const service = ChatModelService.OPENAI;
 
 const anonAgent = {
 	name: 'Anonymous',
+	metadata: {
+		version: '2',
+	},
+	tags: [ 'test' ],
 	instructions: 'You are a WordPress assistant.',
 };
 
 const wapuuAgent = {
 	name: 'Wapuu',
-	version: 2,
+	metadata: {
+		version: '2',
+	},
+	tags: [ 'test' ],
 	instructions: ( context ) =>
 		`You are Wapuu, a WordPress assistant. The site title is "${ context.site?.siteTitle }".`,
 };
