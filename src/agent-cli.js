@@ -1,23 +1,24 @@
+#!/usr/bin/env node
 import dotenv from 'dotenv';
 import minimist from 'minimist';
-import ChatModel, { ChatModelService } from './src/ai/chat-model.js';
+import ChatModel, { ChatModelService } from './ai/chat-model.js';
 import promptSync from 'prompt-sync';
 
 import { dispatch, select } from '@wordpress/data';
-import { store } from './src/store/index.js';
+import { store } from './store/index.js';
 
 // Agents
-import WapuuAgent from './src/ai/agents/cli/wapuu-agent.js';
-import SiteSpecAgent from './src/ai/agents/cli/site-spec-agent.js';
+import WapuuAgent from './ai/agents/cli/wapuu-agent.js';
+import SiteSpecAgent from './ai/agents/cli/site-spec-agent.js';
 
 // Tools
-import AskUserTool from './src/ai/tools/ask-user.js';
-import ConfirmTool from './src/ai/tools/confirm.js';
-import InformTool from './src/ai/tools/inform-user.js';
+import AskUserTool from './ai/tools/ask-user.js';
+import ConfirmTool from './ai/tools/confirm.js';
+import InformTool from './ai/tools/inform-user.js';
 import createSetAgentTool, {
 	SET_AGENT_TOOL_NAME,
-} from './src/ai/tools/set-agent.js';
-import SetGoalTool from './src/ai/tools/set-goal.js';
+} from './ai/tools/set-agent.js';
+import SetGoalTool from './ai/tools/set-goal.js';
 import {
 	SetSiteDescriptionTool,
 	SetSiteLocationTool,
@@ -25,7 +26,7 @@ import {
 	SetSiteTitleTool,
 	SetSiteTopicTool,
 	SetSiteTypeTool,
-} from './src/ai/tools/site-tools.js';
+} from './ai/tools/site-tools.js';
 
 const wapuuAgent = new WapuuAgent();
 const siteSpecAgent = new SiteSpecAgent();

@@ -6,9 +6,40 @@ import fs from 'fs';
 import path from 'path';
 import { deepEqual } from './evaluators/utils.js';
 import { toOpenAITool } from '../ai/utils/openai.js';
+import {
+	compareContent,
+	includeContext,
+	includeString,
+	matchRegex,
+	matchToolCall,
+} from './evaluators/chat.js';
 dotenv.config();
 
 const client = new Client();
+
+// a class for registering and running evaluators
+// e.g. Evaluators.register( 'chat:matchToolCall', matchToolCallEvaluator );
+// e.g. Evaluators.get( 'chat:matchToolCall', 'my_field', { } )( 'matched_tool_call' )( run, example );
+class Evaluators {
+	static evaluators = {};
+
+	static register( slug, evaluator ) {
+		this.evaluators[ slug ] = evaluator;
+	}
+
+	static get( slug, key, args ) {
+		if ( ! this.evaluators[ slug ] ) {
+			throw new Error( `Evaluator ${ slug } not found.` );
+		}
+		return this.evaluators[ slug ]( key, args );
+	}
+}
+
+Evaluators.register( 'chat:matchToolCall', matchToolCall );
+Evaluators.register( 'chat:compareContent', compareContent );
+Evaluators.register( 'chat:includeContext', includeContext );
+Evaluators.register( 'chat:includeString', includeString );
+Evaluators.register( 'chat:matchRegex', matchRegex );
 
 export const createProject = async ( projectName, description ) => {
 	if ( ! ( await client.hasProject( { projectName } ) ) ) {
@@ -121,31 +152,19 @@ export const createChatDataset = async ( dataset ) => {
 };
 
 // Function to parse and load evaluators
-async function loadEvaluators( evaluators ) {
+async function getEvaluators( evaluators ) {
 	const parsedEvaluators = [];
 
 	for ( const evaluator of evaluators ) {
-		const [ library, func ] = evaluator.function.split( ':' );
-		const modulePath = `./evaluators/${ library }.js`;
-
-		console.warn( 'loading evaluator', modulePath, func );
-
-		try {
-			// Dynamically import the function from the module
-			const { [ func ]: loadedFunction } = await import( modulePath );
-
-			// Call the function with arguments and save the instance
-			const evaluatorInstance = loadedFunction(
+		// const [ library, func ] = evaluator.function.split( ':' );
+		// const modulePath = `./evaluators/${ library }.js`;
+		parsedEvaluators.push(
+			Evaluators.get(
+				evaluator.function,
 				evaluator.key,
 				evaluator.arguments
-			);
-			parsedEvaluators.push( evaluatorInstance );
-		} catch ( error ) {
-			console.error(
-				`Failed to load evaluator ${ evaluator.function }:`,
-				error
-			);
-		}
+			)
+		);
 	}
 
 	return parsedEvaluators;
@@ -164,7 +183,7 @@ export const evaluateAgent = async (
 	const chatModel = ChatModel.getInstance( service, apiKey );
 	const agentMetadata = agent.metadata || {};
 	const agentTags = agent.tags || [];
-	const evaluators = await loadEvaluators( dataset.evaluators );
+	const evaluators = await getEvaluators( dataset.evaluators );
 	return await evaluate(
 		async ( example ) => {
 			const { messages, context = {} } = example;
