@@ -1,6 +1,6 @@
 {
   "name": "@automattic/big-sky-agents",
-  "version": "1.1.46",
+  "version": "1.1.47",
   "description": "The Big Sky Agents SDK",
   "repository": {
     "type": "git",
@@ -15,6 +15,9 @@
     "dist",
     "bin"
   ],
+  "bin": {
+    "eval-agents": "bin/eval-agents.js"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -116,7 +119,8 @@
     "typescript": "^5.3.3",
     "vite": "^5.2.13",
     "vite-plugin-dts": "^4.0.0-beta.0",
-    "webpack": "^5.91.0"
+    "webpack": "^5.91.0",
+    "yargs": "^17.7.2"
   },
   "peerDependencies": {
     "@wordpress/base-styles": "^5.0.0",
