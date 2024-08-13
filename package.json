@@ -1,6 +1,6 @@
 {
   "name": "@automattic/big-sky-agents",
-  "version": "1.1.54",
+  "version": "1.1.55",
   "description": "The Big Sky Agents SDK",
   "repository": {
     "type": "git",
@@ -16,8 +16,8 @@
     "bin"
   ],
   "bin": {
-    "eval-agents": "bin/eval-agents.js",
-    "agent-cli": "bin/agent-cli.js"
+    "eval-agents": "dist/eval-agents.js",
+    "agent-cli": "dist/agent-cli.js"
   },
   "exports": {
     ".": {

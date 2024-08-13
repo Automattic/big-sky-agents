@@ -124,7 +124,7 @@ export default [
 		input: 'src/eval-agents.js',
 		output: [
 			{
-				file: 'bin/eval-agents.js',
+				file: 'dist/eval-agents.js',
 				format: 'esm',
 				sourcemap: true,
 			},
@@ -155,7 +155,7 @@ export default [
 		input: 'src/agent-cli.js',
 		output: [
 			{
-				file: 'bin/agent-cli.js',
+				file: 'dist/agent-cli.js',
 				format: 'esm',
 				sourcemap: true,
 			},
