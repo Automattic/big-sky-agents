@@ -121,6 +121,68 @@ export default [
 		],
 	},
 	{
+		input: 'src/eval-agents.js',
+		output: [
+			{
+				file: 'bin/eval-agents.js',
+				format: 'esm',
+				sourcemap: true,
+			},
+		],
+		plugins: [
+			eslint( {
+				throwOnError: true,
+				exclude: [
+					'node_modules/**',
+					'dist/**',
+					'src/**/*.scss',
+					'src/**/*.json',
+					'src/**/*.riv',
+				],
+			} ),
+			resolve(),
+			json(),
+			commonjs(),
+			preserveDirectives(),
+			babel( {
+				babelHelpers: 'runtime',
+				extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
+				exclude: [ '**/*.riv' ],
+			} ),
+		],
+	},
+	{
+		input: 'src/agent-cli.js',
+		output: [
+			{
+				file: 'bin/agent-cli.js',
+				format: 'esm',
+				sourcemap: true,
+			},
+		],
+		plugins: [
+			eslint( {
+				throwOnError: true,
+				exclude: [
+					'node_modules/**',
+					'dist/**',
+					'src/**/*.scss',
+					'src/**/*.json',
+					'src/**/*.riv',
+				],
+			} ),
+			resolve(),
+			json(),
+			commonjs(),
+			preserveDirectives(),
+			babel( {
+				babelHelpers: 'runtime',
+				extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
+				exclude: [ '**/*.riv' ],
+			} ),
+		],
+	},
+	{
 		input: 'src/index.d.ts',
 		output: [ { file: 'dist/index.d.ts', format: 'esm' } ],
 		plugins: [ dts() ],
