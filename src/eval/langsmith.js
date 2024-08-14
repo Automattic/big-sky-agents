@@ -1,4 +1,5 @@
 import { Client } from 'langsmith';
+import { traceable } from 'langsmith/traceable';
 import { evaluate } from 'langsmith/evaluation';
 import ChatModel from '../ai/chat-model.js';
 import dotenv from 'dotenv';
@@ -226,6 +227,21 @@ export const evaluateAgent = async (
 
 			const openAITools = tools.map( toOpenAITool );
 
+			const traceableMiddleware = ( callee, { tags, metadata } ) =>
+				traceable( callee, {
+					run_type: 'llm',
+					name: 'chat_completion',
+					tags: [ ...agentTags, ...( tags ?? [] ) ],
+					metadata: {
+						ls_model_name: model,
+						ls_provider: service,
+						ls_temperature: temperature,
+						ls_max_tokens: maxTokens,
+						ls_model_type: 'llm',
+						...( metadata ?? {} ),
+					},
+				} );
+
 			const message = await chatModel.run( {
 				instructions,
 				additionalInstructions,
@@ -234,7 +250,9 @@ export const evaluateAgent = async (
 				messages,
 				temperature,
 				maxTokens,
+				middleware: traceableMiddleware,
 			} );
+
 			return {
 				message,
 				instructions,
