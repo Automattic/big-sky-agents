@@ -1,6 +1,6 @@
 import { Client } from 'langsmith';
 import { traceable } from 'langsmith/traceable';
-import { evaluate } from 'langsmith/evaluation';
+import { evaluate, evaluateComparative } from 'langsmith/evaluation';
 import ChatModel from '../ai/chat-model.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -9,6 +9,7 @@ import { deepEqual } from './evaluators/utils.js';
 import { toOpenAITool } from '../ai/utils/openai.js';
 import {
 	compareContent,
+	evaluatePairwise,
 	includeContext,
 	includeString,
 	matchRegex,
@@ -41,6 +42,7 @@ Evaluators.register( 'chat:compareContent', compareContent );
 Evaluators.register( 'chat:includeContext', includeContext );
 Evaluators.register( 'chat:includeString', includeString );
 Evaluators.register( 'chat:matchRegex', matchRegex );
+Evaluators.register( 'chat:evaluatePairwise', evaluatePairwise );
 
 export const createProject = async ( projectName, description ) => {
 	if ( ! ( await client.hasProject( { projectName } ) ) ) {
@@ -294,13 +296,15 @@ export const runEvaluation = async (
 	await createProject( name );
 	await createChatDataset( dataset );
 	const evaluationResults = [];
+	const experimentNames = [];
 
 	for ( const agent of agents ) {
 		const agentNameSlug = agent.name.toLowerCase().replace( / /g, '_' );
+		const agentExperimentPrefix = `${ experimentPrefix }-${ agentNameSlug }-v${
+			agent.metadata?.version ?? '1'
+		}`;
 		const evaluationResult = await evaluateAgent(
-			`${ experimentPrefix }-${ agentNameSlug }-v${
-				agent.metadata?.version ?? '1'
-			}`,
+			agentExperimentPrefix,
 			agent,
 			dataset,
 			service,
@@ -309,16 +313,9 @@ export const runEvaluation = async (
 			temperature,
 			maxTokens
 		);
-		/**
-		 * [
-		 *   {
-		 *     "key": "has_site_title",
-		 *     "score": true,
-		 *     "sourceRunId": "f0ca35df-800e-4a10-8327-39409f9508cb"
-		 *   },
-		 *   //....
-		 * ]
-		 */
+		const experimentName = evaluationResult.manager.experimentName;
+		experimentNames.push( experimentName );
+
 		const results = evaluationResult.results.map( ( result ) => {
 			const exampleId = result.example.metadata.exampleId;
 			const scores = {};
@@ -334,11 +331,6 @@ export const runEvaluation = async (
 			};
 		} );
 
-		// let nextResult = await evaluationResult.next();
-		// while ( ! nextResult.done ) {
-		// 	results.push( nextResult.value );
-		// 	nextResult = await evaluationResult.next();
-		// }
 		evaluationResults.push( {
 			agent: agent.name,
 			tags: agent.tags,
@@ -347,5 +339,13 @@ export const runEvaluation = async (
 		} );
 	}
 
-	return evaluationResults;
+	let pairwiseResult = {};
+
+	if ( experimentNames.lengt === 2 ) {
+		pairwiseResult = await evaluateComparative( experimentNames, {
+			evaluators: [ evaluatePairwise ],
+		} );
+	}
+
+	return { evaluationResults, pairwiseResult };
 };

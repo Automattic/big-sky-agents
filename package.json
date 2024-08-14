@@ -123,16 +123,19 @@
     "webpack": "^5.91.0"
   },
   "peerDependencies": {
-    "yargs": "^17.7.2",
     "@wordpress/base-styles": "^5.0.0",
     "@wordpress/components": "^28.0.0",
     "@wordpress/data": "^10.0.0",
     "@wordpress/element": "^6.1.0",
     "@wordpress/icons": "^10.0.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "yargs": "^17.7.2"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
   }
 }
