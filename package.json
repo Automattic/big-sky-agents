@@ -102,6 +102,7 @@
     "mini-css-extract-plugin": "^2.9.0",
     "minimist": "^1.2.8",
     "nanoid": "^5.0.7",
+    "open": "^10.1.0",
     "postcss-preset-env": "^9.5.14",
     "prettier": "npm:wp-prettier@3.0.3",
     "prompt-sync": "^4.2.0",
@@ -115,13 +116,13 @@
     "rollup-plugin-sass": "^1.12.22",
     "rollup-plugin-visualizer": "^5.12.0",
     "rollup-preserve-directives": "^1.1.1",
+    "sort-keys-recursive": "^2.1.10",
     "storybook": "^8.2.7",
     "tail": "^2.2.6",
     "typescript": "^5.3.3",
     "vite": "^5.2.13",
     "vite-plugin-dts": "^4.0.0-beta.0",
-    "webpack": "^5.91.0",
-    "sort-keys-recursive": "^2.1.10"
+    "webpack": "^5.91.0"
   },
   "peerDependencies": {
     "@wordpress/base-styles": "^5.0.0",
