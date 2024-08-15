@@ -111,5 +111,19 @@
 			"description": "If a message content is expected, does it match?",
 			"function": "chat:compareContent"
 		}
+	],
+	"comparativeEvaluators": [
+		{
+			"key": "llm_comparison",
+			"description": "Compare the first two answers with each other by LLM preference",
+			"function": "chat:evaluatePairwise"
+		}
+	],
+	"summaryEvaluators": [
+		{
+			"key": "custom_summary_evaluator",
+			"description": "Test summary evaluator",
+			"function": "chat:customSummaryEvaluator"
+		}
 	]
 }

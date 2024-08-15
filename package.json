@@ -134,8 +134,5 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
-  },
-  "dependencies": {
-    "zod": "^3.23.8"
   }
 }

@@ -9,6 +9,7 @@ import { deepEqual } from './evaluators/utils.js';
 import { toOpenAITool } from '../ai/utils/openai.js';
 import {
 	compareContent,
+	customSummaryEvaluator,
 	evaluatePairwise,
 	includeContext,
 	includeString,
@@ -24,9 +25,19 @@ const client = new Client();
 // e.g. Evaluators.get( 'chat:matchToolCall', 'my_field', { } )( 'matched_tool_call' )( run, example );
 class Evaluators {
 	static evaluators = {};
+	static summaryEvaluators = {};
+	static comparativeEvaluators = {};
 
 	static register( slug, evaluator ) {
 		this.evaluators[ slug ] = evaluator;
+	}
+
+	static registerSummary( slug, evaluator ) {
+		this.summaryEvaluators[ slug ] = evaluator;
+	}
+
+	static registerComparative( slug, evaluator ) {
+		this.comparativeEvaluators[ slug ] = evaluator;
 	}
 
 	static get( slug, key, args ) {
@@ -35,6 +46,20 @@ class Evaluators {
 		}
 		return this.evaluators[ slug ]( key, args );
 	}
+
+	static getSummary( slug, key, args ) {
+		if ( ! this.summaryEvaluators[ slug ] ) {
+			throw new Error( `Summary evaluator ${ slug } not found.` );
+		}
+		return this.summaryEvaluators[ slug ]( key, args );
+	}
+
+	static getComparative( slug, key, args ) {
+		if ( ! this.comparativeEvaluators[ slug ] ) {
+			throw new Error( `Comparative evaluator ${ slug } not found.` );
+		}
+		return this.comparativeEvaluators[ slug ]( key, args );
+	}
 }
 
 Evaluators.register( 'chat:matchToolCall', matchToolCall );
@@ -42,7 +67,11 @@ Evaluators.register( 'chat:compareContent', compareContent );
 Evaluators.register( 'chat:includeContext', includeContext );
 Evaluators.register( 'chat:includeString', includeString );
 Evaluators.register( 'chat:matchRegex', matchRegex );
-Evaluators.register( 'chat:evaluatePairwise', evaluatePairwise );
+Evaluators.registerSummary(
+	'chat:customSummaryEvaluator',
+	customSummaryEvaluator
+);
+Evaluators.registerComparative( 'chat:evaluatePairwise', evaluatePairwise );
 
 export const createProject = async ( projectName, description ) => {
 	if ( ! ( await client.hasProject( { projectName } ) ) ) {
@@ -86,9 +115,11 @@ export const loadDataset = async ( datasetFilePath ) => {
 
 export const createChatDataset = async ( dataset ) => {
 	const { name, description, data, metadata = {} } = dataset;
-	console.warn( 'create dataset', dataset );
+	let datasetResult = null;
+	console.info( '🤖 Create or Update Dataset', dataset.name );
+
 	if ( ! ( await client.hasDataset( { datasetName: name } ) ) ) {
-		const datasetResult = await client.createDataset( name, {
+		datasetResult = await client.createDataset( name, {
 			data_type: 'chat',
 			description,
 		} );
@@ -103,7 +134,7 @@ export const createChatDataset = async ( dataset ) => {
 			} );
 		}
 	} else {
-		const datasetResult = await client.readDataset( { datasetName: name } );
+		datasetResult = await client.readDataset( { datasetName: name } );
 
 		// Collect existing example IDs
 		const existingExampleIds = new Set();
@@ -152,26 +183,9 @@ export const createChatDataset = async ( dataset ) => {
 			}
 		}
 	}
+
+	return datasetResult;
 };
-
-// Function to parse and load evaluators
-async function getEvaluators( evaluators ) {
-	const parsedEvaluators = [];
-
-	for ( const evaluator of evaluators ) {
-		// const [ library, func ] = evaluator.function.split( ':' );
-		// const modulePath = `./evaluators/${ library }.js`;
-		parsedEvaluators.push(
-			Evaluators.get(
-				evaluator.function,
-				evaluator.key,
-				evaluator.arguments
-			)
-		);
-	}
-
-	return parsedEvaluators;
-}
 
 export const evaluateAgent = async (
 	experimentPrefix,
@@ -186,7 +200,17 @@ export const evaluateAgent = async (
 	const chatModel = ChatModel.getInstance( service, apiKey );
 	const agentMetadata = agent.metadata || {};
 	const agentTags = agent.tags || [];
-	const evaluators = await getEvaluators( dataset.evaluators );
+
+	const evaluators = dataset.evaluators.map( ( evaluator ) =>
+		Evaluators.get( evaluator.function, evaluator.key, evaluator.arguments )
+	);
+	const summaryEvaluators = dataset.summaryEvaluators.map( ( evaluator ) =>
+		Evaluators.getSummary(
+			evaluator.function,
+			evaluator.key,
+			evaluator.arguments
+		)
+	);
 	return await evaluate(
 		async ( example ) => {
 			const { messages, context = {} } = example;
@@ -267,6 +291,7 @@ export const evaluateAgent = async (
 			data: dataset.name,
 			client,
 			evaluators,
+			summaryEvaluators,
 			tags: agentTags,
 			metadata: {
 				a8c_agent_name: agent.name,
@@ -294,9 +319,22 @@ export const runEvaluation = async (
 	// experimentPrefix is a slugified version of the project name
 	const experimentPrefix = name.toLowerCase().replace( / /g, '_' );
 	await createProject( name );
-	await createChatDataset( dataset );
+	const datasetResult = await createChatDataset( dataset );
+	const datasetUrl = await client.getDatasetUrl( {
+		datasetName: dataset.name,
+	} );
 	const evaluationResults = [];
 	const experimentNames = [];
+	const experimentIds = [];
+
+	const comparativeEvaluators = dataset.comparativeEvaluators.map(
+		( evaluator ) =>
+			Evaluators.getComparative(
+				evaluator.function,
+				evaluator.key,
+				evaluator.arguments
+			)
+	);
 
 	for ( const agent of agents ) {
 		const agentNameSlug = agent.name.toLowerCase().replace( / /g, '_' );
@@ -315,37 +353,56 @@ export const runEvaluation = async (
 		);
 		const experimentName = evaluationResult.manager.experimentName;
 		experimentNames.push( experimentName );
+		experimentIds.push( evaluationResult.manager._experiment.id );
 
 		const results = evaluationResult.results.map( ( result ) => {
 			const exampleId = result.example.metadata.exampleId;
-			const scores = {};
-			result.evaluationResults.results.forEach( ( r ) => {
-				scores[ r.key ] = r.score;
-			} );
-			return {
-				exampleId,
-				inputs: result.run.inputs,
-				outputs: result.run.outputs,
-				exampleOutputs: result.example.outputs,
-				scores,
-			};
+			return { exampleId, results: result.evaluationResults.results };
 		} );
 
+		const summaryResults = evaluationResult.summaryResults?.results;
+		const reportUrl = `${ datasetUrl }/compare?selectedSessions=${ evaluationResult.manager._experiment.id }`;
 		evaluationResults.push( {
 			agent: agent.name,
+			reportUrl,
 			tags: agent.tags,
 			metadata: agent.metadata,
 			results,
+			summaryResults,
 		} );
 	}
 
-	let pairwiseResult = {};
+	let comparativeResult = {};
+	let reportUrl = {};
 
-	if ( experimentNames.lengt === 2 ) {
-		pairwiseResult = await evaluateComparative( experimentNames, {
-			evaluators: [ evaluatePairwise ],
+	if ( experimentNames.length >= 2 ) {
+		comparativeResult = await evaluateComparative( experimentNames, {
+			evaluators: comparativeEvaluators,
 		} );
+
+		const queryParams = new URLSearchParams( {
+			name: comparativeResult.experimentName,
+		} );
+
+		let comparativeExperimentId = null;
+
+		for await ( const comparativeExperiments of client._getPaginated(
+			`/datasets/${ datasetResult.id }/comparative`,
+			queryParams
+		) ) {
+			if ( comparativeExperiments.length > 0 ) {
+				comparativeExperimentId = comparativeExperiments[ 0 ].id;
+			}
+		}
+
+		reportUrl = `${ datasetUrl }/compare?selectedSessions=${ experimentIds.join(
+			','
+		) }&comparativeExperiment=${ comparativeExperimentId }`;
+	} else {
+		reportUrl = `${ datasetUrl }/compare?selectedSessions=${ experimentIds.join(
+			','
+		) }`;
 	}
 
-	return { evaluationResults, pairwiseResult };
+	return { evaluationResults, comparativeResult, reportUrl };
 };
