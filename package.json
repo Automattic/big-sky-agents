@@ -1,6 +1,6 @@
 {
   "name": "@automattic/big-sky-agents",
-  "version": "1.1.56",
+  "version": "1.1.58",
   "description": "The Big Sky Agents SDK",
   "repository": {
     "type": "git",
@@ -134,5 +134,10 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
+  },
+  "dependencies": {
+    "deep-equal": "^2.2.3",
+    "lodash.isequal": "^4.5.0",
+    "sort-keys-recursive": "^2.1.10"
   }
 }

@@ -5,7 +5,8 @@ import ChatModel from '../ai/chat-model.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { deepEqual } from './evaluators/utils.js';
+// import { deepEqual } from './evaluators/utils.js';
+import sortKeysRecursive from 'sort-keys-recursive';
 import { toOpenAITool } from '../ai/utils/openai.js';
 import {
 	compareContent,
@@ -149,14 +150,40 @@ export const createChatDataset = async ( dataset ) => {
 			);
 
 			if ( example ) {
-				if (
-					! deepEqual( example.inputs, remoteExample.inputs ) ||
-					! deepEqual( example.outputs, remoteExample.outputs )
-				) {
+				const inputs = sortKeysRecursive( example.inputs );
+				const outputs = sortKeysRecursive( example.outputs );
+				const remoteInputs = sortKeysRecursive( remoteExample.inputs );
+				const remoteOutputs = sortKeysRecursive(
+					remoteExample.outputs
+				);
+
+				const mismatchedInputs =
+					JSON.stringify( inputs ) !== JSON.stringify( remoteInputs );
+				const mismatchedOutputs =
+					JSON.stringify( outputs ) !==
+					JSON.stringify( remoteOutputs );
+
+				if ( mismatchedInputs ) {
+					console.warn(
+						'mismatched inputs',
+						JSON.stringify( inputs, null, 2 ),
+						JSON.stringify( remoteInputs, null, 2 )
+					);
+				}
+
+				if ( mismatchedOutputs ) {
+					console.warn(
+						'mismatched outputs',
+						JSON.stringify( outputs, null, 2 ),
+						JSON.stringify( remoteOutputs, null, 2 )
+					);
+				}
+
+				if ( mismatchedInputs || mismatchedOutputs ) {
 					console.warn( `updating example ${ remoteExample.id }` );
 					await client.updateExample( remoteExample.id, {
-						inputs: example.inputs,
-						outputs: example.outputs,
+						inputs,
+						outputs,
 					} );
 				} else {
 					console.warn(
@@ -164,7 +191,9 @@ export const createChatDataset = async ( dataset ) => {
 					);
 				}
 			} else {
-				console.warn( `deleting example ${ remoteExample.id }` );
+				console.warn(
+					`Deleting example ${ remoteExample.id } with missing exampleId ${ remoteExample.metadata.exampleId }`
+				);
 				await client.deleteExample( remoteExample.id );
 			}
 		}
@@ -201,10 +230,10 @@ export const evaluateAgent = async (
 	const agentMetadata = agent.metadata || {};
 	const agentTags = agent.tags || [];
 
-	const evaluators = dataset.evaluators.map( ( evaluator ) =>
+	const evaluators = dataset.evaluators?.map( ( evaluator ) =>
 		Evaluators.get( evaluator.function, evaluator.key, evaluator.arguments )
 	);
-	const summaryEvaluators = dataset.summaryEvaluators.map( ( evaluator ) =>
+	const summaryEvaluators = dataset.summaryEvaluators?.map( ( evaluator ) =>
 		Evaluators.getSummary(
 			evaluator.function,
 			evaluator.key,
@@ -327,7 +356,7 @@ export const runEvaluation = async (
 	const experimentNames = [];
 	const experimentIds = [];
 
-	const comparativeEvaluators = dataset.comparativeEvaluators.map(
+	const comparativeEvaluators = dataset.comparativeEvaluators?.map(
 		( evaluator ) =>
 			Evaluators.getComparative(
 				evaluator.function,
@@ -375,7 +404,7 @@ export const runEvaluation = async (
 	let comparativeResult = {};
 	let reportUrl = {};
 
-	if ( experimentNames.length >= 2 ) {
+	if ( experimentNames.length >= 2 && comparativeEvaluators?.length > 0 ) {
 		comparativeResult = await evaluateComparative( experimentNames, {
 			evaluators: comparativeEvaluators,
 		} );
