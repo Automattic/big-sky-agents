@@ -1,5 +1,7 @@
 import { deepEqual } from './utils.js';
 
+export const IGNORE = 'IGNORE';
+
 const getVar = ( obj, path ) => {
 	return path.split( '.' ).reduce( ( acc, part ) => acc && acc[ part ], obj );
 };
@@ -62,6 +64,13 @@ export const matchToolCall = ( key ) => async ( run, example ) => {
 	const outputToolCallArgs = JSON.parse(
 		outputMessage.tool_calls?.[ 0 ]?.function.arguments || '{}'
 	);
+	// filter out arguments with a value of 'IGNORE'
+	Object.keys( exampleToolCallArgs ).forEach( ( k ) => {
+		if ( exampleToolCallArgs[ k ] === IGNORE ) {
+			delete exampleToolCallArgs[ k ];
+			delete outputToolCallArgs[ k ];
+		}
+	} );
 	const argsMatch = deepEqual( exampleToolCallArgs, outputToolCallArgs );
 
 	return {
