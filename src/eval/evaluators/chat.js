@@ -49,6 +49,35 @@ export const matchOutput = ( key ) => async ( run, example ) => {
 	};
 };
 
+const removeIgnoredKeys = ( obj1, obj2 ) => {
+	if (
+		typeof obj1 !== 'object' ||
+		obj1 === null ||
+		typeof obj2 !== 'object' ||
+		obj2 === null
+	) {
+		return;
+	}
+
+	if ( Array.isArray( obj1 ) && Array.isArray( obj2 ) ) {
+		for ( let i = 0; i < obj1.length; i++ ) {
+			removeIgnoredKeys( obj1[ i ], obj2[ i ] );
+		}
+	} else {
+		for ( const key in obj1 ) {
+			if ( obj1[ key ] === 'IGNORE' ) {
+				delete obj1[ key ];
+				delete obj2[ key ];
+			} else if (
+				typeof obj1[ key ] === 'object' &&
+				obj1[ key ] !== null
+			) {
+				removeIgnoredKeys( obj1[ key ], obj2[ key ] );
+			}
+		}
+	}
+};
+
 export const matchToolCall = ( key ) => async ( run, example ) => {
 	const outputMessage = run.outputs?.message;
 	const exampleMessage = example.outputs.message;
@@ -64,13 +93,9 @@ export const matchToolCall = ( key ) => async ( run, example ) => {
 	const outputToolCallArgs = JSON.parse(
 		outputMessage.tool_calls?.[ 0 ]?.function.arguments || '{}'
 	);
-	// filter out arguments with a value of 'IGNORE'
-	Object.keys( exampleToolCallArgs ).forEach( ( k ) => {
-		if ( exampleToolCallArgs[ k ] === IGNORE ) {
-			delete exampleToolCallArgs[ k ];
-			delete outputToolCallArgs[ k ];
-		}
-	} );
+	// recursively filter out all keys with a value of 'IGNORE'
+	removeIgnoredKeys( exampleToolCallArgs, outputToolCallArgs );
+
 	const argsMatch = deepEqual( exampleToolCallArgs, outputToolCallArgs );
 
 	return {
