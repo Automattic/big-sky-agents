@@ -1,5 +1,7 @@
 import deepmerge from 'deepmerge';
 
+let exampleNumber = 0;
+
 function AgentExampleBuilder() {
 	function builder( id ) {
 		let context = {};
@@ -58,7 +60,7 @@ function AgentExampleBuilder() {
 
 			toJSON() {
 				return {
-					id,
+					id: id ?? `example-${ ++exampleNumber }`,
 					description,
 					inputs: {
 						context,

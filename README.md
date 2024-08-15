@@ -99,15 +99,14 @@ LANGCHAIN_PROJECT="your-project"
 Then run:
 
 ```bash
-node bin/eval-wapuu.js data/site-examples.json
-node bin/eval-wapuu.js data/name-examples.js
-
-# OR
-
-node bin/eval-weather-bot.js data/tool-examples.json
+# some examples
+node src/eval-agents.js --name test --agent ./src/ai/agents/weather-agent/v1.js --agent ./src/ai/agents/weather-agent/v2.js --dataset data/tool-examples.json
+node src/eval-agents.js --name test --agent ./src/ai/agents/weather-agent/v1.js --dataset data/name-examples.js
 ```
 
 Right now it runs a trivial example, which you can find in [name-example.json](./eval/name-example.json).
+
+For more information on the example formats, see [docs/evals.md](./docs/evals.md).
 
 ## LocalAI
 

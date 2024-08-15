@@ -64,7 +64,7 @@ const argv = yargs( hideBin( process.argv ) )
 		type: 'string',
 		description: 'Model type to use',
 		choices: ChatModelType.getAvailable(),
-		default: ChatModelType.GPT_4O,
+		default: ChatModelType.GPT_4O_MINI,
 	} )
 	.option( 'service', {
 		alias: 's',
