@@ -120,7 +120,8 @@
     "typescript": "^5.3.3",
     "vite": "^5.2.13",
     "vite-plugin-dts": "^4.0.0-beta.0",
-    "webpack": "^5.91.0"
+    "webpack": "^5.91.0",
+    "sort-keys-recursive": "^2.1.10"
   },
   "peerDependencies": {
     "@wordpress/base-styles": "^5.0.0",
@@ -134,10 +135,5 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
-  },
-  "dependencies": {
-    "deep-equal": "^2.2.3",
-    "lodash.isequal": "^4.5.0",
-    "sort-keys-recursive": "^2.1.10"
   }
 }
