@@ -1,14 +1,17 @@
 import { Client } from 'langsmith';
 import { traceable } from 'langsmith/traceable';
-import { evaluate } from 'langsmith/evaluation';
+import { evaluate, evaluateComparative } from 'langsmith/evaluation';
 import ChatModel from '../ai/chat-model.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { deepEqual } from './evaluators/utils.js';
+// import { deepEqual } from './evaluators/utils.js';
+import sortKeysRecursive from 'sort-keys-recursive';
 import { toOpenAITool } from '../ai/utils/openai.js';
 import {
 	compareContent,
+	customSummaryEvaluator,
+	evaluatePairwise,
 	includeContext,
 	includeString,
 	matchRegex,
@@ -23,9 +26,19 @@ const client = new Client();
 // e.g. Evaluators.get( 'chat:matchToolCall', 'my_field', { } )( 'matched_tool_call' )( run, example );
 class Evaluators {
 	static evaluators = {};
+	static summaryEvaluators = {};
+	static comparativeEvaluators = {};
 
 	static register( slug, evaluator ) {
 		this.evaluators[ slug ] = evaluator;
+	}
+
+	static registerSummary( slug, evaluator ) {
+		this.summaryEvaluators[ slug ] = evaluator;
+	}
+
+	static registerComparative( slug, evaluator ) {
+		this.comparativeEvaluators[ slug ] = evaluator;
 	}
 
 	static get( slug, key, args ) {
@@ -34,6 +47,20 @@ class Evaluators {
 		}
 		return this.evaluators[ slug ]( key, args );
 	}
+
+	static getSummary( slug, key, args ) {
+		if ( ! this.summaryEvaluators[ slug ] ) {
+			throw new Error( `Summary evaluator ${ slug } not found.` );
+		}
+		return this.summaryEvaluators[ slug ]( key, args );
+	}
+
+	static getComparative( slug, key, args ) {
+		if ( ! this.comparativeEvaluators[ slug ] ) {
+			throw new Error( `Comparative evaluator ${ slug } not found.` );
+		}
+		return this.comparativeEvaluators[ slug ]( key, args );
+	}
 }
 
 Evaluators.register( 'chat:matchToolCall', matchToolCall );
@@ -41,6 +68,11 @@ Evaluators.register( 'chat:compareContent', compareContent );
 Evaluators.register( 'chat:includeContext', includeContext );
 Evaluators.register( 'chat:includeString', includeString );
 Evaluators.register( 'chat:matchRegex', matchRegex );
+Evaluators.registerSummary(
+	'chat:customSummaryEvaluator',
+	customSummaryEvaluator
+);
+Evaluators.registerComparative( 'chat:evaluatePairwise', evaluatePairwise );
 
 export const createProject = async ( projectName, description ) => {
 	if ( ! ( await client.hasProject( { projectName } ) ) ) {
@@ -84,9 +116,11 @@ export const loadDataset = async ( datasetFilePath ) => {
 
 export const createChatDataset = async ( dataset ) => {
 	const { name, description, data, metadata = {} } = dataset;
-	console.warn( 'create dataset', dataset );
+	let datasetResult = null;
+	console.info( '🤖 Create or Update Dataset', dataset.name );
+
 	if ( ! ( await client.hasDataset( { datasetName: name } ) ) ) {
-		const datasetResult = await client.createDataset( name, {
+		datasetResult = await client.createDataset( name, {
 			data_type: 'chat',
 			description,
 		} );
@@ -101,7 +135,7 @@ export const createChatDataset = async ( dataset ) => {
 			} );
 		}
 	} else {
-		const datasetResult = await client.readDataset( { datasetName: name } );
+		datasetResult = await client.readDataset( { datasetName: name } );
 
 		// Collect existing example IDs
 		const existingExampleIds = new Set();
@@ -116,14 +150,40 @@ export const createChatDataset = async ( dataset ) => {
 			);
 
 			if ( example ) {
-				if (
-					! deepEqual( example.inputs, remoteExample.inputs ) ||
-					! deepEqual( example.outputs, remoteExample.outputs )
-				) {
+				const inputs = sortKeysRecursive( example.inputs );
+				const outputs = sortKeysRecursive( example.outputs );
+				const remoteInputs = sortKeysRecursive( remoteExample.inputs );
+				const remoteOutputs = sortKeysRecursive(
+					remoteExample.outputs
+				);
+
+				const mismatchedInputs =
+					JSON.stringify( inputs ) !== JSON.stringify( remoteInputs );
+				const mismatchedOutputs =
+					JSON.stringify( outputs ) !==
+					JSON.stringify( remoteOutputs );
+
+				if ( mismatchedInputs ) {
+					console.warn(
+						'mismatched inputs',
+						JSON.stringify( inputs, null, 2 ),
+						JSON.stringify( remoteInputs, null, 2 )
+					);
+				}
+
+				if ( mismatchedOutputs ) {
+					console.warn(
+						'mismatched outputs',
+						JSON.stringify( outputs, null, 2 ),
+						JSON.stringify( remoteOutputs, null, 2 )
+					);
+				}
+
+				if ( mismatchedInputs || mismatchedOutputs ) {
 					console.warn( `updating example ${ remoteExample.id }` );
 					await client.updateExample( remoteExample.id, {
-						inputs: example.inputs,
-						outputs: example.outputs,
+						inputs,
+						outputs,
 					} );
 				} else {
 					console.warn(
@@ -131,7 +191,9 @@ export const createChatDataset = async ( dataset ) => {
 					);
 				}
 			} else {
-				console.warn( `deleting example ${ remoteExample.id }` );
+				console.warn(
+					`Deleting example ${ remoteExample.id } with missing exampleId ${ remoteExample.metadata.exampleId }`
+				);
 				await client.deleteExample( remoteExample.id );
 			}
 		}
@@ -150,26 +212,9 @@ export const createChatDataset = async ( dataset ) => {
 			}
 		}
 	}
+
+	return datasetResult;
 };
-
-// Function to parse and load evaluators
-async function getEvaluators( evaluators ) {
-	const parsedEvaluators = [];
-
-	for ( const evaluator of evaluators ) {
-		// const [ library, func ] = evaluator.function.split( ':' );
-		// const modulePath = `./evaluators/${ library }.js`;
-		parsedEvaluators.push(
-			Evaluators.get(
-				evaluator.function,
-				evaluator.key,
-				evaluator.arguments
-			)
-		);
-	}
-
-	return parsedEvaluators;
-}
 
 export const evaluateAgent = async (
 	experimentPrefix,
@@ -184,7 +229,17 @@ export const evaluateAgent = async (
 	const chatModel = ChatModel.getInstance( service, apiKey );
 	const agentMetadata = agent.metadata || {};
 	const agentTags = agent.tags || [];
-	const evaluators = await getEvaluators( dataset.evaluators );
+
+	const evaluators = dataset.evaluators?.map( ( evaluator ) =>
+		Evaluators.get( evaluator.function, evaluator.key, evaluator.arguments )
+	);
+	const summaryEvaluators = dataset.summaryEvaluators?.map( ( evaluator ) =>
+		Evaluators.getSummary(
+			evaluator.function,
+			evaluator.key,
+			evaluator.arguments
+		)
+	);
 	return await evaluate(
 		async ( example ) => {
 			const { messages, context = {} } = example;
@@ -265,6 +320,7 @@ export const evaluateAgent = async (
 			data: dataset.name,
 			client,
 			evaluators,
+			summaryEvaluators,
 			tags: agentTags,
 			metadata: {
 				a8c_agent_name: agent.name,
@@ -292,15 +348,30 @@ export const runEvaluation = async (
 	// experimentPrefix is a slugified version of the project name
 	const experimentPrefix = name.toLowerCase().replace( / /g, '_' );
 	await createProject( name );
-	await createChatDataset( dataset );
+	const datasetResult = await createChatDataset( dataset );
+	const datasetUrl = await client.getDatasetUrl( {
+		datasetName: dataset.name,
+	} );
 	const evaluationResults = [];
+	const experimentNames = [];
+	const experimentIds = [];
+
+	const comparativeEvaluators = dataset.comparativeEvaluators?.map(
+		( evaluator ) =>
+			Evaluators.getComparative(
+				evaluator.function,
+				evaluator.key,
+				evaluator.arguments
+			)
+	);
 
 	for ( const agent of agents ) {
 		const agentNameSlug = agent.name.toLowerCase().replace( / /g, '_' );
+		const agentExperimentPrefix = `${ experimentPrefix }-${ agentNameSlug }-v${
+			agent.metadata?.version ?? '1'
+		}`;
 		const evaluationResult = await evaluateAgent(
-			`${ experimentPrefix }-${ agentNameSlug }-v${
-				agent.metadata?.version ?? '1'
-			}`,
+			agentExperimentPrefix,
 			agent,
 			dataset,
 			service,
@@ -309,43 +380,58 @@ export const runEvaluation = async (
 			temperature,
 			maxTokens
 		);
-		/**
-		 * [
-		 *   {
-		 *     "key": "has_site_title",
-		 *     "score": true,
-		 *     "sourceRunId": "f0ca35df-800e-4a10-8327-39409f9508cb"
-		 *   },
-		 *   //....
-		 * ]
-		 */
+		const experimentName = evaluationResult.manager.experimentName;
+		experimentNames.push( experimentName );
+		experimentIds.push( evaluationResult.manager._experiment.id );
+
 		const results = evaluationResult.results.map( ( result ) => {
 			const exampleId = result.example.metadata.exampleId;
-			const scores = {};
-			result.evaluationResults.results.forEach( ( r ) => {
-				scores[ r.key ] = r.score;
-			} );
-			return {
-				exampleId,
-				inputs: result.run.inputs,
-				outputs: result.run.outputs,
-				exampleOutputs: result.example.outputs,
-				scores,
-			};
+			return { exampleId, results: result.evaluationResults.results };
 		} );
 
-		// let nextResult = await evaluationResult.next();
-		// while ( ! nextResult.done ) {
-		// 	results.push( nextResult.value );
-		// 	nextResult = await evaluationResult.next();
-		// }
+		const summaryResults = evaluationResult.summaryResults?.results;
+		const reportUrl = `${ datasetUrl }/compare?selectedSessions=${ evaluationResult.manager._experiment.id }`;
 		evaluationResults.push( {
 			agent: agent.name,
+			reportUrl,
 			tags: agent.tags,
 			metadata: agent.metadata,
 			results,
+			summaryResults,
 		} );
 	}
 
-	return evaluationResults;
+	let comparativeResult = {};
+	let reportUrl = {};
+
+	if ( experimentNames.length >= 2 && comparativeEvaluators?.length > 0 ) {
+		comparativeResult = await evaluateComparative( experimentNames, {
+			evaluators: comparativeEvaluators,
+		} );
+
+		const queryParams = new URLSearchParams( {
+			name: comparativeResult.experimentName,
+		} );
+
+		let comparativeExperimentId = null;
+
+		for await ( const comparativeExperiments of client._getPaginated(
+			`/datasets/${ datasetResult.id }/comparative`,
+			queryParams
+		) ) {
+			if ( comparativeExperiments.length > 0 ) {
+				comparativeExperimentId = comparativeExperiments[ 0 ].id;
+			}
+		}
+
+		reportUrl = `${ datasetUrl }/compare?selectedSessions=${ experimentIds.join(
+			','
+		) }&comparativeExperiment=${ comparativeExperimentId }`;
+	} else {
+		reportUrl = `${ datasetUrl }/compare?selectedSessions=${ experimentIds.join(
+			','
+		) }`;
+	}
+
+	return { evaluationResults, comparativeResult, reportUrl };
 };
