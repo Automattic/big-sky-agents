@@ -118,151 +118,157 @@ const result = await runEvaluation(
 
 const writeHTMLReport = async ( evaluationOutput ) => {
 	const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evaluation Report</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .score {
-            font-weight: bold;
-        }
-        .true {
-            color: green;
-        }
-        .false {
-            color: red;
-        }
-        .report-link {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 10px 15px;
-            background-color: #3498db;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-        .report-link:hover {
-            background-color: #2980b9;
-        }
-    </style>
-</head>
-<body>
-    <h1>Evaluation Report</h1>
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Evaluation Report</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				line-height: 1.6;
+				color: #333;
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 20px;
+			}
+			h1, h2, h3 {
+				color: #2c3e50;
+			}
+			table {
+				border-collapse: collapse;
+				width: 100%;
+				margin-bottom: 20px;
+			}
+			th, td {
+				border: 1px solid #ddd;
+				padding: 12px;
+				text-align: left;
+			}
+			th {
+				background-color: #f2f2f2;
+			}
+			.score {
+				font-weight: bold;
+			}
+			.true {
+				color: green;
+			}
+			.false {
+				color: red;
+			}
+			.report-link {
+				display: inline-block;
+				margin-top: 10px;
+				padding: 10px 15px;
+				background-color: #3498db;
+				color: white;
+				text-decoration: none;
+				border-radius: 5px;
+			}
+			.report-link:hover {
+				background-color: #2980b9;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Evaluation Report</h1>
 
-    ${ evaluationOutput.evaluationResults
-		.map(
-			( evaluationResult ) => `
-        <h2>Agent: ${ evaluationResult.agent }</h2>
-        <p>Version: ${ evaluationResult.metadata.version }</p>
-        <table>
-            <tr>
-                <th>Example ID</th>
-                <th>Evaluation</th>
-                <th>Score</th>
-            </tr>
-            ${ evaluationResult.results
-				.sort( ( a, b ) => a.exampleId - b.exampleId )
-				.map(
-					( example ) => `
-                ${ example.results
+		${ evaluationOutput.evaluationResults
+			.map(
+				( evaluationResult ) => `
+			<h2>Agent: ${ evaluationResult.agent }</h2>
+			<p>Version: ${ evaluationResult.metadata.version }</p>
+			<table>
+				<tr>
+					<th>Example ID</th>
+					<th>Evaluation</th>
+					<th>Score</th>
+				</tr>
+				${ evaluationResult.results
+					.sort( ( a, b ) => a.exampleId - b.exampleId )
 					.map(
-						( exampleResult ) => `
-                    <tr>
-                        <td>${ example.exampleId }</td>
-                        <td>${ exampleResult.key }</td>
-                        <td class="score ${ exampleResult.score }">${ exampleResult.score }</td>
-                    </tr>
-                `
-					)
-					.join( '' ) }
-            `
-				)
-				.join( '' ) }
-        </table>
-        <h3>Summary Results</h3>
-        <table>
-            <tr>
-                <th>Evaluation</th>
-                <th>Score</th>
-                <th>Comment</th>
-            </tr>
-            ${ evaluationResult.summaryResults
-				?.map(
-					( summary ) => `
-                <tr>
-                    <td>${ summary.key }</td>
-                    <td class="score">${ summary.score }</td>
-                    <td>${ summary.comment }</td>
-                </tr>
-            `
-				)
-				.join( '' ) }
-        </table>
-        <a href="${
-			evaluationResult.reportUrl
-		}" class="report-link" target="_blank">View Detailed Report</a>
-    `
-		)
-		.join( '' ) }
-
-    <h2>Comparative Results</h2>
-    <p>Experiment: ${ evaluationOutput.comparativeResult?.experimentName }</p>
-    <table>
-        <tr>
-            <th>Evaluation</th>
-            <th>Scores</th>
-        </tr>
-        ${ evaluationOutput.comparativeResult?.results
-			?.map(
-				( comparativeResult ) => `
-            <tr>
-                <td>${ comparativeResult.key }</td>
-                <td>
-                    ${ Object.entries( comparativeResult.scores )
+						( example ) => `
+					${ example.results
 						.map(
-							( [ id, score ] ) => `
-                        ${ id }: ${ score }<br>
-                    `
+							( exampleResult ) => `
+						<tr>
+							<td>${ example.exampleId }</td>
+							<td>${ exampleResult.key }</td>
+							<td class="score ${ exampleResult.score }">${ exampleResult.score }</td>
+						</tr>
+					`
 						)
 						.join( '' ) }
-                </td>
-            </tr>
-        `
+				`
+					)
+					.join( '' ) }
+			</table>
+			<h3>Summary Results</h3>
+			<table>
+				<tr>
+					<th>Evaluation</th>
+					<th>Score</th>
+					<th>Comment</th>
+				</tr>
+				${ evaluationResult.summaryResults
+					?.map(
+						( summary ) => `
+					<tr>
+						<td>${ summary.key }</td>
+						<td class="score">${ summary.score }</td>
+						<td>${ summary.comment }</td>
+					</tr>
+				`
+					)
+					.join( '' ) }
+			</table>
+			<a href="${
+				evaluationResult.reportUrl
+			}" class="report-link" target="_blank">View Detailed Report</a>
+		`
 			)
 			.join( '' ) }
-    </table>
-    <a href="${
-		evaluationOutput.reportUrl
-	}" class="report-link" target="_blank">View Comparative Report</a>
-</body>
-</html>
-  `;
+
+		${
+			evaluationOutput.comparativeResult?.results.length > 0
+				? `
+		<h2>Comparative Results</h2>
+		<p>Experiment: ${ evaluationOutput.comparativeResult?.experimentName }</p>
+		<table>
+			<tr>
+				<th>Evaluation</th>
+				<th>Scores</th>
+			</tr>
+			${ evaluationOutput.comparativeResult?.results
+				?.map(
+					( comparativeResult ) => `
+				<tr>
+					<td>${ comparativeResult.key }</td>
+					<td>
+						${ Object.entries( comparativeResult.scores )
+							.map(
+								( [ id, score ] ) => `
+							${ id }: ${ score }<br>
+						`
+							)
+							.join( '' ) }
+					</td>
+				</tr>
+			`
+				)
+				.join( '' ) }
+		</table>
+		<a href="${
+			evaluationOutput.reportUrl
+		}" class="report-link" target="_blank">View Comparative Report</a>
+		`
+				: `<a href="${ evaluationOutput.reportUrl }" class="report-link" target="_blank">View Full Report</a>`
+		}
+	</body>
+	</html>
+	  `;
 
 	await fs.writeFile( 'eval.html', html );
 	console.log( 'Report generated: eval.html' );
