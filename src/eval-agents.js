@@ -213,7 +213,7 @@ const writeHTMLReport = async ( evaluationOutput ) => {
                 <th>Comment</th>
             </tr>
             ${ evaluationResult.summaryResults
-				.map(
+				?.map(
 					( summary ) => `
                 <tr>
                     <td>${ summary.key }</td>
@@ -232,14 +232,14 @@ const writeHTMLReport = async ( evaluationOutput ) => {
 		.join( '' ) }
 
     <h2>Comparative Results</h2>
-    <p>Experiment: ${ evaluationOutput.comparativeResult.experimentName }</p>
+    <p>Experiment: ${ evaluationOutput.comparativeResult?.experimentName }</p>
     <table>
         <tr>
             <th>Evaluation</th>
             <th>Scores</th>
         </tr>
-        ${ evaluationOutput.comparativeResult.results
-			.map(
+        ${ evaluationOutput.comparativeResult?.results
+			?.map(
 				( comparativeResult ) => `
             <tr>
                 <td>${ comparativeResult.key }</td>

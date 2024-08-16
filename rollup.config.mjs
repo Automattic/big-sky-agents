@@ -8,7 +8,7 @@ import json from '@rollup/plugin-json';
 import url from '@rollup/plugin-url';
 import eslint from '@rollup/plugin-eslint';
 import preserveDirectives from 'rollup-preserve-directives';
-import { visualizer } from 'rollup-plugin-visualizer';
+// import { visualizer } from 'rollup-plugin-visualizer';
 import packageJson from './package.json' assert { type: 'json' };
 
 export default [
@@ -65,9 +65,9 @@ export default [
 					{ src: 'src/components/bot.svg', dest: 'dist/' },
 				],
 			} ),
-			visualizer( {
-				open: true,
-			} ),
+			// visualizer( {
+			// 	open: true,
+			// } ),
 		],
 		external: [
 			'react',
