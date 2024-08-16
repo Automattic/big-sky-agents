@@ -20,3 +20,4 @@ llama.log
 models/*
 !models/*.yaml
 stats.html
+eval.html
