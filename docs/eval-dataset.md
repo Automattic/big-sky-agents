@@ -12,6 +12,8 @@ node src/eval-agents.js --name test --agent ./src/ai/agents/weather-agent/v1.js 
 
 This dataset format includes input/output examples and evaluation functions, all specified in JSON.
 
+For more information on evaluator functions, see the [Big Sky Evaluators documentation](./eval-evaluators.md).
+
 ## JSON Structure
 
 The main JSON object contains the following top-level keys:

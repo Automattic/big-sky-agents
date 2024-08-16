@@ -110,6 +110,8 @@ For more information on the `eval-agents.js` command, [read the docs](./docs/eva
 
 For more information on the example formats, see [Eval Dataset](./docs/eval-dataset.md) and [Eval Output](./docs/eval-output.md) documentation.
 
+For more information on evaluator functions, see the [Big Sky Evaluators documentation](./docs/eval-evaluators.md).
+
 ## LocalAI
 
 Using LocalAI, you can run the Chat Completion inference locally on your machine. This is useful for debugging, experimentation, testing, and just privacy in general.
