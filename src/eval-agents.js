@@ -267,6 +267,7 @@ const writeHTMLReport = async ( evaluationOutput ) => {
 	await fs.writeFile( 'eval.html', html );
 	console.log( 'Report generated: eval.html' );
 	await open( 'eval.html' );
+	await open( evaluationOutput.reportUrl );
 };
 
 if ( ! argv.json ) {

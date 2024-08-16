@@ -106,6 +106,8 @@ node src/eval-agents.js --name test --agent ./src/ai/agents/weather-agent/v1.js 
 
 Right now it runs a trivial example, which you can find in [name-example.json](./eval/name-example.json).
 
+For more information on the `eval-agents.js` command, [read the docs](./docs/eval-agents-command.md).
+
 For more information on the example formats, see [Eval Dataset](./docs/eval-dataset.md) and [Eval Output](./docs/eval-output.md) documentation.
 
 ## LocalAI
