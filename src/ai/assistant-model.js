@@ -399,7 +399,7 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 	}
 
 	getServiceUrl() {
-		return 'https://api.langgraph.cloud/v1';
+		return 'http://localhost:58699';
 	}
 }
 
