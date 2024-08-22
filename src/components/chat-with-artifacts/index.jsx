@@ -33,6 +33,12 @@ import useAgentsToolkit from '../../hooks/use-agents-toolkit.js';
 // import useInformToolkit from '../hooks/use-inform-toolkit.js';
 // import useAskUserToolkit from '../hooks/use-ask-user-toolkit.js';
 
+const GraphAgent = {
+	id: 'graph-example',
+	instructions: 'You are a helpful assistant that can answer questions and help with tasks.',
+	assistantId: 'graph-example', // not sure what this should be yet
+};
+
 /**
  * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
  *
@@ -40,12 +46,15 @@ import useAgentsToolkit from '../../hooks/use-agents-toolkit.js';
  *
  * <!--
  * @param {Object}   root0                 The component props.
+ * @param {string}   root0.baseUrl         The base URL for the LangGraph Cloud API.
  * @param {string}   root0.apiKey          The token to use for the chat model.
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  *                                         -->
  */
-const ChatWithArtifacts = ( { apiKey, onApiKeyChanged } ) => {
+const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
 	const [ selectedPageId, setSelectedArtifactId ] = useState( null );
+
+	console.warn( 'baseUrl', baseUrl );
 
 	useChatSettings( {
 		apiKey,
@@ -53,8 +62,9 @@ const ChatWithArtifacts = ( { apiKey, onApiKeyChanged } ) => {
 		assistantEnabled: true,
 		service: AssistantModelService.LANGGRAPH_CLOUD,
 		model: AssistantModelType.GPT_4O,
-		// initialAgentId: WAPUU_AGENT_ID,
-		defaultAssistantId: WAPUU_ASSISTANT_ID,
+		baseUrl,
+		initialAgentId: GraphAgent.id,
+		defaultAssistantId: GraphAgent.assistantId,
 	} );
 
 	useAgentsToolkit();

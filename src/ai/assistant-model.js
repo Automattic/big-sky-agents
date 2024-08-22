@@ -3,11 +3,13 @@ export const AssistantModelService = {
 	WPCOM_OPENAI: 'wpcom-openai', // the wpcom OpenAI proxy
 	WPCOM: 'wpcom', // WPCOM native
 	OPENAI: 'openai',
+	LANGGRAPH_CLOUD: 'langgraph-cloud',
 	getAvailable: () => {
 		const services = [
 			AssistantModelService.WPCOM_OPENAI,
 			AssistantModelService.WPCOM,
 			AssistantModelService.OPENAI,
+			AssistantModelService.LANGGRAPH_CLOUD,
 		];
 		return services;
 	},
@@ -29,7 +31,6 @@ export const AssistantModelType = {
 	GPT_4_TURBO: 'gpt-4-turbo',
 	GPT_4O: 'gpt-4o',
 	GPT_4O_MINI: 'gpt-4o-mini',
-	LANGGRAPH_CLOUD: 'langgraph-cloud',
 	isMultimodal: ( model ) => model === AssistantModelType.GPT_4O,
 	supportsToolMessages: ( model ) =>
 		[ AssistantModelType.GPT_4O, AssistantModelType.GPT_4_TURBO ].includes(
@@ -54,12 +55,14 @@ class AssistantModel {
 		openAiOrganization,
 		feature,
 		sessionId,
+		baseUrl,
 	} ) {
 		this.apiKey = apiKey;
 		this.assistantId = assistantId;
 		this.openAiOrganization = openAiOrganization;
 		this.feature = feature;
 		this.sessionId = sessionId;
+		this.baseUrl = baseUrl;
 	}
 
 	getApiKey() {
@@ -301,7 +304,11 @@ class AssistantModel {
 	}
 
 	getServiceUrl() {
-		throw new Error( 'Not implemented' );
+		// throw an error if the baseUrl is not set
+		if ( ! this.baseUrl ) {
+			throw new Error( 'Base URL is not set' );
+		}
+		return this.baseUrl;
 	}
 
 	static getInstance( service, apiKey, feature, sessionId, opts = {} ) {
@@ -322,6 +329,13 @@ class AssistantModel {
 				} );
 			case AssistantModelService.WPCOM_OPENAI:
 				return new WPCOMOpenAIProxyAssistantModel( {
+					apiKey,
+					feature,
+					sessionId,
+					...opts,
+				} );
+			case AssistantModelService.LANGGRAPH_CLOUD:
+				return new LangGraphCloudAssistantModel( {
 					apiKey,
 					feature,
 					sessionId,
@@ -395,11 +409,37 @@ export class OpenAIAssistantModel extends AssistantModel {
 
 export class LangGraphCloudAssistantModel extends AssistantModel {
 	getDefaultModel() {
-		return AssistantModelType.LANGGRAPH_CLOUD;
+		return AssistantModelType.GPT_4O;
 	}
 
-	getServiceUrl() {
-		return 'http://localhost:58699';
+	// override getresponse to ignore the expectedObject
+	async getResponse( request ) {
+		return await super.getResponse( request );
+	}
+
+	// langgraph threads use state rather than messages
+	async getThreadMessages( threadId ) {
+		const headers = this.getHeaders();
+		const getMessagesRequest = await fetch(
+			`${ this.getServiceUrl() }/threads/${ threadId }/state`,
+			{
+				method: 'GET',
+				headers,
+			}
+		);
+		const getMessagesResponse =
+			await this.getResponse( getMessagesRequest );
+		console.warn( 'getMessagesResponse', getMessagesResponse );
+		if ( getMessagesResponse.values.messages ) {
+			return { data: getMessagesResponse.values.messages };
+		}
+		return { data: [] };
+	}
+
+	async getThreadRuns( threadId ) {
+		// get super.getThreadRuns and return { data: the response }
+		const threadRunsResponse = await super.getThreadRuns( threadId );
+		return { data: threadRunsResponse };
 	}
 }
 

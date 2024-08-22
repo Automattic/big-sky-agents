@@ -72,9 +72,11 @@ export default function useChat() {
 		setApiKey,
 		setFeature,
 		setAssistantEnabled,
+		setBaseUrl,
 	} = useDispatch( agentStore );
 
 	const {
+		baseUrl,
 		assistantEnabled,
 		service,
 		temperature,
@@ -105,6 +107,7 @@ export default function useChat() {
 		isThreadRunAwaitingToolOutputs,
 		feature,
 	} = useSelect( ( select ) => ( {
+		baseUrl: select( agentStore ).getBaseUrl(),
 		assistantEnabled: select( agentStore ).isAssistantEnabled(),
 		service: select( agentStore ).getService(),
 		temperature: select( agentStore ).getTemperature(),
@@ -161,6 +164,8 @@ export default function useChat() {
 		setModel,
 		service,
 		setService,
+		baseUrl,
+		setBaseUrl,
 		temperature,
 		setTemperature,
 

@@ -64,6 +64,7 @@ const initialState = {
 	assistantId: null, // The assistant ID
 	defaultAssistantId: null, // The default assistant ID
 	openAiOrganization: null,
+	baseUrl: null, // default to null
 	threadId: isLocalStorageAvailable
 		? localStorage.getItem( 'threadId' )
 		: null, // The assistant thread ID
@@ -293,6 +294,7 @@ const updateThreadRuns =
 		try {
 			const threadRunsResponse =
 				await getAssistantModel( select ).getThreadRuns( threadId );
+
 			dispatch( {
 				type: 'GET_THREAD_RUNS_END_REQUEST',
 				ts: Date.now(),
@@ -341,6 +343,8 @@ const updateThreadMessages =
 		try {
 			const threadMessagesResponse =
 				await getAssistantModel( select ).getThreadMessages( threadId );
+
+			console.warn( 'threadMessagesResponse', threadMessagesResponse );
 			// if there are messages, then set started to true
 			if ( threadMessagesResponse.data.length ) {
 				dispatch( agentsActions.setAgentStarted( true ) );
@@ -360,16 +364,23 @@ const updateThreadMessages =
 	};
 
 const getAssistantModel = ( select ) => {
-	const { service, apiKey, assistantId, feature, openAiOrganization } =
-		select( ( state ) => {
-			return {
-				service: state.root.service,
-				apiKey: state.root.apiKey,
-				assistantId: selectors.getAssistantId( state.root ),
-				feature: state.root.feature,
-				openAiOrganization: state.root.openAiOrganization,
-			};
-		} );
+	const {
+		service,
+		apiKey,
+		assistantId,
+		feature,
+		openAiOrganization,
+		baseUrl,
+	} = select( ( state ) => {
+		return {
+			service: state.root.service,
+			apiKey: state.root.apiKey,
+			assistantId: selectors.getAssistantId( state.root ),
+			feature: state.root.feature,
+			openAiOrganization: state.root.openAiOrganization,
+			baseUrl: state.root.baseUrl,
+		};
+	} );
 	if ( ! service || ! apiKey || ! assistantId ) {
 		console.warn( 'Service, API key and assistant ID are required', {
 			service,
@@ -380,6 +391,7 @@ const getAssistantModel = ( select ) => {
 	}
 	return AssistantModel.getInstance( service, apiKey, feature, null, {
 		openAiOrganization,
+		baseUrl,
 	} );
 };
 
@@ -393,12 +405,16 @@ const createThread =
 		try {
 			const threadResponse =
 				await getAssistantModel( select ).createThread();
+
+			// langgraph threads have thread_id but not id
+			const threadId = threadResponse.thread_id || threadResponse.id;
+
 			dispatch( {
 				type: 'CREATE_THREAD_END_REQUEST',
-				threadId: threadResponse.id,
+				threadId,
 			} );
 		} catch ( error ) {
-			console.error( 'Thread error', error );
+			console.error( 'Create thread error', error );
 			dispatch( { type: 'CREATE_THREAD_ERROR', error: error.message } );
 		}
 	};
@@ -416,7 +432,7 @@ const deleteThread =
 			dispatch( { type: 'DELETE_THREAD_END_REQUEST' } );
 			dispatch( agentsActions.setAgentStarted( false ) );
 		} catch ( error ) {
-			console.error( 'Thread error', error );
+			console.error( 'Delete thread error', error );
 			dispatch( { type: 'DELETE_THREAD_ERROR', error: error.message } );
 		}
 	};
@@ -689,6 +705,8 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, service: action.service };
 		case 'SET_API_KEY':
 			return { ...state, apiKey: action.apiKey };
+		case 'SET_BASE_URL':
+			return { ...state, baseUrl: action.baseUrl };
 		case 'SET_FEATURE':
 			return { ...state, feature: action.feature };
 		case 'SET_MODEL':
@@ -803,7 +821,11 @@ export const reducer = ( state = initialState, action ) => {
 				isDeletingThread: false,
 			};
 		case 'DELETE_THREAD_ERROR':
-			return { ...state, isDeletingThread: false, error: action.error };
+			return {
+				...setThreadIdReducer( state, null ),
+				isDeletingThread: false,
+				error: action.error,
+			};
 
 		// Create Thread Message
 		case 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST':
@@ -1123,6 +1145,7 @@ export const selectors = {
 	getTemperature: ( state ) => state.temperature,
 	getFeature: ( state ) => state.feature,
 	getApiKey: ( state ) => state.apiKey,
+	getBaseUrl: ( state ) => state.baseUrl,
 	getError: ( state ) => state.error,
 	getMessages: ( state ) => state.messages,
 	getAssistantMessage: ( state ) => {
@@ -1283,6 +1306,10 @@ export const actions = {
 	setApiKey: ( apiKey ) => ( {
 		type: 'SET_API_KEY',
 		apiKey,
+	} ),
+	setBaseUrl: ( baseUrl ) => ( {
+		type: 'SET_BASE_URL',
+		baseUrl,
 	} ),
 	setFeature: ( feature ) => ( {
 		type: 'SET_FEATURE',

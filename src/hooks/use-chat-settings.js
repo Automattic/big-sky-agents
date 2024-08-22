@@ -8,6 +8,7 @@ const useChatSettings = ( options ) => {
 		feature,
 		service,
 		model,
+		baseUrl,
 		assistantEnabled,
 		setApiKey,
 		setService,
@@ -15,6 +16,7 @@ const useChatSettings = ( options ) => {
 		setModel,
 		setAssistantEnabled,
 		setDefaultAssistantId,
+		setBaseUrl,
 	} = useChat();
 	const { activeAgentId, setActiveAgent } = useAgents();
 
@@ -71,6 +73,12 @@ const useChatSettings = ( options ) => {
 			setDefaultAssistantId( options.defaultAssistantId );
 		}
 	}, [ options.defaultAssistantId, setDefaultAssistantId ] );
+
+	useEffect( () => {
+		if ( options.baseUrl && options.baseUrl !== baseUrl ) {
+			setBaseUrl( options.baseUrl );
+		}
+	}, [ baseUrl, options.baseUrl, setBaseUrl ] );
 };
 
 export default useChatSettings;
