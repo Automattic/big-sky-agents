@@ -8,7 +8,6 @@ export const toOpenAITool = ( tool ) => {
 			},
 		},
 		required: [ 'value' ],
-		additionalProperties: ! tool.strict,
 	};
 
 	// enable structured output if strict is true
