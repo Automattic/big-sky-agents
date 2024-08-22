@@ -29,6 +29,7 @@ export const AssistantModelType = {
 	GPT_4_TURBO: 'gpt-4-turbo',
 	GPT_4O: 'gpt-4o',
 	GPT_4O_MINI: 'gpt-4o-mini',
+	LANGGRAPH_CLOUD: 'langgraph-cloud',
 	isMultimodal: ( model ) => model === AssistantModelType.GPT_4O,
 	supportsToolMessages: ( model ) =>
 		[ AssistantModelType.GPT_4O, AssistantModelType.GPT_4_TURBO ].includes(
@@ -389,6 +390,16 @@ export class OpenAIAssistantModel extends AssistantModel {
 
 	getServiceUrl() {
 		return 'https://api.openai.com/v1';
+	}
+}
+
+export class LangGraphCloudAssistantModel extends AssistantModel {
+	getDefaultModel() {
+		return AssistantModelType.LANGGRAPH_CLOUD;
+	}
+
+	getServiceUrl() {
+		return 'https://api.langgraph.cloud/v1';
 	}
 }
 

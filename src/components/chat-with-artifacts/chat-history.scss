@@ -1,0 +1,76 @@
+.big-sky__messages {
+	max-height: 400px;
+	overflow-y: scroll;
+	// overscroll-behavior: contain;
+	-ms-overflow-style: none; /* IE and Edge */
+	scrollbar-width: none; /* Firefox */
+	padding-bottom: 12px;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
+
+	.big-sky__messages-message {
+		color: #fff;
+		background: rgba(#006, 0.85);
+		border-radius: 8px;
+		margin-bottom: 8px;
+		padding: 6px 10px;
+		max-width: 80%;
+
+		.big-sky__messages-message-date {
+			opacity: 0.8;
+			font-size: 12px;
+			margin: 4px 0;
+		}
+
+		.big-sky__messages-user-avatar {
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			margin-right: 8px;
+			margin-bottom: -12px;
+			position: relative;
+			top: -12px;
+			left: -12px;
+		}
+
+		&.big-sky__messages-message-role-assistant {
+			// align left, blue background, white text
+			margin-right: auto;
+		}
+
+		&.big-sky__messages-message-role-user {
+			background: rgba(#ff0, 0.85);
+			color: #000;
+			margin-left: auto;
+		}
+
+		&.big-sky__messages-message-role-tool {
+			// align center, yellow background, black text
+			background: rgba(#ccc, 0.85);
+			opacity: 0.8;
+			color: #000;
+			margin-left: auto;
+			margin-right: auto;
+		}
+
+		.big-sky__messages-tool-call {
+			font-weight: bold;
+			font-family: 'Courier New', Courier, monospace;
+
+			&.big-sky__messages-tool-call-pending {
+				animation: pulse 1s infinite;
+				color: #ccc;
+
+			}
+		}
+
+		p {
+			margin: 0;
+			padding: 0;
+			font-size: 14px;
+			line-height: 1.4;
+		}
+	}
+}
