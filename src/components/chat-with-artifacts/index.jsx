@@ -25,18 +25,29 @@ import {
 } from '../../ai/agents/wapuu-agent.js';
 import '../chat-demo-ui.scss';
 import PopUpControls from '../popup-controls.jsx';
+import { AgentsProvider, useAgent } from '../agents-provider';
 // import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 import useAgentExecutor from '../../hooks/use-agent-executor.js';
 import useAgentsToolkit from '../../hooks/use-agents-toolkit.js';
 // import useSiteToolkit from '../hooks/use-site-toolkit.js';
 // import useGoalToolkit from '../hooks/use-goal-toolkit.js';
-// import useInformToolkit from '../hooks/use-inform-toolkit.js';
-// import useAskUserToolkit from '../hooks/use-ask-user-toolkit.js';
+import useInformToolkit from '../../hooks/use-inform-toolkit.js';
+import useAskUserToolkit from '../../hooks/use-ask-user-toolkit.js';
+import AskUserToolkit from '../../ai/toolkits/ask-user-toolkit.js';
+import InformToolkit from '../../ai/toolkits/inform-toolkit.js';
 
 const GraphAgent = {
 	id: 'graph-example',
-	instructions: 'You are a helpful assistant that can answer questions and help with tasks.',
+	instructions:
+		'You are a helpful assistant that can answer questions and help with tasks.',
 	assistantId: 'graph-example', // not sure what this should be yet
+	toolkits: [ AskUserToolkit, InformToolkit ],
+	onStart: ( invoke ) => {
+		invoke.askUser( {
+			question: 'What is your favourite color?',
+			choices: [ 'Red', 'Blue', 'Green', 'Yellow' ],
+		} );
+	},
 };
 
 /**
@@ -67,12 +78,13 @@ const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
 		defaultAssistantId: GraphAgent.assistantId,
 	} );
 
+	useAgent( GraphAgent );
 	useAgentsToolkit();
 	// useAnalyzeSiteToolkit( { apiKey } );
 	// useSiteToolkit( { pageId: selectedPageId } );
-	// useAskUserToolkit();
+	useAskUserToolkit();
 	// useGoalToolkit();
-	// useInformToolkit();
+	useInformToolkit();
 	useAgentExecutor();
 
 	const { artifacts } = useSelect( ( select ) => {
