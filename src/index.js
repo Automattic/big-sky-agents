@@ -53,6 +53,7 @@ export { default as ConfirmComponent } from './components/confirm.jsx';
 export { default as MessageContent } from './components/message-content.jsx';
 export { default as MessageInput } from './components/message-input.jsx';
 export { default as UserMessageInput } from './components/user-message-input.jsx';
+export { default as EvalPopup } from './components/eval-popup.jsx';
 
 /**
  * Decorators
