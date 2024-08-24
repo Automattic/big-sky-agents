@@ -106,7 +106,8 @@ class AssistantModel {
 	}
 
 	/**
-	 * This is not currently used anywhere but kept here for reference.
+	 * This is currently only used by langgraph.
+	 * https://a8c-graphs-57eb16cdfddc56528ca96d5463f5f983.default.us.langgraph.app/docs#tag/assistantscreate/POST/assistants
 	 *
 	 * @param {*}      request
 	 * @param {string} request.name
@@ -117,6 +118,9 @@ class AssistantModel {
 	 * @param {Object} request.metadata
 	 * @param {Object} request.temperature
 	 * @param {Object} request.response_format
+	 * @param {Object} request.graph_id        langgraph only
+	 * @param {Object} request.config          langgraph only
+	 * @param {Object} request.metadata        langgraph only
 	 * @return {Promise<Object>} The response object
 	 */
 	async createAssistant( request ) {
@@ -253,6 +257,8 @@ class AssistantModel {
 			throw new Error( 'Bad request' );
 		} else if ( request.status === 401 ) {
 			throw new Error( 'Unauthorized' );
+		} else if ( request.status === 404 ) {
+			throw new Error( 'Not found' );
 		} else if ( request.status === 429 ) {
 			throw new Error( 'Rate limit exceeded' );
 		} else if ( request.status === 500 ) {
@@ -408,6 +414,16 @@ export class OpenAIAssistantModel extends AssistantModel {
 }
 
 export class LangGraphCloudAssistantModel extends AssistantModel {
+	getHeaders() {
+		const headers = super.getHeaders();
+		if ( this.apiKey ) {
+			headers[ 'X-Api-Key' ] = this.apiKey;
+			// delete Authorization
+			delete headers.Authorization;
+		}
+		return headers;
+	}
+
 	getDefaultModel() {
 		return AssistantModelType.GPT_4O;
 	}

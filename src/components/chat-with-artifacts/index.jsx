@@ -38,9 +38,10 @@ import InformToolkit from '../../ai/toolkits/inform-toolkit.js';
 
 const GraphAgent = {
 	id: 'graph-example',
+	name: 'Graph Example',
+	graphId: 'memory', // this is a named graph, change to suit your application
 	instructions:
 		'You are a helpful assistant that can answer questions and help with tasks.',
-	assistantId: 'graph-example', // not sure what this should be yet
 	toolkits: [ AskUserToolkit, InformToolkit ],
 	onStart: ( invoke ) => {
 		invoke.askUser( {
@@ -65,8 +66,6 @@ const GraphAgent = {
 const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
 	const [ selectedPageId, setSelectedArtifactId ] = useState( null );
 
-	console.warn( 'baseUrl', baseUrl );
-
 	useChatSettings( {
 		apiKey,
 		feature: 'big-sky',
@@ -75,7 +74,7 @@ const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
 		model: AssistantModelType.GPT_4O,
 		baseUrl,
 		initialAgentId: GraphAgent.id,
-		defaultAssistantId: GraphAgent.assistantId,
+		autoCreateAssistant: true,
 	} );
 
 	useAgent( GraphAgent );

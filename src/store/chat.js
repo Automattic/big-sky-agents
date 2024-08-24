@@ -46,6 +46,7 @@ const initialState = {
 	error: null,
 	enabled: true,
 	assistantEnabled: false,
+	autoCreateAssistant: false,
 	feature: 'unknown',
 
 	// LLM related
@@ -72,6 +73,7 @@ const initialState = {
 	threadRunsUpdated: null, // The last time the thread runs were updated
 	threadMessagesUpdated: null, // The last time Assistant messages were updated
 	syncedThreadMessagesAt: null, // The last time synced messages were updated
+	isCreatingAssistant: false,
 	isCreatingThread: false,
 	isDeletingThread: false,
 	isCreatingThreadRun: false,
@@ -381,19 +383,45 @@ const getAssistantModel = ( select ) => {
 			baseUrl: state.root.baseUrl,
 		};
 	} );
-	if ( ! service || ! apiKey || ! assistantId ) {
-		console.warn( 'Service, API key and assistant ID are required', {
+	if ( ! service || ! apiKey ) {
+		console.warn( 'Service and API key are required', {
 			service,
 			apiKey,
-			assistantId,
 		} );
-		throw new Error( 'Service, API key and assistant ID are required' );
+		throw new Error( 'Service and API key are required' );
 	}
 	return AssistantModel.getInstance( service, apiKey, feature, null, {
 		openAiOrganization,
 		baseUrl,
 	} );
 };
+
+/**
+ * Create a new assistant.
+ *
+ * @param {string} graphId The ID of the graph to use for the assistant.
+ */
+const createAssistant =
+	( { graphId } ) =>
+	async ( { select, dispatch } ) => {
+		dispatch( { type: 'CREATE_ASSISTANT_BEGIN_REQUEST' } );
+		try {
+			const assistant = await getAssistantModel( select ).createAssistant(
+				{ graph_id: graphId }
+			);
+			console.warn( 'createAssistant', assistant );
+			dispatch( {
+				type: 'CREATE_ASSISTANT_END_REQUEST',
+				assistantId: assistant.assistant_id,
+			} );
+		} catch ( error ) {
+			console.error( 'Create assistant error', error );
+			dispatch( {
+				type: 'CREATE_ASSISTANT_ERROR',
+				error: error.message,
+			} );
+		}
+	};
 
 /**
  * Create a new thread.
@@ -701,6 +729,11 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, enabled: action.enabled };
 		case 'SET_ASSISTANT_ENABLED':
 			return { ...state, assistantEnabled: action.enabled };
+		case 'SET_AUTO_CREATE_ASSISTANT':
+			return {
+				...state,
+				autoCreateAssistant: action.autoCreateAssistant,
+			};
 		case 'SET_SERVICE':
 			return { ...state, service: action.service };
 		case 'SET_API_KEY':
@@ -791,6 +824,11 @@ export const reducer = ( state = initialState, action ) => {
 				...state,
 				assistantId: action.assistantId,
 			};
+		case 'SET_GRAPH_ID':
+			return {
+				...state,
+				graphId: action.graphId,
+			};
 		case 'SET_DEFAULT_ASSISTANT_ID':
 			return {
 				...state,
@@ -800,6 +838,22 @@ export const reducer = ( state = initialState, action ) => {
 		// Set Thread
 		case 'SET_THREAD_ID':
 			return setThreadIdReducer( state, action.threadId );
+
+		// Create Assistant
+		case 'CREATE_ASSISTANT_BEGIN_REQUEST':
+			return { ...state, assistantId: null, isCreatingAssistant: true };
+		case 'CREATE_ASSISTANT_END_REQUEST':
+			return {
+				...state,
+				assistantId: action.assistantId,
+				isCreatingAssistant: false,
+			};
+		case 'CREATE_ASSISTANT_ERROR':
+			return {
+				...state,
+				isCreatingAssistant: false,
+				error: action.error,
+			};
 
 		// Create Thread
 		case 'CREATE_THREAD_BEGIN_REQUEST':
@@ -987,7 +1041,7 @@ export const reducer = ( state = initialState, action ) => {
 			};
 		case 'GET_THREAD_RUNS_ERROR':
 			return {
-				...state,
+				...setThreadIdReducer( state, null ),
 				isFetchingThreadRuns: false,
 				error: action.error,
 			};
@@ -1078,6 +1132,9 @@ export const selectors = {
 	isAssistantEnabled: ( state ) => {
 		return state.assistantEnabled;
 	},
+	isAutoCreateAssistant: ( state ) => {
+		return state.autoCreateAssistant;
+	},
 	isLoading: ( state ) =>
 		state.assistantEnabled && ! selectors.isThreadDataLoaded( state ),
 	isRunning: ( state ) =>
@@ -1090,6 +1147,7 @@ export const selectors = {
 		state.isFetchingThreadRuns ||
 		state.isCreatingThreadMessage ||
 		state.isFetchingThreadMessages ||
+		state.isCreatingAssistant ||
 		state.isSubmittingToolOutputs,
 	isServiceAvailable: ( state ) =>
 		state.enabled && ! state.error && state.service && state.apiKey,
@@ -1207,6 +1265,7 @@ export const selectors = {
 	),
 	getThreadId: ( state ) => state.threadId,
 	getAssistantId: ( state ) => state.assistantId ?? state.defaultAssistantId,
+	getGraphId: ( state ) => state.graphId,
 	updateThreadRuns: ( state ) => state.threadRun,
 	getThreadRunsUpdated: ( state ) => state.threadRunsUpdated,
 	getThreadMessagesUpdated: ( state ) => state.threadMessagesUpdated,
@@ -1287,6 +1346,10 @@ export const actions = {
 			enabled,
 		};
 	},
+	setAutoCreateAssistant: ( autoCreateAssistant ) => ( {
+		type: 'SET_AUTO_CREATE_ASSISTANT',
+		autoCreateAssistant,
+	} ),
 	setThreadId: ( threadId ) => ( {
 		type: 'SET_THREAD_ID',
 		threadId,
@@ -1294,6 +1357,10 @@ export const actions = {
 	setAssistantId: ( assistantId ) => ( {
 		type: 'SET_ASSISTANT_ID',
 		assistantId,
+	} ),
+	setGraphId: ( graphId ) => ( {
+		type: 'SET_GRAPH_ID',
+		graphId,
 	} ),
 	setDefaultAssistantId: ( assistantId ) => ( {
 		type: 'SET_DEFAULT_ASSISTANT_ID',
@@ -1327,6 +1394,7 @@ export const actions = {
 	setToolResult,
 	submitToolOutputs,
 	runChatCompletion,
+	createAssistant,
 	createThread,
 	deleteThread,
 	createThreadRun,

@@ -26,6 +26,7 @@ const useAgentExecutor = () => {
 		isThreadRunInProgress,
 		isThreadRunComplete,
 		isThreadDataLoaded,
+		graphId,
 		threadId,
 		enabled,
 		assistantEnabled,
@@ -48,8 +49,11 @@ const useAgentExecutor = () => {
 		setToolResult,
 		additionalMessages,
 		assistantId,
+		setGraphId,
 		setAssistantId,
 		agentSay,
+		autoCreateAssistant,
+		createAssistant,
 	} = useChat();
 
 	const { tools, invoke, hasToolkits, context, callbacks } = useToolkits();
@@ -75,6 +79,27 @@ const useAgentExecutor = () => {
 		threadId,
 		threadRunsUpdated,
 		updateThreadRuns,
+	] );
+
+	// create assistant if it doesn't exist
+	useEffect( () => {
+		if (
+			enabled &&
+			! running &&
+			autoCreateAssistant &&
+			! assistantId &&
+			graphId
+		) {
+			// TODO: decouple this from langgraph cloud's peculiarities
+			createAssistant( { graphId } );
+		}
+	}, [
+		enabled,
+		running,
+		autoCreateAssistant,
+		assistantId,
+		createAssistant,
+		graphId,
 	] );
 
 	// update messages if they haven't been updated
@@ -244,8 +269,16 @@ const useAgentExecutor = () => {
 					? activeAgent.additionalInstructions( context )
 					: activeAgent.additionalInstructions;
 
-			if ( activeAgent.assistantId !== assistantId ) {
+			if (
+				activeAgent.assistantId !== assistantId &&
+				( activeAgent.assistantId || ! autoCreateAssistant )
+			) {
 				setAssistantId( activeAgent.assistantId );
+			}
+
+			// langgraph cloud only
+			if ( activeAgent.graphId !== graphId ) {
+				setGraphId( activeAgent.graphId );
 			}
 
 			if ( newInstructions && newInstructions !== instructions ) {
@@ -257,10 +290,13 @@ const useAgentExecutor = () => {
 			}
 		}
 	}, [
+		autoCreateAssistant,
 		additionalInstructions,
 		activeAgent,
 		assistantId,
+		graphId,
 		setAssistantId,
+		setGraphId,
 		instructions,
 		tools,
 		context,

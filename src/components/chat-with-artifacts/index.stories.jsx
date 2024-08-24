@@ -23,6 +23,6 @@ const Template = ( args ) => <ChatWithArtifacts { ...args } />;
 export const ChatWithArtifactsDemo = Template.bind( {} );
 
 ChatWithArtifactsDemo.args = {
-	apiKey: import.meta.env.STORYBOOK_OPENAI_API_KEY,
+	apiKey: import.meta.env.STORYBOOK_LANGCHAIN_API_KEY,
 	baseUrl: import.meta.env.STORYBOOK_LANGGRAPH_CLOUD_BASE_URL,
 };

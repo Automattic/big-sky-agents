@@ -5,6 +5,7 @@ import useAgents from '../components/agents-provider/use-agents.js';
 const useChatSettings = ( options ) => {
 	const {
 		apiKey,
+		autoCreateAssistant,
 		feature,
 		service,
 		model,
@@ -17,6 +18,7 @@ const useChatSettings = ( options ) => {
 		setAssistantEnabled,
 		setDefaultAssistantId,
 		setBaseUrl,
+		setAutoCreateAssistant,
 	} = useChat();
 	const { activeAgentId, setActiveAgent } = useAgents();
 
@@ -61,6 +63,20 @@ const useChatSettings = ( options ) => {
 			setAssistantEnabled( options.assistantEnabled );
 		}
 	}, [ assistantEnabled, options.assistantEnabled, setAssistantEnabled ] );
+
+	// if autoCreateAssistant !== autoCreateAssistant, set it
+	useEffect( () => {
+		if (
+			typeof options.autoCreateAssistant !== 'undefined' &&
+			options.autoCreateAssistant !== autoCreateAssistant
+		) {
+			setAutoCreateAssistant( options.autoCreateAssistant );
+		}
+	}, [
+		autoCreateAssistant,
+		options.autoCreateAssistant,
+		setAutoCreateAssistant,
+	] );
 
 	useEffect( () => {
 		if ( options.initialAgentId && ! activeAgentId ) {
