@@ -8,6 +8,7 @@ import json from '@rollup/plugin-json';
 import url from '@rollup/plugin-url';
 import eslint from '@rollup/plugin-eslint';
 import preserveDirectives from 'rollup-preserve-directives';
+// import { visualizer } from 'rollup-plugin-visualizer';
 import packageJson from './package.json' assert { type: 'json' };
 
 export default [
@@ -51,7 +52,7 @@ export default [
 				],
 			} ),
 			babel( {
-				babelHelpers: 'bundled',
+				babelHelpers: 'runtime',
 				extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
 				exclude: [ '**/*.riv' ],
 			} ),
@@ -64,8 +65,122 @@ export default [
 					{ src: 'src/components/bot.svg', dest: 'dist/' },
 				],
 			} ),
+			// visualizer( {
+			// 	open: true,
+			// } ),
 		],
-		external: [ 'react', 'react-dom', 'prop-types', 'PropTypes' ],
+		external: [
+			'react',
+			'react-dom',
+			'prop-types',
+			'PropTypes',
+			'@wordpress/components',
+			'@wordpress/element',
+			'@wordpress/data',
+			'@wordpress/icons',
+		],
+	},
+	{
+		input: 'src/eval.js',
+		output: [
+			{
+				file: 'dist/eval.cjs',
+				format: 'cjs',
+				sourcemap: true,
+			},
+			{
+				file: 'dist/eval.js',
+				format: 'esm',
+				sourcemap: true,
+			},
+		],
+		plugins: [
+			eslint( {
+				throwOnError: true,
+				exclude: [
+					'node_modules/**',
+					'dist/**',
+					'src/**/*.scss',
+					'src/**/*.json',
+					'src/**/*.riv',
+				],
+			} ),
+			resolve(),
+			json(),
+			preserveDirectives(),
+			commonjs(),
+			babel( {
+				babelHelpers: 'runtime',
+				extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
+				exclude: [ '**/*.riv' ],
+			} ),
+			// copy the evaluators, which are loaded dynamically
+			copy( {
+				targets: [ { src: 'src/eval/evaluators', dest: 'dist' } ],
+			} ),
+		],
+	},
+	{
+		input: 'src/eval-agents.js',
+		output: [
+			{
+				file: 'dist/eval-agents.js',
+				format: 'esm',
+				sourcemap: true,
+			},
+		],
+		plugins: [
+			eslint( {
+				throwOnError: true,
+				exclude: [
+					'node_modules/**',
+					'dist/**',
+					'src/**/*.scss',
+					'src/**/*.json',
+					'src/**/*.riv',
+				],
+			} ),
+			resolve(),
+			json(),
+			commonjs(),
+			preserveDirectives(),
+			babel( {
+				babelHelpers: 'runtime',
+				extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
+				exclude: [ '**/*.riv' ],
+			} ),
+		],
+	},
+	{
+		input: 'src/agent-cli.js',
+		output: [
+			{
+				file: 'dist/agent-cli.js',
+				format: 'esm',
+				sourcemap: true,
+			},
+		],
+		plugins: [
+			eslint( {
+				throwOnError: true,
+				exclude: [
+					'node_modules/**',
+					'dist/**',
+					'src/**/*.scss',
+					'src/**/*.json',
+					'src/**/*.riv',
+				],
+			} ),
+			resolve(),
+			json(),
+			commonjs(),
+			preserveDirectives(),
+			babel( {
+				babelHelpers: 'runtime',
+				extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
+				exclude: [ '**/*.riv' ],
+			} ),
+		],
 	},
 	{
 		input: 'src/index.d.ts',

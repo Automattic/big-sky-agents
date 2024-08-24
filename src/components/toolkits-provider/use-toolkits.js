@@ -7,8 +7,8 @@ import { useDispatch, useSelect } from '@wordpress/data';
 /**
  * Internal dependencies
  */
-import defaultToolkits from '../../ai/toolkits/default-toolkits';
-import useAgents from '../agents-provider/use-agents';
+import defaultToolkits from '../../ai/toolkits/default-toolkits.js';
+import useAgents from '../agents-provider/use-agents.js';
 
 /**
  * Internal dependencies
@@ -120,7 +120,7 @@ function resolveAgentTools( agent, context, toolkitTools ) {
 export default function useToolkits() {
 	const toolkitsStore = useContext( Context );
 	const { activeAgent } = useAgents();
-	const { registerToolkit, setCallbacks, setContext, setTools } =
+	const { registerToolkit, setCallbacks, setContext } =
 		useDispatch( toolkitsStore );
 	const { call, agentSay, userSay } = useChat();
 	const {
@@ -154,7 +154,7 @@ export default function useToolkits() {
 	const callbacks = useMemo( () => {
 		return toolkits?.reduce( ( acc, toolkit ) => {
 			const toolkitCallbacks =
-				toolkit.callbacks ?? allCallbacks[ toolkit.name ];
+				toolkit?.callbacks ?? allCallbacks[ toolkit.name ];
 
 			if ( ! toolkitCallbacks ) {
 				return acc;
@@ -253,7 +253,6 @@ export default function useToolkits() {
 		registerToolkit,
 		setCallbacks,
 		setContext,
-		setTools,
 		registerDefaultToolkits,
 	};
 }

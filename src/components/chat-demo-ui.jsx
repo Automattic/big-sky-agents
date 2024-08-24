@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from '@wordpress/element';
 import { Flex } from '@wordpress/components';
 
 /**

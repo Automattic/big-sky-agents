@@ -241,6 +241,8 @@ class ChatModel {
 	 * @param {string}        params.additionalInstructions The agent loop prompt
 	 * @param {number}        params.temperature            The temperature to use
 	 * @param {number}        params.maxTokens              The maximum number of tokens to generate
+	 * @param {Array<string>} params.tags                   The tags to use for analytics
+	 * @param {Function}      params.middleware             The middleware to use
 	 * @return {Promise<Object>} The response message
 	 */
 	async run( {
@@ -251,6 +253,8 @@ class ChatModel {
 		additionalInstructions,
 		temperature,
 		maxTokens,
+		tags,
+		middleware,
 	} ) {
 		if ( ! messages || ! messages.length ) {
 			throw new Error( 'Missing history' );
@@ -267,7 +271,13 @@ class ChatModel {
 		temperature = temperature ?? this.getDefaultTemperature( model );
 		const max_tokens = maxTokens ?? this.getDefaultMaxTokens( model );
 
-		const response = await this.call( {
+		const invokeChatModel = middleware
+			? middleware( this.call.bind( this ), {
+					tags,
+			  } )
+			: this.call.bind( this );
+
+		const response = await invokeChatModel( {
 			model,
 			temperature,
 			max_tokens,

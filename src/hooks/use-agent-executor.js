@@ -9,24 +9,7 @@ import { useEffect, useMemo, useState } from '@wordpress/element';
 import useAgents from '../components/agents-provider/use-agents.js';
 import useChat from '../components/chat-provider/use-chat.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
-
-const toOpenAITool = ( tool ) => ( {
-	type: 'function',
-	function: {
-		name: tool.name,
-		description: tool.description,
-		// default to a single string parameter called "value"
-		parameters: tool.parameters ?? {
-			type: 'object',
-			properties: {
-				value: {
-					type: 'string',
-				},
-			},
-			required: [ 'value' ],
-		},
-	},
-} );
+import { toOpenAITool } from '../ai/utils/openai.js';
 
 const useAgentExecutor = () => {
 	const { activeAgent, started, setAgentStarted } = useAgents();

@@ -1,0 +1,129 @@
+{
+	"name": "Get the Weather",
+	"description": "Getting the weather for a location",
+	"data": [
+		{
+			"id": "1",
+			"description": "Get weather for the current location by default",
+			"inputs": {
+				"context": {
+					"currentLocation": "Boston, MA"
+				},
+				"messages": [
+					{
+						"role": "assistant",
+						"content": "How can I help you?"
+					},
+					{
+						"role": "user",
+						"content": "Get the weather"
+					}
+				]
+			},
+			"outputs": {
+				"message": {
+					"role": "assistant",
+					"content": "",
+					"tool_calls": [
+						{
+							"type": "function",
+							"function": {
+								"name": "getWeather",
+								"arguments": {
+									"location": "Boston, MA"
+								}
+							}
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": "2",
+			"description": "Get the weather for a specific location",
+			"inputs": {
+				"context": {
+					"currentLocation": "Boston, MA"
+				},
+				"messages": [
+					{
+						"role": "assistant",
+						"content": "How can I help you?"
+					},
+					{
+						"role": "user",
+						"content": "Get the weather for Melbourne, Australia"
+					}
+				]
+			},
+			"outputs": {
+				"message": {
+					"role": "assistant",
+					"content": "",
+					"tool_calls": [
+						{
+							"type": "function",
+							"function": {
+								"name": "getWeather",
+								"arguments": {
+									"location": "Melbourne, Australia"
+								}
+							}
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": "3",
+			"description": "Prompt for weather location if not available",
+			"inputs": {
+				"context": {
+					"currentLocation": ""
+				},
+				"messages": [
+					{
+						"role": "assistant",
+						"content": "How can I help you?"
+					},
+					{
+						"role": "user",
+						"content": "Get the weather"
+					}
+				]
+			},
+			"outputs": {
+				"message": {
+					"role": "assistant",
+					"content": "Could you please provide the name of the location for which you would like to get the weather?"
+				}
+			}
+		}
+	],
+	"evaluators": [
+		{
+			"key": "match_tool_call",
+			"description": "If a tool call is expected, does it match?",
+			"function": "chat:matchToolCall"
+		},
+		{
+			"key": "match_message_content",
+			"description": "If a message content is expected, does it match?",
+			"function": "chat:compareContent"
+		}
+	],
+	"comparativeEvaluators": [
+		{
+			"key": "llm_comparison",
+			"description": "Compare the first two answers with each other by LLM preference",
+			"function": "chat:evaluatePairwise"
+		}
+	],
+	"summaryEvaluators": [
+		{
+			"key": "custom_summary_evaluator",
+			"description": "Test summary evaluator",
+			"function": "chat:customSummaryEvaluator"
+		}
+	]
+}

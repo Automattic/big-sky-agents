@@ -11,7 +11,7 @@ import {
 	__experimentalItemGroup as ItemGroup,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import MessageInput from './message-input.jsx';
 import AskUserTool from '../ai/tools/ask-user.js';
 import withToolCall from './with-tool-call.jsx';

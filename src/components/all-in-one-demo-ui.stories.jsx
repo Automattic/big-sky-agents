@@ -1,5 +1,3 @@
-import React from 'react';
-
 import AllInOneDemoUI from './all-in-one-demo-ui.jsx';
 
 export default {

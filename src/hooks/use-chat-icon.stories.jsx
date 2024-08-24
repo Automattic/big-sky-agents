@@ -1,5 +1,3 @@
-import React from 'react';
-
 import useChatIcon from './use-chat-icon.js';
 
 // based container

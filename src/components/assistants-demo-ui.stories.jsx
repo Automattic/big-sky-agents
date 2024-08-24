@@ -1,5 +1,3 @@
-import React from 'react';
-
 import AssistantsDemoUI from './assistants-demo-ui';
 
 export default {

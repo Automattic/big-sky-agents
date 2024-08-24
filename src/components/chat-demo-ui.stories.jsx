@@ -1,5 +1,3 @@
-import React from 'react';
-
 import ChatDemoUI from './chat-demo-ui';
 
 export default {

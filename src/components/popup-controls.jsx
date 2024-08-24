@@ -3,7 +3,7 @@ import { close, settings } from '@wordpress/icons';
 import ChatModelControls from './chat-model-controls.jsx';
 import AgentControls from './agent-controls.jsx';
 import ToolCallControls from './tool-call-controls.jsx';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from '@wordpress/element';
 import './popup-controls.scss';
 
 const PopUpControls = ( { setApiKey } ) => {

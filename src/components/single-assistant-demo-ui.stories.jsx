@@ -1,5 +1,3 @@
-import React from 'react';
-
 import SingleAssistantDemoUI from './single-assistant-demo-ui';
 
 export default {

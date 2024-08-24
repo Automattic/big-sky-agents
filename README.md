@@ -80,6 +80,38 @@ npm publish --access public
 
 You can [view the updated package here](https://github.com/Automattic/big-sky-agents/pkgs/npm/big-sky-agents) to verify.
 
+## Running evaluations using LangSmith
+
+Sign up and get an API key from https://smith.langchain.com/
+
+You'll also need an OpenAI API key for generating responses and running some evaluations.
+
+Add the following to your `.env` file:
+
+```bash
+OPENAI_API_KEY="sk-..."
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
+LANGCHAIN_API_KEY="your-api-key"
+LANGCHAIN_PROJECT="your-project"
+```
+
+Then run:
+
+```bash
+# some examples
+node src/eval-agents.js --name test --agent ./src/ai/agents/weather-agent/v1.js --agent ./src/ai/agents/weather-agent/v2.js --dataset data/tool-examples.json
+node src/eval-agents.js --name test --agent ./src/ai/agents/weather-agent/v1.js --dataset data/name-examples.js
+```
+
+Right now it runs a trivial example, which you can find in [name-example.json](./eval/name-example.json).
+
+For more information on the `eval-agents.js` command, [read the docs](./docs/eval-agents-command.md).
+
+For more information on the example formats, see [Eval Dataset](./docs/eval-dataset.md) and [Eval Output](./docs/eval-output.md) documentation.
+
+For more information on evaluator functions, see the [Big Sky Evaluators documentation](./docs/eval-evaluators.md).
+
 ## LocalAI
 
 Using LocalAI, you can run the Chat Completion inference locally on your machine. This is useful for debugging, experimentation, testing, and just privacy in general.

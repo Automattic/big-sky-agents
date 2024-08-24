@@ -1,13 +1,12 @@
 /**
  * External dependencies
  */
-import { FakeBrowser } from '@vtaits/react-fake-browser-ui';
 
 /**
  * WordPress dependencies
  */
 import { Card, CardBody } from '@wordpress/components';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 // import {
 // 	BlockCanvas,
@@ -136,17 +135,14 @@ import { store as siteSpecStore } from '../store/index.js';
 // } );
 
 function PageSpecPreview( { disabled, pageId } ) {
-	const { category, sections, title, description } = useSelect(
-		( select ) => {
-			return {
-				description:
-					select( siteSpecStore ).getPageDescription( pageId ),
-				sections: select( siteSpecStore ).getPageSections( pageId ),
-				title: select( siteSpecStore ).getPageTitle( pageId ),
-				category: select( siteSpecStore ).getPageCategory( pageId ),
-			};
-		}
-	);
+	const { category, sections, description } = useSelect( ( select ) => {
+		return {
+			description: select( siteSpecStore ).getPageDescription( pageId ),
+			sections: select( siteSpecStore ).getPageSections( pageId ),
+			title: select( siteSpecStore ).getPageTitle( pageId ),
+			category: select( siteSpecStore ).getPageCategory( pageId ),
+		};
+	} );
 
 	const [ blocks, setBlocks ] = useState( [] );
 
@@ -173,38 +169,30 @@ function PageSpecPreview( { disabled, pageId } ) {
 					<div className="big-sky__page-description">
 						{ description || 'No description' } ( { category } )
 					</div>
-
-					<FakeBrowser
-						currentAddress={ title }
-						canMoveForward={ false }
-						canMoveBack={ false }
-						/* // refresh, // goBack, // goForward, // goTo */
-					>
-						<div className="big-sky__page-editor">
-							{ ! disabled && blocks && blocks.length > 0 && (
-								<>Blocks: { JSON.stringify( blocks ) }</>
-								// <BlockEditorProvider
-								// 	value={ blocks }
-								// 	onChange={ setBlocks }
-								// 	onInput={ setBlocks }
-								// 	templateLock="all"
-								// 	codeEditingEnabled={ false }
-								// 	bodyPlaceholder="Please Wait..."
-								// 	// hasPermissionsToManageWidgets={ false }
-								// 	// focusMode={ true }
-								// 	/* TODO */
-								// 	/*colors: EditorColor[];
-								// 	fontSizes: EditorFontSize[];
-								// 	styles: EditorStyle[];*/
-								// >
-								// 	<BlockCanvas
-								// 		shouldIframe={ true }
-								// 		height="600px"
-								// 	/>
-								// </BlockEditorProvider>
-							) }
-						</div>
-					</FakeBrowser>
+					<div className="big-sky__page-editor">
+						{ ! disabled && blocks && blocks.length > 0 && (
+							<>Blocks: { JSON.stringify( blocks ) }</>
+							// <BlockEditorProvider
+							// 	value={ blocks }
+							// 	onChange={ setBlocks }
+							// 	onInput={ setBlocks }
+							// 	templateLock="all"
+							// 	codeEditingEnabled={ false }
+							// 	bodyPlaceholder="Please Wait..."
+							// 	// hasPermissionsToManageWidgets={ false }
+							// 	// focusMode={ true }
+							// 	/* TODO */
+							// 	/*colors: EditorColor[];
+							// 	fontSizes: EditorFontSize[];
+							// 	styles: EditorStyle[];*/
+							// >
+							// 	<BlockCanvas
+							// 		shouldIframe={ true }
+							// 		height="600px"
+							// 	/>
+							// </BlockEditorProvider>
+						) }
+					</div>
 				</CardBody>
 			</Card>
 		</div>

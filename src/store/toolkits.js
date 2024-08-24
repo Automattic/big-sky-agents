@@ -28,13 +28,6 @@ export const actions = {
 			context,
 		};
 	},
-	setTools: ( name, tools ) => {
-		return {
-			type: 'REGISTER_TOOLKIT_TOOLS',
-			name,
-			tools,
-		};
-	},
 };
 
 const registerToolkit = ( state, action ) => {
