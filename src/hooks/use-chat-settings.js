@@ -39,10 +39,6 @@ const useChatSettings = ( options ) => {
 	// if chat.model !== model, set it
 	useEffect( () => {
 		if ( options.model && options.model !== model ) {
-			console.warn( 'set model', {
-				options,
-				model,
-			} );
 			setModel( options.model );
 		}
 	}, [ model, options, options.model, setModel ] );

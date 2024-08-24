@@ -52,7 +52,7 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		feature: 'big-sky',
 		assistantEnabled: true,
 		service: AssistantModelService.OPENAI,
-		model: AssistantModelType.GPT_4O,
+		model: AssistantModelType.GPT_4O_MINI,
 		initialAgentId: WAPUU_AGENT_ID,
 		defaultAssistantId: WAPUU_ASSISTANT_ID,
 	} );

@@ -180,6 +180,118 @@ class AssistantModel {
 		return await this.getResponse( createRunRequest, 'thread.run' );
 	}
 
+	/**
+	 *
+	 * @param {*}      request
+	 * @param {string} request.threadId
+	 * @param {string} request.assistantId
+	 * @param {string} request.model
+	 * @param {string} request.instructions
+	 * @param {string} request.additionalInstructions
+	 * @param {Array}  request.additionalMessages
+	 * @param {Array}  request.tools
+	 * @param {Array}  request.metadata
+	 * @param {number} request.temperature
+	 * @param {number} request.maxPromptTokens
+	 * @param {number} request.maxCompletionTokens
+	 * @param {Object} request.truncationStrategy
+	 * @param {Object} request.responseFormat
+	 * @return {*} An async iterable of events
+	 */
+	async *createThreadRunEventStream( request ) {
+		const headers = this.getHeaders();
+		const url = `${ this.getServiceUrl() }/threads/${
+			request.threadId
+		}/runs`;
+
+		// Using fetch to establish the connection
+		const response = await fetch( url, {
+			method: 'POST',
+			headers,
+			body: JSON.stringify( {
+				stream: true,
+				assistant_id: request.assistantId,
+				instructions: request.instructions,
+				additional_instructions: request.additionalInstructions,
+				additional_messages: request.additionalMessages,
+				tools: request.tools,
+				model: request.model ?? this.getDefaultModel(),
+				temperature:
+					request.temperature ?? this.getDefaultTemperature(),
+				max_completion_tokens:
+					request.maxCompletionTokens ?? this.getDefaultMaxTokens(),
+				truncation_strategy: request.truncationStrategy,
+				response_format: request.responseFormat,
+			} ),
+		} );
+
+		if ( ! response.ok ) {
+			throw new Error(
+				`Failed to create thread run: ${ response.statusText }`
+			);
+		}
+
+		const reader = response.body.getReader();
+		const decoder = new TextDecoder( 'utf-8' );
+		let buffer = '';
+
+		try {
+			while ( true ) {
+				const { done, value } = await reader.read();
+				if ( done ) {
+					break;
+				}
+
+				buffer += decoder.decode( value, { stream: true } );
+
+				let boundary = buffer.indexOf( '\n\n' );
+				while ( boundary !== -1 ) {
+					const chunk = buffer.slice( 0, boundary );
+					buffer = buffer.slice( boundary + 2 );
+
+					const event = this.parseEvent( chunk );
+					if ( event ) {
+						yield event;
+					}
+
+					boundary = buffer.indexOf( '\n\n' );
+				}
+			}
+		} catch ( err ) {
+			console.error( 'Stream reading error:', err );
+		} finally {
+			reader.releaseLock();
+		}
+	}
+
+	parseEvent( chunk ) {
+		const lines = chunk.split( '\n' );
+		let event = null;
+		let data = '';
+
+		for ( const line of lines ) {
+			if ( line.startsWith( 'event:' ) ) {
+				event = line.slice( 6 ).trim();
+			} else if ( line.startsWith( 'data:' ) ) {
+				data += line.slice( 5 ).trim();
+			}
+		}
+
+		if ( event && data ) {
+			if ( data === '[DONE]' ) {
+				return { event: 'done' };
+			}
+			try {
+				const parsedData = JSON.parse( data );
+				return { event, data: parsedData };
+			} catch ( e ) {
+				console.error( 'Error parsing JSON message:', e, data );
+			}
+		}
+
+		return null;
+	}
+
 	async createThreadMessage( threadId, message ) {
 		const params = message;
 		const headers = this.getHeaders();
