@@ -234,24 +234,24 @@ const useAgentExecutor = () => {
 	] );
 
 	// if there are pendingThreadMessages, send them using addMessageToThread
-	useEffect( () => {
-		if (
-			isAssistantAvailable &&
-			! running &&
-			isThreadRunComplete &&
-			additionalMessages.length > 0
-		) {
-			addMessageToThread( {
-				message: additionalMessages[ 0 ],
-			} );
-		}
-	}, [
-		running,
-		additionalMessages,
-		isThreadRunComplete,
-		addMessageToThread,
-		isAssistantAvailable,
-	] );
+	// useEffect( () => {
+	// 	if (
+	// 		isAssistantAvailable &&
+	// 		! running &&
+	// 		isThreadRunComplete &&
+	// 		additionalMessages.length > 0
+	// 	) {
+	// 		addMessageToThread( {
+	// 			message: additionalMessages[ 0 ],
+	// 		} );
+	// 	}
+	// }, [
+	// 	running,
+	// 	additionalMessages,
+	// 	isThreadRunComplete,
+	// 	addMessageToThread,
+	// 	isAssistantAvailable,
+	// ] );
 
 	const toolkitsLoaded = useMemo( () => {
 		return ! activeAgent?.toolkits || hasToolkits( activeAgent?.toolkits );
@@ -310,6 +310,16 @@ const useAgentExecutor = () => {
 	}, [ error, isAssistantAvailable, createThread, running, threadId ] );
 
 	useEffect( () => {
+		console.warn( '🧠 createThreadRun', {
+			running,
+			instructions,
+			isAssistantAvailable,
+			isThreadRunComplete,
+			isThreadDataLoaded,
+			isAwaitingUserInput,
+			additionalMessages,
+			messages,
+		} );
 		if (
 			! running &&
 			instructions &&
@@ -317,7 +327,7 @@ const useAgentExecutor = () => {
 			isThreadRunComplete &&
 			isThreadDataLoaded &&
 			! isAwaitingUserInput &&
-			additionalMessages.length === 0 &&
+			additionalMessages.length > 0 &&
 			messages.length > 0
 		) {
 			// deduplicate and convert to OpenAI format
@@ -327,7 +337,7 @@ const useAgentExecutor = () => {
 				instructions,
 				additionalInstructions,
 				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
-				// additionalMessages,
+				additionalMessages,
 			} );
 		}
 	}, [
@@ -342,6 +352,7 @@ const useAgentExecutor = () => {
 		createThreadRun,
 		tools,
 		isThreadDataLoaded,
+		messages,
 	] );
 
 	/**

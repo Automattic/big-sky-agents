@@ -44,10 +44,7 @@ const GraphAgent = {
 		'You are a helpful assistant that can answer questions and help with tasks.',
 	toolkits: [ AskUserToolkit, InformToolkit ],
 	onStart: ( invoke ) => {
-		invoke.askUser( {
-			question: 'What is your favourite color?',
-			choices: [ 'Red', 'Blue', 'Green', 'Yellow' ],
-		} );
+		invoke.agentSay( 'What would you like to do?' );
 	},
 };
 
@@ -81,9 +78,9 @@ const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
 	useAgentsToolkit();
 	// useAnalyzeSiteToolkit( { apiKey } );
 	// useSiteToolkit( { pageId: selectedPageId } );
-	useAskUserToolkit();
+	// useAskUserToolkit();
 	// useGoalToolkit();
-	useInformToolkit();
+	// useInformToolkit();
 	useAgentExecutor();
 
 	const { artifacts } = useSelect( ( select ) => {

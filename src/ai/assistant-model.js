@@ -102,7 +102,9 @@ class AssistantModel {
 				headers,
 			}
 		);
-		return await this.getResponse( deleteThreadRequest );
+		// this doesn't return anything in langgraph cloud anyway
+		return {};
+		// return await this.getResponse( deleteThreadRequest );
 	}
 
 	/**
@@ -118,9 +120,6 @@ class AssistantModel {
 	 * @param {Object} request.metadata
 	 * @param {Object} request.temperature
 	 * @param {Object} request.response_format
-	 * @param {Object} request.graph_id        langgraph only
-	 * @param {Object} request.config          langgraph only
-	 * @param {Object} request.metadata        langgraph only
 	 * @return {Promise<Object>} The response object
 	 */
 	async createAssistant( request ) {
@@ -266,7 +265,8 @@ class AssistantModel {
 			throw new Error( `Internal server error: ${ response }` );
 		}
 
-		const response = await request.json();
+		const response =
+			request.method !== 'DELETE' ? await request.json() : {};
 
 		if ( response.code && ! response.id ) {
 			throw new Error( `${ response.code } ${ response.message ?? '' }` );
@@ -413,6 +413,15 @@ export class OpenAIAssistantModel extends AssistantModel {
 	}
 }
 
+const filterLangGraphMessages = ( messages ) => {
+	return messages.map( ( message ) => {
+		return {
+			...message,
+			role: message.type === 'ai' ? 'assistant' : 'user',
+		};
+	} );
+};
+
 export class LangGraphCloudAssistantModel extends AssistantModel {
 	getHeaders() {
 		const headers = super.getHeaders();
@@ -445,9 +454,8 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 		);
 		const getMessagesResponse =
 			await this.getResponse( getMessagesRequest );
-		console.warn( 'getMessagesResponse', getMessagesResponse );
 		if ( getMessagesResponse.values.messages ) {
-			return { data: getMessagesResponse.values.messages };
+			return { data: filterLangGraphMessages( getMessagesResponse.values.messages ) };
 		}
 		return { data: [] };
 	}
@@ -456,6 +464,80 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 		// get super.getThreadRuns and return { data: the response }
 		const threadRunsResponse = await super.getThreadRuns( threadId );
 		return { data: threadRunsResponse };
+	}
+
+	/**
+	 * This is currently only used by langgraph.
+	 * https://a8c-graphs-57eb16cdfddc56528ca96d5463f5f983.default.us.langgraph.app/docs#tag/assistantscreate/POST/assistants
+	 *
+	 * @param {*}      request
+	 * @param {string} request.name
+	 * @param {string} request.description
+	 * @param {Object} request.graph_id
+	 * @param {Object} request.config
+	 * @param {Object} request.metadata
+	 * @return {Promise<Object>} The response object
+	 */
+	async createAssistant( request ) {
+		const langgraphRequest = {
+			graph_id: request.graph_id,
+			config: {
+				configurable: {
+					// TODO: add configurable fields
+					user_id: 1,
+				},
+			},
+			metadata: {
+				name: request.name,
+				description: request.description,
+				...request.metadata,
+			},
+		};
+		const headers = this.getHeaders( request );
+		const createAssistantRequest = await fetch(
+			`${ this.getServiceUrl() }/assistants`,
+			{
+				method: 'POST',
+				headers,
+				body: JSON.stringify( langgraphRequest ),
+			}
+		);
+		return await this.getResponse( createAssistantRequest, 'assistant' );
+	}
+
+	// createThreadRun has an 'input' param in langgraph cloud
+	async createThreadRun( request ) {
+		const params = {
+			assistant_id: request.assistantId,
+			metadata: {},
+			input: {
+				messages: request.additionalMessages,
+			},
+			// config: {
+			// 	configurable: {},
+			// },
+			// instructions: request.instructions,
+			// additional_instructions: request.additionalInstructions,
+			// additional_messages: request.additionalMessages,
+			// tools: request.tools,
+			// model: request.model ?? this.getDefaultModel(),
+			// temperature: request.temperature ?? this.getDefaultTemperature(),
+			// max_completion_tokens:
+			// 	request.maxCompletionTokens ?? this.getDefaultMaxTokens(),
+			// truncation_strategy: request.truncationStrategy,
+			// response_format: request.responseFormat,
+		};
+		// console.warn( 'createThreadRun', params );
+		const headers = this.getHeaders();
+		const createRunRequest = await fetch(
+			`${ this.getServiceUrl() }/threads/${ request.threadId }/runs`,
+			{
+				method: 'POST',
+				headers,
+				body: JSON.stringify( params ),
+			}
+		);
+		return await this.getResponse( createRunRequest, 'thread.run' );
 	}
 }
 

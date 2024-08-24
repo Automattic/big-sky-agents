@@ -610,10 +610,10 @@ const addMessageToThread =
 				message: newMessage,
 			} );
 		} catch ( error ) {
-			console.error( 'Create thread error', error );
+			console.error( 'Add message to thread error', error );
 			return {
 				type: 'CREATE_THREAD_MESSAGE_ERROR',
-				error: error.message,
+				error: error.message ?? error,
 			};
 		}
 	};
