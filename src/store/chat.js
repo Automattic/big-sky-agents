@@ -144,11 +144,7 @@ const chatMessageToThreadMessage = ( message ) => {
 
 	return {
 		...message,
-		role: message.role,
 		content: filteredContent,
-		// These aren't supported in Big Sky Agents yet
-		// attachments: message.attachments,
-		// metadata: message.metadata,
 	};
 };
 
