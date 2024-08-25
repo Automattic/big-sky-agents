@@ -19,6 +19,8 @@ const useChatSettings = ( options ) => {
 		setDefaultAssistantId,
 		setBaseUrl,
 		setAutoCreateAssistant,
+		stream,
+		setStream,
 	} = useChat();
 	const { activeAgentId, setActiveAgent } = useAgents();
 
@@ -35,6 +37,13 @@ const useChatSettings = ( options ) => {
 			setService( options.service );
 		}
 	}, [ options, service, setService ] );
+
+	// if chat.stream !== stream, set it
+	useEffect( () => {
+		if ( options.stream && options.stream !== stream ) {
+			setStream( options.stream );
+		}
+	}, [ options, stream, setStream ] );
 
 	// if chat.model !== model, set it
 	useEffect( () => {

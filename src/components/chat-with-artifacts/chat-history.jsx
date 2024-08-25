@@ -32,7 +32,9 @@ function ChatHistory( { avatarUrl } ) {
 				</Notice>
 			) }
 			{ messages
-				?.filter( ( message ) => message.content || message.tool_calls )
+				?.filter( ( message ) =>
+					[ 'user', 'assistant' ].includes( message.role )
+				)
 				.map( ( message, rowId ) => {
 					return (
 						<div
@@ -47,13 +49,8 @@ function ChatHistory( { avatarUrl } ) {
 								/>
 							) }
 
-							{ [ 'user', 'assistant' ].includes(
-								message.role
-							) && (
-								<MessageContent
-									content={ message.content || '' }
-								/>
-							) }
+							<MessageContent content={ message.content || '' } />
+
 							{ message.tool_calls?.map( ( tool_call, i ) => {
 								const toolCallResult = toolOutputs.find(
 									( toolOutput ) =>
@@ -69,7 +66,40 @@ function ChatHistory( { avatarUrl } ) {
 										}` }
 									>
 										⚙️ { tool_call.function.name }
-										{ ! toolCallResult && ' (pending)' }
+										<pre>
+											Request:
+											<br />
+											<br />
+											{ JSON.stringify(
+												tool_call.function.arguments,
+												null,
+												2
+											) }
+										</pre>
+										{ toolCallResult ? (
+											<pre>
+												Result:
+												<br />
+												<br />
+												{ ( () => {
+													try {
+														const parsedContent =
+															JSON.parse(
+																toolCallResult.output
+															);
+														return JSON.stringify(
+															parsedContent,
+															null,
+															2
+														);
+													} catch ( e ) {
+														return toolCallResult.output;
+													}
+												} )() }
+											</pre>
+										) : (
+											' (pending)'
+										) }
 									</div>
 								);
 							} ) }

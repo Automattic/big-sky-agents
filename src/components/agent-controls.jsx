@@ -290,7 +290,8 @@ const ChatAgentControls = () => {
 };
 
 const AgentControls = () => {
-	const { assistantEnabled, setAssistantEnabled } = useChat();
+	const { assistantEnabled, setAssistantEnabled, stream, setStream } =
+		useChat();
 	return (
 		<div className="big-sky__agent-controls">
 			<ChatAgentControls />
@@ -308,6 +309,11 @@ const AgentControls = () => {
 						}
 					/>{ ' ' }
 					{ assistantEnabled ? 'Enabled' : 'Disabled' }
+					<FormToggle
+						checked={ stream }
+						onClick={ () => setStream( ! stream ) }
+					/>{ ' ' }
+					{ stream ? 'Stream' : 'Poll' }
 				</span>
 			</BaseControl>
 		</div>

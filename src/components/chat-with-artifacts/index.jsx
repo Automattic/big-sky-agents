@@ -35,6 +35,9 @@ import useInformToolkit from '../../hooks/use-inform-toolkit.js';
 import useAskUserToolkit from '../../hooks/use-ask-user-toolkit.js';
 import AskUserToolkit from '../../ai/toolkits/ask-user-toolkit.js';
 import InformToolkit from '../../ai/toolkits/inform-toolkit.js';
+import { useChat } from '../chat-provider';
+import MessageInput from '../message-input.jsx';
+import MessageContent from '../message-content.jsx';
 
 const GraphAgent = {
 	id: 'graph-example',
@@ -83,6 +86,20 @@ const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
 	// useInformToolkit();
 	useAgentExecutor();
 
+	const {
+		error,
+		enabled,
+		loading,
+		running,
+		toolRunning,
+		assistantMessage,
+		userSay,
+		pendingToolRequests,
+		reset: onResetChat,
+	} = useChat();
+
+	const [ userMessage, setUserMessage ] = useState( '' );
+
 	const { artifacts } = useSelect( ( select ) => {
 		return {
 			artifacts: [], //select( artifactStore ).getArtifacts(),
@@ -101,14 +118,20 @@ const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
 		<>
 			<Flex direction="row" align="stretch" justify="center">
 				<div className="big-sky__agent-column">
-					<AgentUI />
-				</div>
-				<div className="big-sky__current-preview-wrapper">
-					{ selectedPageId ? (
-						<PageSpecPreview pageId={ selectedPageId } />
-					) : (
-						<SiteSpecPreview />
-					) }
+					<ChatHistory />
+					<MessageInput
+						disabled={ ! assistantMessage }
+						value={ userMessage }
+						onChange={ setUserMessage }
+						onSubmit={ ( value, files ) => {
+							userSay( value, files );
+							setUserMessage( '' );
+						} }
+						onCancel={ () => {
+							onResetChat();
+						} }
+						fileUploadEnabled={ true }
+					/>
 				</div>
 
 				{ artifacts?.length > 0 && (
@@ -120,7 +143,6 @@ const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
 					</div>
 				) }
 			</Flex>
-			<ChatHistory />
 			<PopUpControls setApiKey={ onApiKeyChanged } />
 		</>
 	);

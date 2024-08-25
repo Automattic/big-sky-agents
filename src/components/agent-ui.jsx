@@ -75,7 +75,7 @@ function AgentUI() {
 		reset: onResetChat,
 	} = useChat();
 
-	const [ userMessgae, setUserMessage ] = useState( '' );
+	const [ userMessage, setUserMessage ] = useState( '' );
 
 	return (
 		<div
@@ -104,7 +104,7 @@ function AgentUI() {
 					{ assistantMessage && (
 						<AgentMessage message={ assistantMessage }>
 							<MessageInput
-								value={ userMessgae }
+								value={ userMessage }
 								onChange={ setUserMessage }
 								onSubmit={ ( value, files ) => {
 									userSay( value, files );

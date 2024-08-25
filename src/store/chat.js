@@ -1,7 +1,9 @@
 import { createReduxStore, createSelector } from '@wordpress/data';
 import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../ai/chat-model.js';
-import AssistantModel from '../ai/assistant-model.js';
+import AssistantModel, {
+	AssistantModelService,
+} from '../ai/assistant-model.js';
 import { actions as agentsActions } from './agents.js';
 
 export const THREAD_RUN_ACTIVE_STATUSES = [
@@ -64,7 +66,9 @@ const initialState = {
 
 	// Assistants-API-related
 	assistantId: null, // The assistant ID
-	defaultAssistantId: null, // The default assistant ID
+	defaultAssistantId: isLocalStorageAvailable
+		? localStorage.getItem( 'assistantId' )
+		: null, // The default assistant ID
 	openAiOrganization: null,
 	baseUrl: null, // default to null
 	threadId: isLocalStorageAvailable
@@ -772,7 +776,7 @@ const addMessageReducer = ( state, message ) => {
 					thread_id: message.thread_id,
 					state: message.state,
 					content: message.content,
-					created_at: message.created_at,
+					additional_kwargs: message.additional_kwargs,
 				},
 				...state.messages.slice( existingMessageIndex + 1 ),
 			],
@@ -817,19 +821,47 @@ const addMessageReducer = ( state, message ) => {
 				],
 			};
 		}
-		console.error(
+		console.warn(
 			'could not find call message for tool result',
 			message,
-			existingToolCallMessage
-		);
-		throw new Error(
-			`Could not find tool call message for tool call ID ${ message.tool_call_id }`
+			state.messages
 		);
 	}
 
+	// Ensure all messages have created_at
+	if (
+		! message.created_at ||
+		state.messages.some( ( m ) => ! m.created_at )
+	) {
+		console.warn(
+			'All messages must have a created_at timestamp',
+			message,
+			state.messages
+		);
+		// throw new Error( 'All messages must have a created_at timestamp' );
+	}
+
+	// Create a new array with the existing messages and the new message
+	const updatedMessages = [ ...state.messages, message ];
+
+	// Sort the messages by created_at
+	updatedMessages.sort( ( a, b ) => a.created_at - b.created_at );
+
 	return {
 		...state,
-		messages: [ ...state.messages, message ],
+		messages: updatedMessages,
+	};
+};
+
+const setAssistantIdReducer = ( state, assistantId ) => {
+	if ( assistantId ) {
+		localStorage.setItem( 'assistantId', assistantId );
+	} else {
+		localStorage.removeItem( 'assistantId' );
+	}
+	return {
+		...state,
+		assistantId,
 	};
 };
 
@@ -910,6 +942,8 @@ export const reducer = ( state = initialState, action ) => {
 				...state,
 				autoCreateAssistant: action.autoCreateAssistant,
 			};
+		case 'SET_STREAM':
+			return { ...state, stream: action.stream };
 		case 'SET_SERVICE':
 			return { ...state, service: action.service };
 		case 'SET_API_KEY':
@@ -1064,10 +1098,7 @@ export const reducer = ( state = initialState, action ) => {
 
 		// Set Assistant ID
 		case 'SET_ASSISTANT_ID':
-			return {
-				...state,
-				assistantId: action.assistantId,
-			};
+			return setAssistantIdReducer( state, action.assistantId );
 		case 'SET_GRAPH_ID':
 			return {
 				...state,
@@ -1085,16 +1116,18 @@ export const reducer = ( state = initialState, action ) => {
 
 		// Create Assistant
 		case 'CREATE_ASSISTANT_BEGIN_REQUEST':
-			return { ...state, assistantId: null, isCreatingAssistant: true };
+			return {
+				...setAssistantIdReducer( state, null ),
+				isCreatingAssistant: true,
+			};
 		case 'CREATE_ASSISTANT_END_REQUEST':
 			return {
-				...state,
-				assistantId: action.assistantId,
+				...setAssistantIdReducer( state, action.assistantId ),
 				isCreatingAssistant: false,
 			};
 		case 'CREATE_ASSISTANT_ERROR':
 			return {
-				...state,
+				...setAssistantIdReducer( state, null ),
 				isCreatingAssistant: false,
 				error: action.error,
 			};
@@ -1339,6 +1372,11 @@ const getActiveThreadRun = createSelector(
 	( state ) => [ state.threadRuns ]
 );
 
+const shouldSyncToolCalls = ( state ) => {
+	// if the service is langgraph-cloud, return true
+	return state.service === AssistantModelService.LANGGRAPH_CLOUD;
+};
+
 export const selectors = {
 	isEnabled: ( state ) => {
 		return state.enabled;
@@ -1412,6 +1450,7 @@ export const selectors = {
 			requiredToolOutputs.length > 0
 		);
 	},
+	getStream: ( state ) => state.stream,
 	getService: ( state ) => state.service,
 	getModel: ( state ) => state.model,
 	getTemperature: ( state ) => state.temperature,
@@ -1453,6 +1492,11 @@ export const selectors = {
 	getAdditionalMessages: createSelector(
 		( state ) => {
 			// user/assistant messages without a threadId are considered not to have been synced
+			if ( shouldSyncToolCalls( state ) ) {
+				return state.messages.filter(
+					( message ) => ! message.thread_id
+				);
+			}
 			return state.messages.filter(
 				( message ) =>
 					[ 'assistant', 'user' ].includes( message.role ) &&
@@ -1520,7 +1564,7 @@ const addMessage = ( message ) => {
 		message: {
 			...message,
 			id: message.id || uuidv4(),
-			created_at: message.created_at || Date.now(),
+			created_at: message.created_at || Date.now() / 1000,
 		},
 	};
 };
@@ -1580,6 +1624,10 @@ export const actions = {
 		type: 'SET_DEFAULT_ASSISTANT_ID',
 		assistantId,
 	} ),
+	setStream: ( stream ) => ( {
+		type: 'SET_STREAM',
+		stream,
+	} ),
 	setService: ( service ) => ( {
 		type: 'SET_SERVICE',
 		service,
@@ -1623,6 +1671,7 @@ export const actions = {
 	userSay: ( content, image_urls = [] ) =>
 		addMessage( {
 			role: 'user',
+			id: uuidv4(),
 			content: [
 				{
 					type: 'text',

@@ -525,13 +525,68 @@ export class OpenAIAssistantModel extends AssistantModel {
 	}
 }
 
-const filterLangGraphMessages = ( messages ) => {
+const filterLangGraphMessages = ( messages, thread_id ) => {
+	// tool calls are in this weird format:
+	/// "tool_calls": [
+	// {
+	// 	"name": "tavily_search_results_json",
+	// 	"args": {
+	// 	  "query": "books about cheese"
+	// 	},
+	// 	"id": "call_D7bfbEc7K3YeaJkVDakcXEwi",
+	// 	"type": "tool_call"
+	//   }
+	// ],
+
+	console.warn( 'filterLangGraphMessages', messages );
+
 	return messages.map( ( message ) => {
+		let role;
+		if ( message.type === 'tool' ) {
+			role = 'tool';
+		} else if ( message.type === 'ai' ) {
+			role = 'assistant';
+		} else if ( message.type === 'human' ) {
+			role = 'user';
+		} else {
+			role = message.role;
+		}
 		return {
-			...message,
-			role: message.type === 'ai' ? 'assistant' : 'user',
+			id: message.id ?? message.additional_kwargs?.id,
+			thread_id,
+			role,
+			additional_kwargs: message.additional_kwargs,
+			content: message.content,
+			name: message.name,
+			tool_call_id: message.tool_call_id,
+			tool_calls: message.additional_kwargs?.tool_calls,
+			created_at: message.additional_kwargs?.created_at,
 		};
 	} );
+};
+
+const filterOpenAIMessagesForLangGraph = ( message ) => {
+	let langgraphRole;
+	if ( message.role === 'assistant' ) {
+		langgraphRole = 'ai';
+	} else if ( message.role === 'user' ) {
+		langgraphRole = 'human';
+	} else if ( message.role === 'tool' ) {
+		langgraphRole = 'tool';
+	} else {
+		langgraphRole = message.role;
+	}
+	return {
+		id: message.id,
+		content: message.content,
+		// additional_kwargs: {
+		// 	id: message.id, // cache it here because langgraph overwrites this value
+
+		// },
+		created_at: message.created_at ?? Date.now() / 1000,
+		tool_calls: message.tool_calls,
+		type: langgraphRole,
+	};
 };
 
 export class LangGraphCloudAssistantModel extends AssistantModel {
@@ -567,7 +622,12 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 		const getMessagesResponse =
 			await this.getResponse( getMessagesRequest );
 		if ( getMessagesResponse.values.messages ) {
-			return { data: filterLangGraphMessages( getMessagesResponse.values.messages ) };
+			return {
+				data: filterLangGraphMessages(
+					getMessagesResponse.values.messages,
+					threadId
+				),
+			};
 		}
 		return { data: [] };
 	}
@@ -623,7 +683,9 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 			assistant_id: request.assistantId,
 			metadata: {},
 			input: {
-				messages: request.additionalMessages,
+				messages: request.additionalMessages.map(
+					filterOpenAIMessagesForLangGraph
+				),
 			},
 			// config: {
 			// 	configurable: {},
@@ -650,6 +712,138 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 			}
 		);
 		return await this.getResponse( createRunRequest, 'thread.run' );
+	}
+
+	/**
+	 *
+	 * @param {*}      request
+	 * @param {string} request.threadId
+	 * @param {string} request.assistantId
+	 * @param {Array}  request.additionalMessages
+	 * @return {*} An async iterable of events
+	 */
+	async *createThreadRunEventStream( request ) {
+		const headers = this.getHeaders();
+		const url = `${ this.getServiceUrl() }/threads/${
+			request.threadId
+		}/runs/stream`;
+
+		// Using fetch to establish the connection
+		const response = await fetch( url, {
+			method: 'POST',
+			headers,
+			body: JSON.stringify( {
+				stream_mode: [ 'updates' ], // also: values, messages, events, debug
+				assistant_id: request.assistantId,
+				metadata: {},
+				input: {
+					messages: request.additionalMessages.map(
+						filterOpenAIMessagesForLangGraph
+					),
+				},
+			} ),
+		} );
+
+		if ( ! response.ok ) {
+			throw new Error(
+				`Failed to create thread run: ${ response.statusText }`
+			);
+		}
+
+		const reader = response.body.getReader();
+		const decoder = new TextDecoder( 'utf-8' );
+		let buffer = '';
+		let threadRunId = null;
+
+		try {
+			while ( true ) {
+				const { done, value } = await reader.read();
+				if ( done ) {
+					yield {
+						event: 'thread.run.completed',
+						data: {
+							id: threadRunId,
+							status: 'completed',
+						},
+					};
+					break;
+				}
+
+				buffer += decoder.decode( value, { stream: true } );
+
+				// Split the buffer by double newline, accounting for different newline characters
+				const chunks = buffer.split( /\r?\n\r?\n/ );
+
+				// Process all complete chunks
+				for ( let i = 0; i < chunks.length - 1; i++ ) {
+					const chunk = chunks[ i ].trim();
+					if ( chunk ) {
+						const event = this.parseEvent( chunk );
+						if ( event ) {
+							console.warn( 'event', event );
+							if (
+								event.event === 'metadata' &&
+								event.data.run_id
+							) {
+								threadRunId = event.data.run_id;
+								const threadRun = {
+									id: threadRunId,
+									status: 'queued',
+								};
+
+								// simulate OpenAI assistants behavior for now
+								yield {
+									event: 'thread.run.created',
+									data: threadRun,
+								};
+
+								yield {
+									event: 'thread.run.in_progress',
+									data: {
+										...threadRun,
+										status: 'in_progress',
+									},
+								};
+							}
+							if ( event.event === 'updates' ) {
+								if ( event.data.agent?.messages ) {
+									const messages = filterLangGraphMessages(
+										[ event.data.agent.messages ],
+										request.threadId
+									);
+									for ( const message of messages ) {
+										yield {
+											event: 'thread.message.completed',
+											data: message,
+										};
+									}
+								}
+
+								if ( event.data.tools?.messages ) {
+									const messages = filterLangGraphMessages(
+										[ event.data.tools.messages ],
+										request.threadId
+									);
+									for ( const message of messages ) {
+										yield {
+											event: 'thread.message.completed',
+											data: message,
+										};
+									}
+								}
+							}
+						}
+					}
+				}
+
+				// Keep the last (possibly incomplete) chunk in the buffer
+				buffer = chunks[ chunks.length - 1 ];
+			}
+		} catch ( err ) {
+			console.error( 'Stream reading error:', err );
+		} finally {
+			reader.releaseLock();
+		}
 	}
 }
 
