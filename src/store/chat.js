@@ -189,7 +189,15 @@ function filterChatMessage( message ) {
 				...toolCall.function,
 				arguments:
 					typeof toolCall.function?.arguments === 'string'
-						? JSON.parse( toolCall.function.arguments )
+						? ( () => {
+								try {
+									return JSON.parse(
+										toolCall.function.arguments
+									);
+								} catch ( e ) {
+									return toolCall.function.arguments;
+								}
+						  } )()
 						: toolCall.function.arguments,
 			},
 		} ) );
@@ -604,6 +612,13 @@ const createThreadRun =
 								type: 'APPLY_MESSAGE_CONTENT_DELTA',
 								id: event.data.id,
 								content: event.data.delta.content,
+							} );
+							break;
+						// langgraph-specific
+						case 'thread.message.partial':
+							dispatch( {
+								type: 'ADD_MESSAGE',
+								message: event.data,
 							} );
 							break;
 						case 'thread.message.completed':

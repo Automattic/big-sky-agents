@@ -731,7 +731,13 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 			method: 'POST',
 			headers,
 			body: JSON.stringify( {
-				stream_mode: [ 'updates' ], // also: values, messages, events, debug
+				stream_mode: [
+					// 'updates',
+					// 'values',
+					'messages',
+					// 'events',
+					// 'debug',
+				], // also: values, messages, events, debug
 				assistant_id: request.assistantId,
 				metadata: {},
 				input: {
@@ -780,54 +786,36 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 						if ( event ) {
 							console.warn( 'event', event );
 							if (
-								event.event === 'metadata' &&
-								event.data.run_id
+								[
+									'thread.run.created',
+									'thread.run.in_progress',
+								].includes( event.event )
 							) {
-								threadRunId = event.data.run_id;
-								const threadRun = {
-									id: threadRunId,
-									status: 'queued',
-								};
-
-								// simulate OpenAI assistants behavior for now
-								yield {
-									event: 'thread.run.created',
-									data: threadRun,
-								};
-
-								yield {
-									event: 'thread.run.in_progress',
-									data: {
-										...threadRun,
-										status: 'in_progress',
-									},
-								};
+								threadRunId = event.data.id;
+								yield event;
 							}
-							if ( event.event === 'updates' ) {
-								if ( event.data.agent?.messages ) {
-									const messages = filterLangGraphMessages(
-										[ event.data.agent.messages ],
-										request.threadId
-									);
-									for ( const message of messages ) {
-										yield {
-											event: 'thread.message.completed',
-											data: message,
-										};
-									}
+							if ( event.event === 'messages/complete' ) {
+								const messages = filterLangGraphMessages(
+									event.data,
+									request.threadId
+								);
+								for ( const message of messages ) {
+									yield {
+										event: 'thread.message.completed',
+										data: message,
+									};
 								}
-
-								if ( event.data.tools?.messages ) {
-									const messages = filterLangGraphMessages(
-										[ event.data.tools.messages ],
-										request.threadId
-									);
-									for ( const message of messages ) {
-										yield {
-											event: 'thread.message.completed',
-											data: message,
-										};
-									}
+							}
+							if ( event.event === 'messages/partial' ) {
+								const messages = filterLangGraphMessages(
+									event.data,
+									request.threadId
+								);
+								for ( const message of messages ) {
+									yield {
+										event: 'thread.message.partial',
+										data: message,
+									};
 								}
 							}
 						}
