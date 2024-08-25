@@ -143,6 +143,7 @@ const chatMessageToThreadMessage = ( message ) => {
 	}
 
 	return {
+		...message,
 		role: message.role,
 		content: filteredContent,
 		// These aren't supported in Big Sky Agents yet
@@ -1299,7 +1300,7 @@ export const reducer = ( state = initialState, action ) => {
 		case 'GET_THREAD_MESSAGES_END_REQUEST':
 			// use addMessageReducer( state, message ) to add each message to the history
 			// and update the tool_calls
-			action.threadMessages.reverse().forEach( ( m ) => {
+			action.threadMessages.forEach( ( m ) => {
 				// if the message is already in the history, update it
 				state = addMessageReducer( state, m );
 			} );

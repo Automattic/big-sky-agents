@@ -310,16 +310,6 @@ const useAgentExecutor = () => {
 	}, [ error, isAssistantAvailable, createThread, running, threadId ] );
 
 	useEffect( () => {
-		console.warn( '🧠 createThreadRun', {
-			running,
-			instructions,
-			isAssistantAvailable,
-			isThreadRunComplete,
-			isThreadDataLoaded,
-			isAwaitingUserInput,
-			additionalMessages,
-			messages,
-		} );
 		if (
 			! running &&
 			instructions &&
@@ -369,6 +359,16 @@ const useAgentExecutor = () => {
 			messages.length === 0 &&
 			activeAgent
 		) {
+			console.warn( '🧠 setAgentStarted', {
+				isAvailable,
+				toolkitsLoaded,
+				isAwaitingUserInput,
+				running,
+				loading,
+				started,
+				messages,
+				activeAgent,
+			} );
 			setAgentStarted( true );
 			if ( typeof activeAgent.onStart === 'function' ) {
 				activeAgent.onStart( invoke );

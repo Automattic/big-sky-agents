@@ -552,7 +552,7 @@ const filterLangGraphMessages = ( messages, thread_id ) => {
 			role = message.role;
 		}
 		return {
-			id: message.id ?? message.additional_kwargs?.id,
+			id: message.additional_kwargs?.external_id ?? message.id,
 			thread_id,
 			role,
 			additional_kwargs: message.additional_kwargs,
@@ -566,6 +566,7 @@ const filterLangGraphMessages = ( messages, thread_id ) => {
 };
 
 const filterOpenAIMessagesForLangGraph = ( message ) => {
+	console.warn( 'filterOpenAIMessagesForLangGraph', message );
 	let langgraphRole;
 	if ( message.role === 'assistant' ) {
 		langgraphRole = 'ai';
@@ -579,10 +580,7 @@ const filterOpenAIMessagesForLangGraph = ( message ) => {
 	return {
 		id: message.id,
 		content: message.content,
-		// additional_kwargs: {
-		// 	id: message.id, // cache it here because langgraph overwrites this value
-
-		// },
+		external_id: message.id, // cache it here because langgraph overwrites this value
 		created_at: message.created_at ?? Date.now() / 1000,
 		tool_calls: message.tool_calls,
 		type: langgraphRole,
