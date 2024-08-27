@@ -1033,7 +1033,7 @@ export const reducer = ( state = initialState, action ) => {
 				...addMessageReducer( state, {
 					role: 'tool',
 					id: action.id,
-					created_at: action.ts,
+					created_at: action.ts / 1000,
 					tool_call_id: action.tool_call_id,
 					content: action.result,
 				} ),
@@ -1072,7 +1072,7 @@ export const reducer = ( state = initialState, action ) => {
 			state = addMessageReducer( state, {
 				id: action.id,
 				role: 'assistant',
-				created_at: action.ts,
+				created_at: action.ts / 1000,
 				tool_calls: action.tool_calls,
 			} );
 			return state;
