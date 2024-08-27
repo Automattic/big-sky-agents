@@ -183,7 +183,7 @@ const withImplicitOauth = ( Component ) => {
 					user={ wpcomUserInfo }
 					{ ...props }
 				/>
-				<p>
+				<p style={ { textAlign: 'center' } }>
 					<img
 						style={ { width: '24px', verticalAlign: 'middle' } }
 						src={ wpcomUserInfo.avatar_URL }
