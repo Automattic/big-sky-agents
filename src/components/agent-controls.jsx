@@ -120,7 +120,6 @@ const ChatAgentControls = () => {
 		isThreadRunComplete,
 		isAwaitingUserInput,
 		isAvailable,
-		isChatAvailable,
 		isAssistantAvailable,
 	} = useChat();
 	const { reset: onResetToolkit } = useToolkits();

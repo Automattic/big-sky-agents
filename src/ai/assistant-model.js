@@ -95,13 +95,10 @@ class AssistantModel {
 	 */
 	async deleteThread( threadId ) {
 		const headers = this.getHeaders();
-		const deleteThreadRequest = await fetch(
-			`${ this.getServiceUrl() }/threads/${ threadId }`,
-			{
-				method: 'DELETE',
-				headers,
-			}
-		);
+		await fetch( `${ this.getServiceUrl() }/threads/${ threadId }`, {
+			method: 'DELETE',
+			headers,
+		} );
 		// this doesn't return anything in langgraph cloud anyway
 		return {};
 		// return await this.getResponse( deleteThreadRequest );

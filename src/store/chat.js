@@ -378,23 +378,17 @@ const updateThreadMessages =
 	};
 
 const getAssistantModel = ( select ) => {
-	const {
-		service,
-		apiKey,
-		assistantId,
-		feature,
-		openAiOrganization,
-		baseUrl,
-	} = select( ( state ) => {
-		return {
-			service: state.root.service,
-			apiKey: state.root.apiKey,
-			assistantId: selectors.getAssistantId( state.root ),
-			feature: state.root.feature,
-			openAiOrganization: state.root.openAiOrganization,
-			baseUrl: state.root.baseUrl,
-		};
-	} );
+	const { service, apiKey, feature, openAiOrganization, baseUrl } = select(
+		( state ) => {
+			return {
+				service: state.root.service,
+				apiKey: state.root.apiKey,
+				feature: state.root.feature,
+				openAiOrganization: state.root.openAiOrganization,
+				baseUrl: state.root.baseUrl,
+			};
+		}
+	);
 	if ( ! service || ! apiKey ) {
 		console.warn( 'Service and API key are required', {
 			service,
