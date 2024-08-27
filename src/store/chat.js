@@ -370,6 +370,10 @@ const updateThreadMessages =
 			} );
 		} catch ( error ) {
 			console.error( 'Get Thread Messages Error', error );
+			// if the message is "not found", dispatch the delete thread action
+			if ( error.message === 'Not Found' ) {
+				dispatch( deleteThread() );
+			}
 			dispatch( {
 				type: 'GET_THREAD_MESSAGES_ERROR',
 				error: error.message,
@@ -812,37 +816,6 @@ const addMessageReducer = ( state, message ) => {
 			console.warn( 'tool call result already exists', message );
 			return state;
 		}
-
-		// find the tool call message and insert the result after it
-		const existingToolCallMessage = state.messages.find(
-			( callMessage ) => {
-				return (
-					callMessage.role === 'assistant' &&
-					callMessage.tool_calls?.some(
-						( toolCall ) => toolCall.id === message.tool_call_id
-					)
-				);
-			}
-		);
-
-		if ( existingToolCallMessage ) {
-			const index = state.messages.indexOf( existingToolCallMessage );
-			// add this message to the messages list, and remove the existing tool call
-			return {
-				...state,
-				threadMessagesUpdated: Date.now(),
-				messages: [
-					...state.messages.slice( 0, index + 1 ),
-					message,
-					...state.messages.slice( index + 1 ),
-				],
-			};
-		}
-		console.warn(
-			'could not find call message for tool result',
-			message,
-			state.messages
-		);
 	}
 
 	// Ensure all messages have created_at
@@ -855,20 +828,43 @@ const addMessageReducer = ( state, message ) => {
 			message,
 			state.messages
 		);
-		// throw new Error( 'All messages must have a created_at timestamp' );
 	}
-
-	// Create a new array with the existing messages and the new message
-	const updatedMessages = [ ...state.messages, message ];
-
-	// Sort the messages by created_at
-	updatedMessages.sort( ( a, b ) => a.created_at - b.created_at );
 
 	return {
 		...state,
 		threadMessagesUpdated: Date.now(),
-		messages: updatedMessages,
+		messages: sortMessageHistory( [ ...state.messages, message ] ),
 	};
+};
+
+const sortMessageHistory = ( messages ) => {
+	const sortedMessages = [ ...messages ];
+	sortedMessages.sort( ( a, b ) => a.created_at - b.created_at );
+
+	// Move tool messages after their corresponding assistant messages
+	for ( let i = 0; i < sortedMessages.length; i++ ) {
+		if (
+			sortedMessages[ i ].role === 'assistant' &&
+			sortedMessages[ i ].tool_calls &&
+			sortedMessages[ i ].tool_calls.length > 0
+		) {
+			let insertIndex = i + 1;
+			for ( let j = i + 1; j < sortedMessages.length; j++ ) {
+				if (
+					sortedMessages[ j ].role === 'tool' &&
+					sortedMessages[ i ].tool_calls.some(
+						( call ) => call.id === sortedMessages[ j ].tool_call_id
+					)
+				) {
+					const toolMessage = sortedMessages.splice( j, 1 )[ 0 ];
+					sortedMessages.splice( insertIndex, 0, toolMessage );
+					insertIndex++;
+				}
+			}
+		}
+	}
+
+	return sortedMessages;
 };
 
 const setAssistantIdReducer = ( state, assistantId ) => {
