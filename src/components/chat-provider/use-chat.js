@@ -77,6 +77,7 @@ export default function useChat() {
 		setAssistantEnabled,
 		setBaseUrl,
 		setStream,
+		setGraphConfig,
 	} = useDispatch( agentStore );
 
 	const {
@@ -113,6 +114,7 @@ export default function useChat() {
 		isThreadRunAwaitingToolOutputs,
 		feature,
 		stream,
+		graphConfig,
 	} = useSelect( ( select ) => ( {
 		baseUrl: select( agentStore ).getBaseUrl(),
 		autoCreateAssistant: select( agentStore ).isAutoCreateAssistant(),
@@ -148,6 +150,7 @@ export default function useChat() {
 			select( agentStore ).isThreadRunAwaitingToolOutputs(),
 		feature: select( agentStore ).getFeature(),
 		stream: select( agentStore ).getStream(),
+		graphConfig: select( agentStore ).getGraphConfig(),
 	} ) );
 
 	return {
@@ -163,6 +166,10 @@ export default function useChat() {
 		running,
 		// started,
 		error,
+
+		// graph config
+		graphConfig,
+		setGraphConfig,
 
 		// stream
 		stream,

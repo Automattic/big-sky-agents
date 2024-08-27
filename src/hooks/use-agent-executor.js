@@ -15,6 +15,7 @@ const useAgentExecutor = () => {
 	const { activeAgent, started, setAgentStarted } = useAgents();
 
 	const {
+		stream,
 		messages,
 		isAssistantAvailable,
 		isChatAvailable,
@@ -39,7 +40,7 @@ const useAgentExecutor = () => {
 		updateThreadRun,
 		updateThreadRuns,
 		updateThreadMessages,
-		addMessageToThread,
+		// addMessageToThread,
 		threadRunsUpdated,
 		threadMessagesUpdated,
 		toolOutputs,
@@ -115,6 +116,7 @@ const useAgentExecutor = () => {
 		}
 	}, [
 		isAssistantAvailable,
+		stream,
 		running,
 		threadId,
 		threadMessagesUpdated,

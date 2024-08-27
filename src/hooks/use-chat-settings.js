@@ -1,6 +1,7 @@
 import { useEffect } from '@wordpress/element';
 import useChat from '../components/chat-provider/use-chat.js';
 import useAgents from '../components/agents-provider/use-agents.js';
+import { deepEqual } from '../eval/evaluators/utils.js';
 
 const useChatSettings = ( options ) => {
 	const {
@@ -21,6 +22,8 @@ const useChatSettings = ( options ) => {
 		setAutoCreateAssistant,
 		stream,
 		setStream,
+		setGraphConfig,
+		graphConfig,
 	} = useChat();
 	const { activeAgentId, setActiveAgent } = useAgents();
 
@@ -100,6 +103,15 @@ const useChatSettings = ( options ) => {
 			setBaseUrl( options.baseUrl );
 		}
 	}, [ baseUrl, options.baseUrl, setBaseUrl ] );
+
+	useEffect( () => {
+		if (
+			options.graphConfig &&
+			! deepEqual( options.graphConfig, graphConfig )
+		) {
+			setGraphConfig( options.graphConfig );
+		}
+	}, [ graphConfig, options.graphConfig, setGraphConfig ] );
 };
 
 export default useChatSettings;

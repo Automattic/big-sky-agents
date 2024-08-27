@@ -538,7 +538,7 @@ const filterLangGraphMessages = ( messages, thread_id ) => {
 	//   }
 	// ],
 
-	console.warn( 'filterLangGraphMessages', messages );
+	// console.warn( 'filterLangGraphMessages', messages );
 
 	return messages.map( ( message ) => {
 		let role;
@@ -718,6 +718,7 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 	 * @param {string} request.threadId
 	 * @param {string} request.assistantId
 	 * @param {Array}  request.additionalMessages
+	 * @param {Object} request.graphConfig
 	 * @return {*} An async iterable of events
 	 */
 	async *createThreadRunEventStream( request ) {
@@ -744,6 +745,9 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 					messages: request.additionalMessages.map(
 						filterOpenAIMessagesForLangGraph
 					),
+				},
+				config: {
+					configurable: request.graphConfig,
 				},
 			} ),
 		} );
@@ -784,7 +788,7 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 					if ( chunk ) {
 						const event = this.parseEvent( chunk );
 						if ( event ) {
-							console.warn( 'event', event );
+							console.debug( 'event', event );
 							if (
 								[
 									'thread.run.created',

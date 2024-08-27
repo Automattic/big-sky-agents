@@ -7,37 +7,25 @@ import { Flex } from '@wordpress/components';
 /**
  * Internal dependencies
  */
-import SiteSpecPreview from '../site-spec-preview.jsx';
-import PageSpecPreview from '../page-spec-preview.jsx';
-import AgentUI from '../agent-ui.jsx';
 import ChatHistory from './chat-history.jsx';
 import ArtifactList from './artifact-list.jsx';
-// import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
 import useChatSettings from '../../hooks/use-chat-settings.js';
 import {
 	AssistantModelService,
 	AssistantModelType,
 } from '../../ai/assistant-model.js';
-import {
-	WAPUU_AGENT_ID,
-	WAPUU_ASSISTANT_ID,
-} from '../../ai/agents/wapuu-agent.js';
 import '../chat-demo-ui.scss';
 import PopUpControls from '../popup-controls.jsx';
-import { AgentsProvider, useAgent } from '../agents-provider';
-// import useAnalyzeSiteToolkit from '../hooks/use-analyze-site-toolkit.js';
 import useAgentExecutor from '../../hooks/use-agent-executor.js';
 import useAgentsToolkit from '../../hooks/use-agents-toolkit.js';
-// import useSiteToolkit from '../hooks/use-site-toolkit.js';
-// import useGoalToolkit from '../hooks/use-goal-toolkit.js';
-import useInformToolkit from '../../hooks/use-inform-toolkit.js';
-import useAskUserToolkit from '../../hooks/use-ask-user-toolkit.js';
 import AskUserToolkit from '../../ai/toolkits/ask-user-toolkit.js';
 import InformToolkit from '../../ai/toolkits/inform-toolkit.js';
 import { useChat } from '../chat-provider';
 import MessageInput from '../message-input.jsx';
-import MessageContent from '../message-content.jsx';
+import { useAgent } from '../agents-provider';
+// for now, hack this in
+import withImplicitOauth from '../../hooks/with-implicit-oauth.jsx';
 
 const GraphAgent = {
 	id: 'graph-example',
@@ -60,11 +48,19 @@ const GraphAgent = {
  * @param {Object}   root0                 The component props.
  * @param {string}   root0.baseUrl         The base URL for the LangGraph Cloud API.
  * @param {string}   root0.apiKey          The token to use for the chat model.
+ * @param {Object}   root0.user            The user object.
+ * @param {string}   root0.wpcomOauthToken The WP.com OAuth token.
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  *                                         -->
  */
-const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
-	const [ selectedPageId, setSelectedArtifactId ] = useState( null );
+const ChatWithArtifacts = ( {
+	baseUrl,
+	apiKey,
+	onApiKeyChanged,
+	user,
+	wpcomOauthToken,
+} ) => {
+	const [ selectedArtifactId, setSelectedArtifactId ] = useState( null );
 
 	useChatSettings( {
 		apiKey,
@@ -75,28 +71,18 @@ const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
 		baseUrl,
 		initialAgentId: GraphAgent.id,
 		autoCreateAssistant: true,
+		graphConfig: {
+			user_id: user?.ID,
+			user_name: user?.display_name,
+			wpcom_access_token: wpcomOauthToken,
+		},
 	} );
 
 	useAgent( GraphAgent );
 	useAgentsToolkit();
-	// useAnalyzeSiteToolkit( { apiKey } );
-	// useSiteToolkit( { pageId: selectedPageId } );
-	// useAskUserToolkit();
-	// useGoalToolkit();
-	// useInformToolkit();
 	useAgentExecutor();
 
-	const {
-		error,
-		enabled,
-		loading,
-		running,
-		toolRunning,
-		assistantMessage,
-		userSay,
-		pendingToolRequests,
-		reset: onResetChat,
-	} = useChat();
+	const { assistantMessage, userSay, reset: onResetChat } = useChat();
 
 	const [ userMessage, setUserMessage ] = useState( '' );
 
@@ -118,7 +104,7 @@ const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
 		<>
 			<Flex direction="row" align="stretch" justify="center">
 				<div className="big-sky__agent-column">
-					<ChatHistory />
+					<ChatHistory avatarUrl={ user?.avatar_URL } />
 					<MessageInput
 						disabled={ ! assistantMessage }
 						value={ userMessage }
@@ -147,5 +133,7 @@ const ChatWithArtifacts = ( { baseUrl, apiKey, onApiKeyChanged } ) => {
 		</>
 	);
 };
+
+export const WPCOMChatWithArtifacts = withImplicitOauth( ChatWithArtifacts );
 
 export default ChatWithArtifacts;

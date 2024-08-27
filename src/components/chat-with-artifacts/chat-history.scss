@@ -19,6 +19,11 @@
 		max-width: 80%;
 		overflow-x: auto;
 
+		a {
+			color: #fff;
+			text-decoration: underline;
+		}
+
 		.big-sky__messages-message-date {
 			opacity: 0.8;
 			font-size: 12px;

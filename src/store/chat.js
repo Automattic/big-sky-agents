@@ -58,6 +58,9 @@ const initialState = {
 	apiKey: null,
 	stream: true,
 
+	// graph related (langgraph)
+	graphConfig: {},
+
 	// Chat-API-related
 	messages: [],
 	tool_calls: [],
@@ -356,7 +359,6 @@ const updateThreadMessages =
 			const threadMessagesResponse =
 				await getAssistantModel( select ).getThreadMessages( threadId );
 
-			console.warn( 'threadMessagesResponse', threadMessagesResponse );
 			// if there are messages, then set started to true
 			if ( threadMessagesResponse.data.length ) {
 				dispatch( agentsActions.setAgentStarted( true ) );
@@ -495,19 +497,25 @@ const deleteThread =
 const createThreadRun =
 	( request ) =>
 	async ( { select, dispatch } ) => {
-		const { stream, threadId, assistantId, model, temperature } = select(
-			( state ) => ( {
-				threadId: state.root.threadId,
-				assistantId: selectors.getAssistantId( state.root ),
-				model: state.root.model,
-				temperature: state.root.temperature,
-				stream: state.root.stream,
-			} )
-		);
+		const {
+			graphConfig,
+			stream,
+			threadId,
+			assistantId,
+			model,
+			temperature,
+		} = select( ( state ) => ( {
+			threadId: state.root.threadId,
+			assistantId: selectors.getAssistantId( state.root ),
+			model: state.root.model,
+			temperature: state.root.temperature,
+			stream: state.root.stream,
+			graphConfig: state.root.graphConfig,
+		} ) );
 		dispatch( { type: 'RUN_THREAD_BEGIN_REQUEST' } );
 		try {
 			if ( stream ) {
-				console.warn( 'streaming' );
+				// console.warn( 'streaming' );
 				const threadRunEventStream = await getAssistantModel(
 					select
 				).createThreadRunEventStream( {
@@ -520,9 +528,10 @@ const createThreadRun =
 					assistantId,
 					model,
 					temperature,
+					graphConfig,
 				} );
 				for await ( const event of threadRunEventStream ) {
-					console.warn( 'event', event );
+					// console.warn( 'event', event );
 					switch ( event.event ) {
 						// Thread Run updates
 						case 'thread.run.created':
@@ -781,6 +790,7 @@ const addMessageReducer = ( state, message ) => {
 		// update thread_id if present
 		return {
 			...state,
+			threadMessagesUpdated: Date.now(),
 			messages: [
 				...state.messages.slice( 0, existingMessageIndex ),
 				{
@@ -826,6 +836,7 @@ const addMessageReducer = ( state, message ) => {
 			// add this message to the messages list, and remove the existing tool call
 			return {
 				...state,
+				threadMessagesUpdated: Date.now(),
 				messages: [
 					...state.messages.slice( 0, index + 1 ),
 					message,
@@ -861,6 +872,7 @@ const addMessageReducer = ( state, message ) => {
 
 	return {
 		...state,
+		threadMessagesUpdated: Date.now(),
 		messages: updatedMessages,
 	};
 };
@@ -1111,6 +1123,11 @@ export const reducer = ( state = initialState, action ) => {
 		// Set Assistant ID
 		case 'SET_ASSISTANT_ID':
 			return setAssistantIdReducer( state, action.assistantId );
+		case 'SET_GRAPH_CONFIG':
+			return {
+				...state,
+				graphConfig: action.graphConfig,
+			};
 		case 'SET_GRAPH_ID':
 			return {
 				...state,
@@ -1535,6 +1552,7 @@ export const selectors = {
 	),
 	getThreadId: ( state ) => state.threadId,
 	getAssistantId: ( state ) => state.assistantId ?? state.defaultAssistantId,
+	getGraphConfig: ( state ) => state.graphConfig,
 	getGraphId: ( state ) => state.graphId,
 	updateThreadRuns: ( state ) => state.threadRun,
 	getThreadRunsUpdated: ( state ) => state.threadRunsUpdated,
@@ -1627,6 +1645,10 @@ export const actions = {
 	setAssistantId: ( assistantId ) => ( {
 		type: 'SET_ASSISTANT_ID',
 		assistantId,
+	} ),
+	setGraphConfig: ( graphConfig ) => ( {
+		type: 'SET_GRAPH_CONFIG',
+		graphConfig,
 	} ),
 	setGraphId: ( graphId ) => ( {
 		type: 'SET_GRAPH_ID',
