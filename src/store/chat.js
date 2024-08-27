@@ -1,7 +1,9 @@
 import { createReduxStore, createSelector } from '@wordpress/data';
 import uuidv4 from '../utils/uuid.js';
 import ChatModel from '../ai/chat-model.js';
-import AssistantModel from '../ai/assistant-model.js';
+import AssistantModel, {
+	AssistantModelService,
+} from '../ai/assistant-model.js';
 import { actions as agentsActions } from './agents.js';
 
 export const THREAD_RUN_ACTIVE_STATUSES = [
@@ -46,6 +48,7 @@ const initialState = {
 	error: null,
 	enabled: true,
 	assistantEnabled: false,
+	autoCreateAssistant: false,
 	feature: 'unknown',
 
 	// LLM related
@@ -53,6 +56,10 @@ const initialState = {
 	service: null,
 	temperature: 0.1,
 	apiKey: null,
+	stream: true,
+
+	// graph related (langgraph)
+	graphConfig: {},
 
 	// Chat-API-related
 	messages: [],
@@ -62,8 +69,11 @@ const initialState = {
 
 	// Assistants-API-related
 	assistantId: null, // The assistant ID
-	defaultAssistantId: null, // The default assistant ID
+	defaultAssistantId: isLocalStorageAvailable
+		? localStorage.getItem( 'assistantId' )
+		: null, // The default assistant ID
 	openAiOrganization: null,
+	baseUrl: null, // default to null
 	threadId: isLocalStorageAvailable
 		? localStorage.getItem( 'threadId' )
 		: null, // The assistant thread ID
@@ -71,6 +81,7 @@ const initialState = {
 	threadRunsUpdated: null, // The last time the thread runs were updated
 	threadMessagesUpdated: null, // The last time Assistant messages were updated
 	syncedThreadMessagesAt: null, // The last time synced messages were updated
+	isCreatingAssistant: false,
 	isCreatingThread: false,
 	isDeletingThread: false,
 	isCreatingThreadRun: false,
@@ -135,11 +146,8 @@ const chatMessageToThreadMessage = ( message ) => {
 	}
 
 	return {
-		role: message.role,
+		...message,
 		content: filteredContent,
-		// These aren't supported in Big Sky Agents yet
-		// attachments: message.attachments,
-		// metadata: message.metadata,
 	};
 };
 
@@ -184,7 +192,15 @@ function filterChatMessage( message ) {
 				...toolCall.function,
 				arguments:
 					typeof toolCall.function?.arguments === 'string'
-						? JSON.parse( toolCall.function.arguments )
+						? ( () => {
+								try {
+									return JSON.parse(
+										toolCall.function.arguments
+									);
+								} catch ( e ) {
+									return toolCall.function.arguments;
+								}
+						  } )()
 						: toolCall.function.arguments,
 			},
 		} ) );
@@ -293,6 +309,7 @@ const updateThreadRuns =
 		try {
 			const threadRunsResponse =
 				await getAssistantModel( select ).getThreadRuns( threadId );
+
 			dispatch( {
 				type: 'GET_THREAD_RUNS_END_REQUEST',
 				ts: Date.now(),
@@ -341,6 +358,7 @@ const updateThreadMessages =
 		try {
 			const threadMessagesResponse =
 				await getAssistantModel( select ).getThreadMessages( threadId );
+
 			// if there are messages, then set started to true
 			if ( threadMessagesResponse.data.length ) {
 				dispatch( agentsActions.setAgentStarted( true ) );
@@ -352,6 +370,10 @@ const updateThreadMessages =
 			} );
 		} catch ( error ) {
 			console.error( 'Get Thread Messages Error', error );
+			// if the message is "not found", dispatch the delete thread action
+			if ( error.message === 'Not Found' ) {
+				dispatch( deleteThread() );
+			}
 			dispatch( {
 				type: 'GET_THREAD_MESSAGES_ERROR',
 				error: error.message,
@@ -360,28 +382,56 @@ const updateThreadMessages =
 	};
 
 const getAssistantModel = ( select ) => {
-	const { service, apiKey, assistantId, feature, openAiOrganization } =
-		select( ( state ) => {
+	const { service, apiKey, feature, openAiOrganization, baseUrl } = select(
+		( state ) => {
 			return {
 				service: state.root.service,
 				apiKey: state.root.apiKey,
-				assistantId: selectors.getAssistantId( state.root ),
 				feature: state.root.feature,
 				openAiOrganization: state.root.openAiOrganization,
+				baseUrl: state.root.baseUrl,
 			};
-		} );
-	if ( ! service || ! apiKey || ! assistantId ) {
-		console.warn( 'Service, API key and assistant ID are required', {
+		}
+	);
+	if ( ! service || ! apiKey ) {
+		console.warn( 'Service and API key are required', {
 			service,
 			apiKey,
-			assistantId,
 		} );
-		throw new Error( 'Service, API key and assistant ID are required' );
+		throw new Error( 'Service and API key are required' );
 	}
 	return AssistantModel.getInstance( service, apiKey, feature, null, {
 		openAiOrganization,
+		baseUrl,
 	} );
 };
+
+/**
+ * Create a new assistant.
+ *
+ * @param {string} graphId The ID of the graph to use for the assistant.
+ */
+const createAssistant =
+	( { graphId } ) =>
+	async ( { select, dispatch } ) => {
+		dispatch( { type: 'CREATE_ASSISTANT_BEGIN_REQUEST' } );
+		try {
+			const assistant = await getAssistantModel( select ).createAssistant(
+				{ graph_id: graphId }
+			);
+			console.warn( 'createAssistant', assistant );
+			dispatch( {
+				type: 'CREATE_ASSISTANT_END_REQUEST',
+				assistantId: assistant.assistant_id,
+			} );
+		} catch ( error ) {
+			console.error( 'Create assistant error', error );
+			dispatch( {
+				type: 'CREATE_ASSISTANT_ERROR',
+				error: error.message,
+			} );
+		}
+	};
 
 /**
  * Create a new thread.
@@ -393,12 +443,16 @@ const createThread =
 		try {
 			const threadResponse =
 				await getAssistantModel( select ).createThread();
+
+			// langgraph threads have thread_id but not id
+			const threadId = threadResponse.thread_id || threadResponse.id;
+
 			dispatch( {
 				type: 'CREATE_THREAD_END_REQUEST',
-				threadId: threadResponse.id,
+				threadId,
 			} );
 		} catch ( error ) {
-			console.error( 'Thread error', error );
+			console.error( 'Create thread error', error );
 			dispatch( { type: 'CREATE_THREAD_ERROR', error: error.message } );
 		}
 	};
@@ -416,7 +470,7 @@ const deleteThread =
 			dispatch( { type: 'DELETE_THREAD_END_REQUEST' } );
 			dispatch( agentsActions.setAgentStarted( false ) );
 		} catch ( error ) {
-			console.error( 'Thread error', error );
+			console.error( 'Delete thread error', error );
 			dispatch( { type: 'DELETE_THREAD_ERROR', error: error.message } );
 		}
 	};
@@ -441,34 +495,178 @@ const deleteThread =
 const createThreadRun =
 	( request ) =>
 	async ( { select, dispatch } ) => {
-		const { threadId, assistantId, model, temperature } = select(
-			( state ) => ( {
-				threadId: state.root.threadId,
-				assistantId: selectors.getAssistantId( state.root ),
-				model: state.root.model,
-				temperature: state.root.temperature,
-			} )
-		);
+		const {
+			graphConfig,
+			stream,
+			threadId,
+			assistantId,
+			model,
+			temperature,
+		} = select( ( state ) => ( {
+			threadId: state.root.threadId,
+			assistantId: selectors.getAssistantId( state.root ),
+			model: state.root.model,
+			temperature: state.root.temperature,
+			stream: state.root.stream,
+			graphConfig: state.root.graphConfig,
+		} ) );
 		dispatch( { type: 'RUN_THREAD_BEGIN_REQUEST' } );
 		try {
-			const createThreadRunResponse = await getAssistantModel(
-				select
-			).createThreadRun( {
-				...request,
-				additionalMessages: request.additionalMessages?.map(
-					chatMessageToThreadMessage
-				),
-				threadId,
-				assistantId,
-				model,
-				temperature,
-			} );
-			dispatch( {
-				type: 'RUN_THREAD_END_REQUEST',
-				ts: Date.now(),
-				additionalMessages: request.additionalMessages,
-				threadRun: createThreadRunResponse,
-			} );
+			if ( stream ) {
+				// console.warn( 'streaming' );
+				const threadRunEventStream = await getAssistantModel(
+					select
+				).createThreadRunEventStream( {
+					...request,
+					additionalMessages: request.additionalMessages?.map(
+						chatMessageToThreadMessage
+					),
+					stream,
+					threadId,
+					assistantId,
+					model,
+					temperature,
+					graphConfig,
+				} );
+				for await ( const event of threadRunEventStream ) {
+					// console.warn( 'event', event );
+					switch ( event.event ) {
+						// Thread Run updates
+						case 'thread.run.created':
+							// dispatch( {
+							// 	type: 'GET_THREAD_RUN_BEGIN_REQUEST',
+							// } );
+							break;
+						case 'thread.run.queued':
+						case 'thread.run.in_progress':
+							dispatch( {
+								type: 'UPDATE_THREAD_RUN',
+								threadRun: event.data,
+								ts: Date.now(),
+							} );
+							break;
+						case 'thread.run.requires_action':
+							dispatch( {
+								type: 'UPDATE_THREAD_RUN',
+								ts: Date.now(),
+								additionalMessages: request.additionalMessages,
+								threadRun: event.data,
+							} );
+							break;
+						case 'thread.run.completed':
+							dispatch( {
+								type: 'RUN_THREAD_END_REQUEST',
+								ts: Date.now(),
+								additionalMessages: request.additionalMessages,
+								threadRun: event.data,
+							} );
+							break;
+
+						// Step (aka Tool Call) updates
+						case 'thread.run.step.created':
+							break;
+						case 'thread.run.step.in_progress':
+						case 'thread.run.step.completed':
+							if (
+								event.data.step_details.type === 'tool_calls'
+							) {
+								const tool_calls = event.data.tool_calls;
+								tool_calls?.forEach( ( toolCall ) => {
+									dispatch( {
+										type: 'ADD_MESSAGE_TOOL_CALL',
+										ts: Date.now(),
+										id: `tc:${ toolCall.id }`,
+										tool_call_id: toolCall.id,
+									} );
+								} );
+							}
+							break;
+
+						// console.warn(
+						// 	'thread.run.step.completed',
+						// 	event.data
+						// );
+						// break;
+						case 'thread.run.step.delta':
+							// console.warn( 'run step delta', event.data );
+							// if (
+							// 	event.data.delta.step_details.type ===
+							// 	'tool_calls'
+							// ) {
+							// 	event.data.delta.step_details.tool_calls.forEach(
+							// 		( toolCall ) => {
+							// 			dispatch( {
+							// 				type: 'TOOL_UPDATE_REQUEST',
+							// 				ts: Date.now(),
+							// 				delta: toolCall,
+							// 			} );
+							// 		}
+							// 	);
+							// }
+							break;
+
+						case 'thread.message.created':
+							dispatch( {
+								type: 'ADD_MESSAGE',
+								message: event.data,
+							} );
+							break;
+						case 'thread.message.in_progress':
+							break;
+						case 'thread.message.delta':
+							console.warn( 'delta', event.data );
+							dispatch( {
+								type: 'APPLY_MESSAGE_CONTENT_DELTA',
+								id: event.data.id,
+								content: event.data.delta.content,
+							} );
+							break;
+						// langgraph-specific
+						case 'thread.message.partial':
+							dispatch( {
+								type: 'ADD_MESSAGE',
+								message: event.data,
+							} );
+							break;
+						case 'thread.message.completed':
+							dispatch( {
+								type: 'ADD_MESSAGE',
+								message: event.data,
+							} );
+							break;
+						case 'done':
+							console.log( 'DONE' );
+							// dispatch( {
+							// 	type: 'RUN_THREAD_END_REQUEST',
+							// 	ts: Date.now(),
+							// 	additionalMessages: request.additionalMessages,
+							// 	threadRun: event.data,
+							// } );
+							break;
+						default:
+							console.log( event );
+					}
+				}
+			} else {
+				const createThreadRunResponse = await getAssistantModel(
+					select
+				).createThreadRun( {
+					...request,
+					additionalMessages: request.additionalMessages?.map(
+						chatMessageToThreadMessage
+					),
+					threadId,
+					assistantId,
+					model,
+					temperature,
+				} );
+				dispatch( {
+					type: 'RUN_THREAD_END_REQUEST',
+					ts: Date.now(),
+					additionalMessages: request.additionalMessages,
+					threadRun: createThreadRunResponse,
+				} );
+			}
 		} catch ( error ) {
 			console.error( 'Run Thread Error', error );
 			return dispatch( {
@@ -566,10 +764,10 @@ const addMessageToThread =
 				message: newMessage,
 			} );
 		} catch ( error ) {
-			console.error( 'Create thread error', error );
+			console.error( 'Add message to thread error', error );
 			return {
 				type: 'CREATE_THREAD_MESSAGE_ERROR',
-				error: error.message,
+				error: error.message ?? error,
 			};
 		}
 	};
@@ -590,11 +788,15 @@ const addMessageReducer = ( state, message ) => {
 		// update thread_id if present
 		return {
 			...state,
+			threadMessagesUpdated: Date.now(),
 			messages: [
 				...state.messages.slice( 0, existingMessageIndex ),
 				{
 					...state.messages[ existingMessageIndex ],
 					thread_id: message.thread_id,
+					state: message.state,
+					content: message.content,
+					additional_kwargs: message.additional_kwargs,
 				},
 				...state.messages.slice( existingMessageIndex + 1 ),
 			],
@@ -614,44 +816,66 @@ const addMessageReducer = ( state, message ) => {
 			console.warn( 'tool call result already exists', message );
 			return state;
 		}
+	}
 
-		// find the tool call message and insert the result after it
-		const existingToolCallMessage = state.messages.find(
-			( callMessage ) => {
-				return (
-					callMessage.role === 'assistant' &&
-					callMessage.tool_calls?.some(
-						( toolCall ) => toolCall.id === message.tool_call_id
-					)
-				);
-			}
-		);
-
-		if ( existingToolCallMessage ) {
-			const index = state.messages.indexOf( existingToolCallMessage );
-			// add this message to the messages list, and remove the existing tool call
-			return {
-				...state,
-				messages: [
-					...state.messages.slice( 0, index + 1 ),
-					message,
-					...state.messages.slice( index + 1 ),
-				],
-			};
-		}
-		console.error(
-			'could not find call message for tool result',
+	// Ensure all messages have created_at
+	if (
+		! message.created_at ||
+		state.messages.some( ( m ) => ! m.created_at )
+	) {
+		console.warn(
+			'All messages must have a created_at timestamp',
 			message,
-			existingToolCallMessage
-		);
-		throw new Error(
-			`Could not find tool call message for tool call ID ${ message.tool_call_id }`
+			state.messages
 		);
 	}
 
 	return {
 		...state,
-		messages: [ ...state.messages, message ],
+		threadMessagesUpdated: Date.now(),
+		messages: sortMessageHistory( [ ...state.messages, message ] ),
+	};
+};
+
+const sortMessageHistory = ( messages ) => {
+	const sortedMessages = [ ...messages ];
+	sortedMessages.sort( ( a, b ) => a.created_at - b.created_at );
+
+	// Move tool messages after their corresponding assistant messages
+	for ( let i = 0; i < sortedMessages.length; i++ ) {
+		if (
+			sortedMessages[ i ].role === 'assistant' &&
+			sortedMessages[ i ].tool_calls &&
+			sortedMessages[ i ].tool_calls.length > 0
+		) {
+			let insertIndex = i + 1;
+			for ( let j = i + 1; j < sortedMessages.length; j++ ) {
+				if (
+					sortedMessages[ j ].role === 'tool' &&
+					sortedMessages[ i ].tool_calls.some(
+						( call ) => call.id === sortedMessages[ j ].tool_call_id
+					)
+				) {
+					const toolMessage = sortedMessages.splice( j, 1 )[ 0 ];
+					sortedMessages.splice( insertIndex, 0, toolMessage );
+					insertIndex++;
+				}
+			}
+		}
+	}
+
+	return sortedMessages;
+};
+
+const setAssistantIdReducer = ( state, assistantId ) => {
+	if ( assistantId ) {
+		localStorage.setItem( 'assistantId', assistantId );
+	} else {
+		localStorage.removeItem( 'assistantId' );
+	}
+	return {
+		...state,
+		assistantId,
 	};
 };
 
@@ -678,6 +902,48 @@ const setThreadIdReducer = ( state, threadId ) => {
 	};
 };
 
+const updateThreadRunReducer = ( state, action ) => {
+	const threadRun = action.threadRun;
+
+	// now optionally update with tool call messages
+	// this simulates an assistant request with tool calls coming from the Chat Completion API
+	// conversely, when we get a tool call response via TOOL_END_REQUEST, we need to send that to the threads/$threadId/runs/$runId/submit_tool_outputs endpoint
+	if (
+		threadRun.status === 'requires_action' &&
+		threadRun.required_action.type === 'submit_tool_outputs'
+	) {
+		const tool_calls =
+			threadRun.required_action.submit_tool_outputs.tool_calls;
+
+		// add an assistant message with the tool calls
+		state = addMessageReducer( state, {
+			id: `tr:${ threadRun.id }`,
+			role: 'assistant',
+			created_at: action.ts,
+			tool_calls,
+		} );
+	}
+	const existingThreadRunIndex = state.threadRuns.findIndex(
+		( tr ) => tr.id === threadRun.id
+	);
+	if ( existingThreadRunIndex !== -1 ) {
+		state = {
+			...state,
+			threadRuns: [
+				...state.threadRuns.slice( 0, existingThreadRunIndex ),
+				threadRun,
+				...state.threadRuns.slice( existingThreadRunIndex + 1 ),
+			],
+		};
+	} else {
+		state = {
+			...state,
+			threadRuns: [ action.threadRun, ...state.threadRuns ],
+		};
+	}
+	return state;
+};
+
 export const reducer = ( state = initialState, action ) => {
 	switch ( action.type ) {
 		// LLM-related
@@ -685,10 +951,19 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, enabled: action.enabled };
 		case 'SET_ASSISTANT_ENABLED':
 			return { ...state, assistantEnabled: action.enabled };
+		case 'SET_AUTO_CREATE_ASSISTANT':
+			return {
+				...state,
+				autoCreateAssistant: action.autoCreateAssistant,
+			};
+		case 'SET_STREAM':
+			return { ...state, stream: action.stream };
 		case 'SET_SERVICE':
 			return { ...state, service: action.service };
 		case 'SET_API_KEY':
 			return { ...state, apiKey: action.apiKey };
+		case 'SET_BASE_URL':
+			return { ...state, baseUrl: action.baseUrl };
 		case 'SET_FEATURE':
 			return { ...state, feature: action.feature };
 		case 'SET_MODEL':
@@ -721,12 +996,40 @@ export const reducer = ( state = initialState, action ) => {
 				],
 				isToolRunning: true,
 			};
+		case 'TOOL_CALL_UPDATE':
+			return {
+				...state,
+				tool_calls: state.tool_calls.map( ( tc ) => {
+					if ( tc.id === action.tool_call_id ) {
+						return {
+							...tc,
+							...action.update,
+						};
+					}
+					return tc;
+				} ),
+			};
+		case 'TOOL_UPDATE_REQUEST':
+			return {
+				...state,
+				tool_calls: state.tool_calls.map( ( tc ) => {
+					if ( tc.id === action.delta.id ) {
+						return {
+							name: action.delta.function.name ?? tc.name,
+							arguments: action.delta.function.arguments
+								? tc.arguments + action.delta.function.arguments
+								: tc.arguments,
+						};
+					}
+					return tc;
+				} ),
+			};
 		case 'TOOL_END_REQUEST':
 			return {
 				...addMessageReducer( state, {
 					role: 'tool',
 					id: action.id,
-					created_at: action.ts,
+					created_at: action.ts / 1000,
 					tool_call_id: action.tool_call_id,
 					content: action.result,
 				} ),
@@ -760,6 +1063,46 @@ export const reducer = ( state = initialState, action ) => {
 		// Add and Clear Messages
 		case 'ADD_MESSAGE':
 			return addMessageReducer( state, action.message );
+		case 'ADD_MESSAGE_TOOL_CALL':
+			// add an assistant message with the tool calls
+			state = addMessageReducer( state, {
+				id: action.id,
+				role: 'assistant',
+				created_at: action.ts / 1000,
+				tool_calls: action.tool_calls,
+			} );
+			return state;
+		case 'APPLY_MESSAGE_CONTENT_DELTA':
+			const id = action.id;
+			const contentDelta = action.content;
+			const messageIndex = state.messages.findIndex(
+				( message ) => message.id === id
+			);
+			if ( messageIndex === -1 ) {
+				return state;
+			}
+			const message = { ...state.messages[ messageIndex ] };
+			console.warn( 'got message', message );
+			contentDelta.forEach( ( delta ) => {
+				const { index, text } = delta;
+				if ( message.content[ index ] ) {
+					message.content[ index ].text += text.value;
+				} else {
+					message.content.push( {
+						type: 'text',
+						text: text.value,
+					} );
+				}
+			} );
+			return {
+				...state,
+				messages: [
+					...state.messages.slice( 0, messageIndex ),
+					message,
+					...state.messages.slice( messageIndex + 1 ),
+				],
+			};
+
 		case 'SET_MESSAGES':
 			return { ...state, messages: action.messages };
 
@@ -769,9 +1112,16 @@ export const reducer = ( state = initialState, action ) => {
 
 		// Set Assistant ID
 		case 'SET_ASSISTANT_ID':
+			return setAssistantIdReducer( state, action.assistantId );
+		case 'SET_GRAPH_CONFIG':
 			return {
 				...state,
-				assistantId: action.assistantId,
+				graphConfig: action.graphConfig,
+			};
+		case 'SET_GRAPH_ID':
+			return {
+				...state,
+				graphId: action.graphId,
 			};
 		case 'SET_DEFAULT_ASSISTANT_ID':
 			return {
@@ -782,6 +1132,24 @@ export const reducer = ( state = initialState, action ) => {
 		// Set Thread
 		case 'SET_THREAD_ID':
 			return setThreadIdReducer( state, action.threadId );
+
+		// Create Assistant
+		case 'CREATE_ASSISTANT_BEGIN_REQUEST':
+			return {
+				...setAssistantIdReducer( state, null ),
+				isCreatingAssistant: true,
+			};
+		case 'CREATE_ASSISTANT_END_REQUEST':
+			return {
+				...setAssistantIdReducer( state, action.assistantId ),
+				isCreatingAssistant: false,
+			};
+		case 'CREATE_ASSISTANT_ERROR':
+			return {
+				...setAssistantIdReducer( state, null ),
+				isCreatingAssistant: false,
+				error: action.error,
+			};
 
 		// Create Thread
 		case 'CREATE_THREAD_BEGIN_REQUEST':
@@ -803,7 +1171,11 @@ export const reducer = ( state = initialState, action ) => {
 				isDeletingThread: false,
 			};
 		case 'DELETE_THREAD_ERROR':
-			return { ...state, isDeletingThread: false, error: action.error };
+			return {
+				...setThreadIdReducer( state, null ),
+				isDeletingThread: false,
+				error: action.error,
+			};
 
 		// Create Thread Message
 		case 'CREATE_THREAD_MESSAGE_BEGIN_REQUEST':
@@ -813,11 +1185,11 @@ export const reducer = ( state = initialState, action ) => {
 			return {
 				...state,
 				messages: [
-					...state.messages.map( ( message ) => {
-						if ( message.id === action.originalMessageId ) {
+					...state.messages.map( ( m ) => {
+						if ( m.id === action.originalMessageId ) {
 							return filterChatMessage( action.message );
 						}
-						return message;
+						return m;
 					} ),
 				],
 				syncedThreadMessagesAt: action.ts,
@@ -835,25 +1207,31 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, isCreatingThreadRun: true };
 		case 'RUN_THREAD_END_REQUEST':
 			const additionalMessageIds =
-				action.additionalMessages?.map( ( message ) => message.id ) ??
-				[];
+				action.additionalMessages?.map( ( m ) => m.id ) ?? [];
+
+			const updatedThreadRuns = state.threadRuns.map( ( tr ) => {
+				if ( tr.id === action.threadRun.id ) {
+					return action.threadRun;
+				}
+				return tr;
+			} );
 
 			return {
 				...state,
 				// for each message in action.additionalMessages, find them by id and set message.thread_id to action.threadRun.id
-				messages: state.messages.map( ( message ) => {
-					if ( additionalMessageIds.includes( message.id ) ) {
+				messages: state.messages.map( ( m ) => {
+					if ( additionalMessageIds.includes( m.id ) ) {
 						return {
-							...message,
+							...m,
 							thread_id: state.threadId,
 						};
 					}
-					return message;
+					return m;
 				} ),
 				isCreatingThreadRun: false,
 				threadRunsUpdated: action.ts,
 				threadMessagesUpdated: null, // force reloading of chat history
-				threadRuns: [ action.threadRun, ...state.threadRuns ],
+				threadRuns: updatedThreadRuns,
 			};
 		case 'RUN_THREAD_ERROR':
 			return {
@@ -887,46 +1265,8 @@ export const reducer = ( state = initialState, action ) => {
 		case 'GET_THREAD_RUN_BEGIN_REQUEST':
 			return { ...state, isFetchingThreadRun: true };
 		case 'GET_THREAD_RUN_END_REQUEST':
-			// check if action.threadRun has pending tool calls
-			const { threadRun } = action;
-
-			// now optionally update with tool call messages
-			// this simulates an assistant request with tool calls coming from the Chat Completion API
-			// conversely, when we get a tool call response via TOOL_END_REQUEST, we need to send that to the threads/$threadId/runs/$runId/submit_tool_outputs endpoint
-			if (
-				threadRun.status === 'requires_action' &&
-				threadRun.required_action.type === 'submit_tool_outputs'
-			) {
-				const tool_calls =
-					threadRun.required_action.submit_tool_outputs.tool_calls;
-
-				// add an assistant message with the tool calls
-				state = addMessageReducer( state, {
-					role: 'assistant',
-					created_at: action.ts,
-					tool_calls,
-				} );
-			}
-			const existingThreadRunIndex = state.threadRuns.findIndex(
-				( tr ) => tr.id === action.threadRun.id
-			);
-			if ( existingThreadRunIndex !== -1 ) {
-				state = {
-					...state,
-					threadRuns: [
-						...state.threadRuns.slice( 0, existingThreadRunIndex ),
-						action.threadRun,
-						...state.threadRuns.slice( existingThreadRunIndex + 1 ),
-					],
-				};
-			} else {
-				state = {
-					...state,
-					threadRuns: [ action.threadRun, ...state.threadRuns ],
-				};
-			}
 			return {
-				...state,
+				...updateThreadRunReducer( state, action ),
 				isFetchingThreadRun: false,
 			};
 		case 'GET_THREAD_RUN_ERROR':
@@ -936,6 +1276,8 @@ export const reducer = ( state = initialState, action ) => {
 				error: action.error,
 			};
 
+		case 'UPDATE_THREAD_RUN':
+			return updateThreadRunReducer( state, action );
 		// Get All Thread Runs
 		case 'GET_THREAD_RUNS_BEGIN_REQUEST':
 			return { ...state, isFetchingThreadRuns: true };
@@ -965,7 +1307,7 @@ export const reducer = ( state = initialState, action ) => {
 			};
 		case 'GET_THREAD_RUNS_ERROR':
 			return {
-				...state,
+				...setThreadIdReducer( state, null ),
 				isFetchingThreadRuns: false,
 				error: action.error,
 			};
@@ -976,9 +1318,9 @@ export const reducer = ( state = initialState, action ) => {
 		case 'GET_THREAD_MESSAGES_END_REQUEST':
 			// use addMessageReducer( state, message ) to add each message to the history
 			// and update the tool_calls
-			action.threadMessages.reverse().forEach( ( message ) => {
+			action.threadMessages.forEach( ( m ) => {
 				// if the message is already in the history, update it
-				state = addMessageReducer( state, message );
+				state = addMessageReducer( state, m );
 			} );
 			return {
 				...state,
@@ -1049,12 +1391,20 @@ const getActiveThreadRun = createSelector(
 	( state ) => [ state.threadRuns ]
 );
 
+const shouldSyncToolCalls = ( state ) => {
+	// if the service is langgraph-cloud, return true
+	return state.service === AssistantModelService.LANGGRAPH_CLOUD;
+};
+
 export const selectors = {
 	isEnabled: ( state ) => {
 		return state.enabled;
 	},
 	isAssistantEnabled: ( state ) => {
 		return state.assistantEnabled;
+	},
+	isAutoCreateAssistant: ( state ) => {
+		return state.autoCreateAssistant;
 	},
 	isLoading: ( state ) =>
 		state.assistantEnabled && ! selectors.isThreadDataLoaded( state ),
@@ -1068,6 +1418,7 @@ export const selectors = {
 		state.isFetchingThreadRuns ||
 		state.isCreatingThreadMessage ||
 		state.isFetchingThreadMessages ||
+		state.isCreatingAssistant ||
 		state.isSubmittingToolOutputs,
 	isServiceAvailable: ( state ) =>
 		state.enabled && ! state.error && state.service && state.apiKey,
@@ -1118,11 +1469,13 @@ export const selectors = {
 			requiredToolOutputs.length > 0
 		);
 	},
+	getStream: ( state ) => state.stream,
 	getService: ( state ) => state.service,
 	getModel: ( state ) => state.model,
 	getTemperature: ( state ) => state.temperature,
 	getFeature: ( state ) => state.feature,
 	getApiKey: ( state ) => state.apiKey,
+	getBaseUrl: ( state ) => state.baseUrl,
 	getError: ( state ) => state.error,
 	getMessages: ( state ) => state.messages,
 	getAssistantMessage: ( state ) => {
@@ -1158,6 +1511,11 @@ export const selectors = {
 	getAdditionalMessages: createSelector(
 		( state ) => {
 			// user/assistant messages without a threadId are considered not to have been synced
+			if ( shouldSyncToolCalls( state ) ) {
+				return state.messages.filter(
+					( message ) => ! message.thread_id
+				);
+			}
 			return state.messages.filter(
 				( message ) =>
 					[ 'assistant', 'user' ].includes( message.role ) &&
@@ -1184,6 +1542,8 @@ export const selectors = {
 	),
 	getThreadId: ( state ) => state.threadId,
 	getAssistantId: ( state ) => state.assistantId ?? state.defaultAssistantId,
+	getGraphConfig: ( state ) => state.graphConfig,
+	getGraphId: ( state ) => state.graphId,
 	updateThreadRuns: ( state ) => state.threadRun,
 	getThreadRunsUpdated: ( state ) => state.threadRunsUpdated,
 	getThreadMessagesUpdated: ( state ) => state.threadMessagesUpdated,
@@ -1224,7 +1584,7 @@ const addMessage = ( message ) => {
 		message: {
 			...message,
 			id: message.id || uuidv4(),
-			created_at: message.created_at || Date.now(),
+			created_at: message.created_at || Date.now() / 1000,
 		},
 	};
 };
@@ -1264,6 +1624,10 @@ export const actions = {
 			enabled,
 		};
 	},
+	setAutoCreateAssistant: ( autoCreateAssistant ) => ( {
+		type: 'SET_AUTO_CREATE_ASSISTANT',
+		autoCreateAssistant,
+	} ),
 	setThreadId: ( threadId ) => ( {
 		type: 'SET_THREAD_ID',
 		threadId,
@@ -1272,9 +1636,21 @@ export const actions = {
 		type: 'SET_ASSISTANT_ID',
 		assistantId,
 	} ),
+	setGraphConfig: ( graphConfig ) => ( {
+		type: 'SET_GRAPH_CONFIG',
+		graphConfig,
+	} ),
+	setGraphId: ( graphId ) => ( {
+		type: 'SET_GRAPH_ID',
+		graphId,
+	} ),
 	setDefaultAssistantId: ( assistantId ) => ( {
 		type: 'SET_DEFAULT_ASSISTANT_ID',
 		assistantId,
+	} ),
+	setStream: ( stream ) => ( {
+		type: 'SET_STREAM',
+		stream,
 	} ),
 	setService: ( service ) => ( {
 		type: 'SET_SERVICE',
@@ -1283,6 +1659,10 @@ export const actions = {
 	setApiKey: ( apiKey ) => ( {
 		type: 'SET_API_KEY',
 		apiKey,
+	} ),
+	setBaseUrl: ( baseUrl ) => ( {
+		type: 'SET_BASE_URL',
+		baseUrl,
 	} ),
 	setFeature: ( feature ) => ( {
 		type: 'SET_FEATURE',
@@ -1300,6 +1680,7 @@ export const actions = {
 	setToolResult,
 	submitToolOutputs,
 	runChatCompletion,
+	createAssistant,
 	createThread,
 	deleteThread,
 	createThreadRun,
@@ -1314,6 +1695,7 @@ export const actions = {
 	userSay: ( content, image_urls = [] ) =>
 		addMessage( {
 			role: 'user',
+			id: uuidv4(),
 			content: [
 				{
 					type: 'text',

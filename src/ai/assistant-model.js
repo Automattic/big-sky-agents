@@ -3,11 +3,13 @@ export const AssistantModelService = {
 	WPCOM_OPENAI: 'wpcom-openai', // the wpcom OpenAI proxy
 	WPCOM: 'wpcom', // WPCOM native
 	OPENAI: 'openai',
+	LANGGRAPH_CLOUD: 'langgraph-cloud',
 	getAvailable: () => {
 		const services = [
 			AssistantModelService.WPCOM_OPENAI,
 			AssistantModelService.WPCOM,
 			AssistantModelService.OPENAI,
+			AssistantModelService.LANGGRAPH_CLOUD,
 		];
 		return services;
 	},
@@ -53,12 +55,14 @@ class AssistantModel {
 		openAiOrganization,
 		feature,
 		sessionId,
+		baseUrl,
 	} ) {
 		this.apiKey = apiKey;
 		this.assistantId = assistantId;
 		this.openAiOrganization = openAiOrganization;
 		this.feature = feature;
 		this.sessionId = sessionId;
+		this.baseUrl = baseUrl;
 	}
 
 	getApiKey() {
@@ -91,18 +95,18 @@ class AssistantModel {
 	 */
 	async deleteThread( threadId ) {
 		const headers = this.getHeaders();
-		const deleteThreadRequest = await fetch(
-			`${ this.getServiceUrl() }/threads/${ threadId }`,
-			{
-				method: 'DELETE',
-				headers,
-			}
-		);
-		return await this.getResponse( deleteThreadRequest );
+		await fetch( `${ this.getServiceUrl() }/threads/${ threadId }`, {
+			method: 'DELETE',
+			headers,
+		} );
+		// this doesn't return anything in langgraph cloud anyway
+		return {};
+		// return await this.getResponse( deleteThreadRequest );
 	}
 
 	/**
-	 * This is not currently used anywhere but kept here for reference.
+	 * This is currently only used by langgraph.
+	 * https://a8c-graphs-57eb16cdfddc56528ca96d5463f5f983.default.us.langgraph.app/docs#tag/assistantscreate/POST/assistants
 	 *
 	 * @param {*}      request
 	 * @param {string} request.name
@@ -171,6 +175,118 @@ class AssistantModel {
 			}
 		);
 		return await this.getResponse( createRunRequest, 'thread.run' );
+	}
+
+	/**
+	 *
+	 * @param {*}      request
+	 * @param {string} request.threadId
+	 * @param {string} request.assistantId
+	 * @param {string} request.model
+	 * @param {string} request.instructions
+	 * @param {string} request.additionalInstructions
+	 * @param {Array}  request.additionalMessages
+	 * @param {Array}  request.tools
+	 * @param {Array}  request.metadata
+	 * @param {number} request.temperature
+	 * @param {number} request.maxPromptTokens
+	 * @param {number} request.maxCompletionTokens
+	 * @param {Object} request.truncationStrategy
+	 * @param {Object} request.responseFormat
+	 * @return {*} An async iterable of events
+	 */
+	async *createThreadRunEventStream( request ) {
+		const headers = this.getHeaders();
+		const url = `${ this.getServiceUrl() }/threads/${
+			request.threadId
+		}/runs`;
+
+		// Using fetch to establish the connection
+		const response = await fetch( url, {
+			method: 'POST',
+			headers,
+			body: JSON.stringify( {
+				stream: true,
+				assistant_id: request.assistantId,
+				instructions: request.instructions,
+				additional_instructions: request.additionalInstructions,
+				additional_messages: request.additionalMessages,
+				tools: request.tools,
+				model: request.model ?? this.getDefaultModel(),
+				temperature:
+					request.temperature ?? this.getDefaultTemperature(),
+				max_completion_tokens:
+					request.maxCompletionTokens ?? this.getDefaultMaxTokens(),
+				truncation_strategy: request.truncationStrategy,
+				response_format: request.responseFormat,
+			} ),
+		} );
+
+		if ( ! response.ok ) {
+			throw new Error(
+				`Failed to create thread run: ${ response.statusText }`
+			);
+		}
+
+		const reader = response.body.getReader();
+		const decoder = new TextDecoder( 'utf-8' );
+		let buffer = '';
+
+		try {
+			while ( true ) {
+				const { done, value } = await reader.read();
+				if ( done ) {
+					break;
+				}
+
+				buffer += decoder.decode( value, { stream: true } );
+
+				let boundary = buffer.indexOf( '\n\n' );
+				while ( boundary !== -1 ) {
+					const chunk = buffer.slice( 0, boundary );
+					buffer = buffer.slice( boundary + 2 );
+
+					const event = this.parseEvent( chunk );
+					if ( event ) {
+						yield event;
+					}
+
+					boundary = buffer.indexOf( '\n\n' );
+				}
+			}
+		} catch ( err ) {
+			console.error( 'Stream reading error:', err );
+		} finally {
+			reader.releaseLock();
+		}
+	}
+
+	parseEvent( chunk ) {
+		const lines = chunk.split( '\n' );
+		let event = null;
+		let data = '';
+
+		for ( const line of lines ) {
+			if ( line.startsWith( 'event:' ) ) {
+				event = line.slice( 6 ).trim();
+			} else if ( line.startsWith( 'data:' ) ) {
+				data += line.slice( 5 ).trim();
+			}
+		}
+
+		if ( event && data ) {
+			if ( data === '[DONE]' ) {
+				return { event: 'done' };
+			}
+			try {
+				const parsedData = JSON.parse( data );
+				return { event, data: parsedData };
+			} catch ( e ) {
+				console.error( 'Error parsing JSON message:', e, data );
+			}
+		}
+
+		return null;
 	}
 
 	async createThreadMessage( threadId, message ) {
@@ -249,6 +365,8 @@ class AssistantModel {
 			throw new Error( 'Bad request' );
 		} else if ( request.status === 401 ) {
 			throw new Error( 'Unauthorized' );
+		} else if ( request.status === 404 ) {
+			throw new Error( 'Not found' );
 		} else if ( request.status === 429 ) {
 			throw new Error( 'Rate limit exceeded' );
 		} else if ( request.status === 500 ) {
@@ -256,7 +374,8 @@ class AssistantModel {
 			throw new Error( `Internal server error: ${ response }` );
 		}
 
-		const response = await request.json();
+		const response =
+			request.method !== 'DELETE' ? await request.json() : {};
 
 		if ( response.code && ! response.id ) {
 			throw new Error( `${ response.code } ${ response.message ?? '' }` );
@@ -300,7 +419,11 @@ class AssistantModel {
 	}
 
 	getServiceUrl() {
-		throw new Error( 'Not implemented' );
+		// throw an error if the baseUrl is not set
+		if ( ! this.baseUrl ) {
+			throw new Error( 'Base URL is not set' );
+		}
+		return this.baseUrl;
 	}
 
 	static getInstance( service, apiKey, feature, sessionId, opts = {} ) {
@@ -321,6 +444,13 @@ class AssistantModel {
 				} );
 			case AssistantModelService.WPCOM_OPENAI:
 				return new WPCOMOpenAIProxyAssistantModel( {
+					apiKey,
+					feature,
+					sessionId,
+					...opts,
+				} );
+			case AssistantModelService.LANGGRAPH_CLOUD:
+				return new LangGraphCloudAssistantModel( {
 					apiKey,
 					feature,
 					sessionId,
@@ -389,6 +519,318 @@ export class OpenAIAssistantModel extends AssistantModel {
 
 	getServiceUrl() {
 		return 'https://api.openai.com/v1';
+	}
+}
+
+const filterLangGraphMessages = ( messages, thread_id ) => {
+	// tool calls are in this weird format:
+	/// "tool_calls": [
+	// {
+	// 	"name": "tavily_search_results_json",
+	// 	"args": {
+	// 	  "query": "books about cheese"
+	// 	},
+	// 	"id": "call_D7bfbEc7K3YeaJkVDakcXEwi",
+	// 	"type": "tool_call"
+	//   }
+	// ],
+
+	// console.warn( 'filterLangGraphMessages', messages );
+
+	return messages.map( ( message ) => {
+		let role;
+		if ( message.type === 'tool' ) {
+			role = 'tool';
+		} else if ( message.type === 'ai' ) {
+			role = 'assistant';
+		} else if ( message.type === 'human' ) {
+			role = 'user';
+		} else {
+			role = message.role;
+		}
+		return {
+			id: message.additional_kwargs?.external_id ?? message.id,
+			thread_id,
+			role,
+			additional_kwargs: message.additional_kwargs,
+			content: message.content,
+			name: message.name,
+			tool_call_id: message.tool_call_id,
+			tool_calls: message.additional_kwargs?.tool_calls,
+			created_at: message.additional_kwargs?.created_at,
+		};
+	} );
+};
+
+const filterOpenAIMessagesForLangGraph = ( message ) => {
+	console.warn( 'filterOpenAIMessagesForLangGraph', message );
+	let langgraphRole;
+	if ( message.role === 'assistant' ) {
+		langgraphRole = 'ai';
+	} else if ( message.role === 'user' ) {
+		langgraphRole = 'human';
+	} else if ( message.role === 'tool' ) {
+		langgraphRole = 'tool';
+	} else {
+		langgraphRole = message.role;
+	}
+	return {
+		id: message.id,
+		content: message.content,
+		external_id: message.id, // cache it here because langgraph overwrites this value
+		created_at: message.created_at ?? Date.now() / 1000,
+		tool_calls: message.tool_calls,
+		type: langgraphRole,
+	};
+};
+
+export class LangGraphCloudAssistantModel extends AssistantModel {
+	getHeaders() {
+		const headers = super.getHeaders();
+		if ( this.apiKey ) {
+			headers[ 'X-Api-Key' ] = this.apiKey;
+			// delete Authorization
+			delete headers.Authorization;
+		}
+		return headers;
+	}
+
+	getDefaultModel() {
+		return AssistantModelType.GPT_4O;
+	}
+
+	// override getresponse to ignore the expectedObject
+	async getResponse( request ) {
+		return await super.getResponse( request );
+	}
+
+	// langgraph threads use state rather than messages
+	async getThreadMessages( threadId ) {
+		const headers = this.getHeaders();
+		const getMessagesRequest = await fetch(
+			`${ this.getServiceUrl() }/threads/${ threadId }/state`,
+			{
+				method: 'GET',
+				headers,
+			}
+		);
+		const getMessagesResponse =
+			await this.getResponse( getMessagesRequest );
+		if ( getMessagesResponse.values.messages ) {
+			return {
+				data: filterLangGraphMessages(
+					getMessagesResponse.values.messages,
+					threadId
+				),
+			};
+		}
+		return { data: [] };
+	}
+
+	async getThreadRuns( threadId ) {
+		// get super.getThreadRuns and return { data: the response }
+		const threadRunsResponse = await super.getThreadRuns( threadId );
+		return { data: threadRunsResponse };
+	}
+
+	/**
+	 * This is currently only used by langgraph.
+	 * https://a8c-graphs-57eb16cdfddc56528ca96d5463f5f983.default.us.langgraph.app/docs#tag/assistantscreate/POST/assistants
+	 *
+	 * @param {*}      request
+	 * @param {string} request.name
+	 * @param {string} request.description
+	 * @param {Object} request.graph_id
+	 * @param {Object} request.config
+	 * @param {Object} request.metadata
+	 * @return {Promise<Object>} The response object
+	 */
+	async createAssistant( request ) {
+		const langgraphRequest = {
+			graph_id: request.graph_id,
+			config: {
+				configurable: {
+					// TODO: add configurable fields
+					user_id: 1,
+				},
+			},
+			metadata: {
+				name: request.name,
+				description: request.description,
+				...request.metadata,
+			},
+		};
+		const headers = this.getHeaders( request );
+		const createAssistantRequest = await fetch(
+			`${ this.getServiceUrl() }/assistants`,
+			{
+				method: 'POST',
+				headers,
+				body: JSON.stringify( langgraphRequest ),
+			}
+		);
+		return await this.getResponse( createAssistantRequest, 'assistant' );
+	}
+
+	// createThreadRun has an 'input' param in langgraph cloud
+	async createThreadRun( request ) {
+		const params = {
+			assistant_id: request.assistantId,
+			metadata: {},
+			input: {
+				messages: request.additionalMessages.map(
+					filterOpenAIMessagesForLangGraph
+				),
+			},
+			// config: {
+			// 	configurable: {},
+			// },
+			// instructions: request.instructions,
+			// additional_instructions: request.additionalInstructions,
+			// additional_messages: request.additionalMessages,
+			// tools: request.tools,
+			// model: request.model ?? this.getDefaultModel(),
+			// temperature: request.temperature ?? this.getDefaultTemperature(),
+			// max_completion_tokens:
+			// 	request.maxCompletionTokens ?? this.getDefaultMaxTokens(),
+			// truncation_strategy: request.truncationStrategy,
+			// response_format: request.responseFormat,
+		};
+		// console.warn( 'createThreadRun', params );
+		const headers = this.getHeaders();
+		const createRunRequest = await fetch(
+			`${ this.getServiceUrl() }/threads/${ request.threadId }/runs`,
+			{
+				method: 'POST',
+				headers,
+				body: JSON.stringify( params ),
+			}
+		);
+		return await this.getResponse( createRunRequest, 'thread.run' );
+	}
+
+	/**
+	 *
+	 * @param {*}      request
+	 * @param {string} request.threadId
+	 * @param {string} request.assistantId
+	 * @param {Array}  request.additionalMessages
+	 * @param {Object} request.graphConfig
+	 * @return {*} An async iterable of events
+	 */
+	async *createThreadRunEventStream( request ) {
+		const headers = this.getHeaders();
+		const url = `${ this.getServiceUrl() }/threads/${
+			request.threadId
+		}/runs/stream`;
+
+		// Using fetch to establish the connection
+		const response = await fetch( url, {
+			method: 'POST',
+			headers,
+			body: JSON.stringify( {
+				stream_mode: [
+					// 'updates',
+					// 'values',
+					'messages',
+					// 'events',
+					// 'debug',
+				], // also: values, messages, events, debug
+				assistant_id: request.assistantId,
+				metadata: {},
+				input: {
+					messages: request.additionalMessages.map(
+						filterOpenAIMessagesForLangGraph
+					),
+				},
+				config: {
+					configurable: request.graphConfig,
+				},
+			} ),
+		} );
+
+		if ( ! response.ok ) {
+			throw new Error(
+				`Failed to create thread run: ${ response.statusText }`
+			);
+		}
+
+		const reader = response.body.getReader();
+		const decoder = new TextDecoder( 'utf-8' );
+		let buffer = '';
+		let threadRunId = null;
+
+		try {
+			while ( true ) {
+				const { done, value } = await reader.read();
+				if ( done ) {
+					yield {
+						event: 'thread.run.completed',
+						data: {
+							id: threadRunId,
+							status: 'completed',
+						},
+					};
+					break;
+				}
+
+				buffer += decoder.decode( value, { stream: true } );
+
+				// Split the buffer by double newline, accounting for different newline characters
+				const chunks = buffer.split( /\r?\n\r?\n/ );
+
+				// Process all complete chunks
+				for ( let i = 0; i < chunks.length - 1; i++ ) {
+					const chunk = chunks[ i ].trim();
+					if ( chunk ) {
+						const event = this.parseEvent( chunk );
+						if ( event ) {
+							console.debug( 'event', event );
+							if (
+								[
+									'thread.run.created',
+									'thread.run.in_progress',
+								].includes( event.event )
+							) {
+								threadRunId = event.data.id;
+								yield event;
+							}
+							if ( event.event === 'messages/complete' ) {
+								const messages = filterLangGraphMessages(
+									event.data,
+									request.threadId
+								);
+								for ( const message of messages ) {
+									yield {
+										event: 'thread.message.completed',
+										data: message,
+									};
+								}
+							}
+							if ( event.event === 'messages/partial' ) {
+								const messages = filterLangGraphMessages(
+									event.data,
+									request.threadId
+								);
+								for ( const message of messages ) {
+									yield {
+										event: 'thread.message.partial',
+										data: message,
+									};
+								}
+							}
+						}
+					}
+				}
+
+				// Keep the last (possibly incomplete) chunk in the buffer
+				buffer = chunks[ chunks.length - 1 ];
+			}
+		} catch ( err ) {
+			console.error( 'Stream reading error:', err );
+		} finally {
+			reader.releaseLock();
+		}
 	}
 }
 

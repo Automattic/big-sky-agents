@@ -50,6 +50,8 @@ export default function useChat() {
 	const {
 		reset,
 		setEnabled,
+		setAutoCreateAssistant,
+		setGraphId,
 		call,
 		userSay,
 		clearMessages,
@@ -59,6 +61,7 @@ export default function useChat() {
 		deleteThread,
 		setAssistantId,
 		setDefaultAssistantId,
+		createAssistant,
 		createThreadRun,
 		updateThreadRun,
 		updateThreadRuns,
@@ -72,9 +75,14 @@ export default function useChat() {
 		setApiKey,
 		setFeature,
 		setAssistantEnabled,
+		setBaseUrl,
+		setStream,
+		setGraphConfig,
 	} = useDispatch( agentStore );
 
 	const {
+		baseUrl,
+		autoCreateAssistant,
 		assistantEnabled,
 		service,
 		temperature,
@@ -92,6 +100,7 @@ export default function useChat() {
 		toolOutputs,
 		threadId,
 		assistantId,
+		graphId,
 		threadRun,
 		threadRunsUpdated,
 		threadMessagesUpdated,
@@ -104,7 +113,11 @@ export default function useChat() {
 		isAwaitingUserInput,
 		isThreadRunAwaitingToolOutputs,
 		feature,
+		stream,
+		graphConfig,
 	} = useSelect( ( select ) => ( {
+		baseUrl: select( agentStore ).getBaseUrl(),
+		autoCreateAssistant: select( agentStore ).isAutoCreateAssistant(),
 		assistantEnabled: select( agentStore ).isAssistantEnabled(),
 		service: select( agentStore ).getService(),
 		temperature: select( agentStore ).getTemperature(),
@@ -122,6 +135,7 @@ export default function useChat() {
 		toolOutputs: select( agentStore ).getToolOutputs(),
 		threadId: select( agentStore ).getThreadId(),
 		assistantId: select( agentStore ).getAssistantId(),
+		graphId: select( agentStore ).getGraphId(),
 		threadRun: select( agentStore ).getActiveThreadRun(),
 		threadRunsUpdated: select( agentStore ).getThreadRunsUpdated(),
 		threadMessagesUpdated: select( agentStore ).getThreadMessagesUpdated(),
@@ -135,6 +149,8 @@ export default function useChat() {
 		isThreadRunAwaitingToolOutputs:
 			select( agentStore ).isThreadRunAwaitingToolOutputs(),
 		feature: select( agentStore ).getFeature(),
+		stream: select( agentStore ).getStream(),
+		graphConfig: select( agentStore ).getGraphConfig(),
 	} ) );
 
 	return {
@@ -143,10 +159,21 @@ export default function useChat() {
 		setEnabled,
 		assistantEnabled,
 		setAssistantEnabled,
+		createAssistant,
+		autoCreateAssistant,
+		setAutoCreateAssistant,
 		loading,
 		running,
 		// started,
 		error,
+
+		// graph config
+		graphConfig,
+		setGraphConfig,
+
+		// stream
+		stream,
+		setStream,
 
 		// auth
 		apiKey,
@@ -161,6 +188,8 @@ export default function useChat() {
 		setModel,
 		service,
 		setService,
+		baseUrl,
+		setBaseUrl,
 		temperature,
 		setTemperature,
 
@@ -187,6 +216,8 @@ export default function useChat() {
 		threadId,
 		deleteThread,
 		assistantId,
+		graphId,
+		setGraphId,
 		threadRun,
 		threadRunsUpdated,
 		threadMessagesUpdated,

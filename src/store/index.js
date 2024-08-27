@@ -54,6 +54,12 @@ import {
 	selectors as sectionSelectors,
 } from './page-sections.js';
 
+import {
+	actions as wpcomActions,
+	reducer as wpcomReducer,
+	selectors as wpcomSelectors,
+} from './wpcom.js';
+
 const store = createReduxStore( 'big-sky-agents', {
 	reducer: combineReducers( {
 		agents: agentsReducer,
@@ -65,6 +71,7 @@ const store = createReduxStore( 'big-sky-agents', {
 		design: designReducer,
 		pages: pageReducer,
 		pageSections: sectionReducer,
+		wpcom: wpcomReducer,
 	} ),
 	actions: {
 		...createNamespacedActions( 'agents', agentsActions ),
@@ -76,6 +83,7 @@ const store = createReduxStore( 'big-sky-agents', {
 		...createNamespacedActions( 'design', designActions ),
 		...createNamespacedActions( 'pages', pageActions ),
 		...createNamespacedActions( 'pageSections', sectionActions ),
+		...createNamespacedActions( 'wpcom', wpcomActions ),
 	},
 	selectors: {
 		...createNamespacedSelectors( 'agents', agentsSelectors ),
@@ -87,6 +95,7 @@ const store = createReduxStore( 'big-sky-agents', {
 		...createNamespacedSelectors( 'design', designSelectors ),
 		...createNamespacedSelectors( 'pages', pageSelectors ),
 		...createNamespacedSelectors( 'pageSections', sectionSelectors ),
+		...createNamespacedSelectors( 'wpcom', wpcomSelectors ),
 	},
 } );
 

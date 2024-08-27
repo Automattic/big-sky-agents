@@ -41,6 +41,7 @@ const FilePreview = ( { name, url, onRemove } ) => {
 function MessageInput( {
 	value,
 	label,
+	disabled,
 	placeholder,
 	onSubmit,
 	onChange,
@@ -121,6 +122,7 @@ function MessageInput( {
 						onClick={ handleSubmit }
 					/>
 				}
+				disabled={ disabled }
 				placeholder={ placeholder }
 				value={ value }
 				onChange={ onChange }

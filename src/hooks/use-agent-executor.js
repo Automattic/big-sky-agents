@@ -15,6 +15,7 @@ const useAgentExecutor = () => {
 	const { activeAgent, started, setAgentStarted } = useAgents();
 
 	const {
+		stream,
 		messages,
 		isAssistantAvailable,
 		isChatAvailable,
@@ -26,6 +27,7 @@ const useAgentExecutor = () => {
 		isThreadRunInProgress,
 		isThreadRunComplete,
 		isThreadDataLoaded,
+		graphId,
 		threadId,
 		enabled,
 		assistantEnabled,
@@ -38,7 +40,7 @@ const useAgentExecutor = () => {
 		updateThreadRun,
 		updateThreadRuns,
 		updateThreadMessages,
-		addMessageToThread,
+		// addMessageToThread,
 		threadRunsUpdated,
 		threadMessagesUpdated,
 		toolOutputs,
@@ -48,8 +50,11 @@ const useAgentExecutor = () => {
 		setToolResult,
 		additionalMessages,
 		assistantId,
+		setGraphId,
 		setAssistantId,
 		agentSay,
+		autoCreateAssistant,
+		createAssistant,
 	} = useChat();
 
 	const { tools, invoke, hasToolkits, context, callbacks } = useToolkits();
@@ -77,6 +82,27 @@ const useAgentExecutor = () => {
 		updateThreadRuns,
 	] );
 
+	// create assistant if it doesn't exist
+	useEffect( () => {
+		if (
+			enabled &&
+			! running &&
+			autoCreateAssistant &&
+			! assistantId &&
+			graphId
+		) {
+			// TODO: decouple this from langgraph cloud's peculiarities
+			createAssistant( { graphId } );
+		}
+	}, [
+		enabled,
+		running,
+		autoCreateAssistant,
+		assistantId,
+		createAssistant,
+		graphId,
+	] );
+
 	// update messages if they haven't been updated
 	useEffect( () => {
 		if (
@@ -90,6 +116,7 @@ const useAgentExecutor = () => {
 		}
 	}, [
 		isAssistantAvailable,
+		stream,
 		running,
 		threadId,
 		threadMessagesUpdated,
@@ -209,24 +236,24 @@ const useAgentExecutor = () => {
 	] );
 
 	// if there are pendingThreadMessages, send them using addMessageToThread
-	useEffect( () => {
-		if (
-			isAssistantAvailable &&
-			! running &&
-			isThreadRunComplete &&
-			additionalMessages.length > 0
-		) {
-			addMessageToThread( {
-				message: additionalMessages[ 0 ],
-			} );
-		}
-	}, [
-		running,
-		additionalMessages,
-		isThreadRunComplete,
-		addMessageToThread,
-		isAssistantAvailable,
-	] );
+	// useEffect( () => {
+	// 	if (
+	// 		isAssistantAvailable &&
+	// 		! running &&
+	// 		isThreadRunComplete &&
+	// 		additionalMessages.length > 0
+	// 	) {
+	// 		addMessageToThread( {
+	// 			message: additionalMessages[ 0 ],
+	// 		} );
+	// 	}
+	// }, [
+	// 	running,
+	// 	additionalMessages,
+	// 	isThreadRunComplete,
+	// 	addMessageToThread,
+	// 	isAssistantAvailable,
+	// ] );
 
 	const toolkitsLoaded = useMemo( () => {
 		return ! activeAgent?.toolkits || hasToolkits( activeAgent?.toolkits );
@@ -244,8 +271,16 @@ const useAgentExecutor = () => {
 					? activeAgent.additionalInstructions( context )
 					: activeAgent.additionalInstructions;
 
-			if ( activeAgent.assistantId !== assistantId ) {
+			if (
+				activeAgent.assistantId !== assistantId &&
+				( activeAgent.assistantId || ! autoCreateAssistant )
+			) {
 				setAssistantId( activeAgent.assistantId );
+			}
+
+			// langgraph cloud only
+			if ( activeAgent.graphId !== graphId ) {
+				setGraphId( activeAgent.graphId );
 			}
 
 			if ( newInstructions && newInstructions !== instructions ) {
@@ -257,10 +292,13 @@ const useAgentExecutor = () => {
 			}
 		}
 	}, [
+		autoCreateAssistant,
 		additionalInstructions,
 		activeAgent,
 		assistantId,
+		graphId,
 		setAssistantId,
+		setGraphId,
 		instructions,
 		tools,
 		context,
@@ -281,7 +319,7 @@ const useAgentExecutor = () => {
 			isThreadRunComplete &&
 			isThreadDataLoaded &&
 			! isAwaitingUserInput &&
-			additionalMessages.length === 0 &&
+			additionalMessages.length > 0 &&
 			messages.length > 0
 		) {
 			// deduplicate and convert to OpenAI format
@@ -291,7 +329,7 @@ const useAgentExecutor = () => {
 				instructions,
 				additionalInstructions,
 				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
-				// additionalMessages,
+				additionalMessages,
 			} );
 		}
 	}, [
@@ -306,6 +344,7 @@ const useAgentExecutor = () => {
 		createThreadRun,
 		tools,
 		isThreadDataLoaded,
+		messages,
 	] );
 
 	/**
@@ -322,6 +361,16 @@ const useAgentExecutor = () => {
 			messages.length === 0 &&
 			activeAgent
 		) {
+			console.warn( '🧠 setAgentStarted', {
+				isAvailable,
+				toolkitsLoaded,
+				isAwaitingUserInput,
+				running,
+				loading,
+				started,
+				messages,
+				activeAgent,
+			} );
 			setAgentStarted( true );
 			if ( typeof activeAgent.onStart === 'function' ) {
 				activeAgent.onStart( invoke );
