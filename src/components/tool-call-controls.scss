@@ -12,7 +12,7 @@
 
 	.big-sky__assistant-message
 	{
-		max-height: 200px;
-		overflow-y: auto;
+		max-height: 100px;
+		overflow-y: scroll;
 	}
 }
