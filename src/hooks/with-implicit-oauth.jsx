@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from '@wordpress/element';
+import { useCallback, useEffect, useMemo, useState } from '@wordpress/element';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { Button, Modal } from '@wordpress/components';
 import wpOAuth from '../utils/implicit-oauth.js';
@@ -22,6 +22,10 @@ const withImplicitOauth = ( Component ) => {
 		...props
 	} ) => {
 		console.log( 'wpcomOauthTokenProp', wpcomOauthTokenProp );
+		const cachedUser = useMemo(
+			() => getLocalStorageItem( 'wp_user' ),
+			[]
+		);
 		const [ isAuthenticating, setIsAuthenticating ] = useState( false );
 		const {
 			wpcomUserInfo,
@@ -55,6 +59,12 @@ const withImplicitOauth = ( Component ) => {
 				} );
 			}
 		}, [ wpcomClientId, wpcomOauthRedirectUri ] );
+
+		useEffect( () => {
+			if ( cachedUser && ! wpcomUserInfo ) {
+				setWpcomUserInfo( cachedUser );
+			}
+		}, [ cachedUser, setWpcomUserInfo, wpcomUserInfo ] );
 
 		useEffect( () => {
 			if ( wpcomClientIdProp ) {

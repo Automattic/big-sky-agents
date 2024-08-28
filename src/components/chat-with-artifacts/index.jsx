@@ -67,7 +67,7 @@ const ChatWithArtifacts = ( {
 		feature: 'big-sky',
 		assistantEnabled: true,
 		service: AssistantModelService.LANGGRAPH_CLOUD,
-		model: AssistantModelType.GPT_4O,
+		model: AssistantModelType.GPT_4O, // this is actually no longer relevant for graphs
 		baseUrl,
 		initialAgentId: GraphAgent.id,
 		autoCreateAssistant: true,

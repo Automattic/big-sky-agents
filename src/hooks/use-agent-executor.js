@@ -339,17 +339,6 @@ const useAgentExecutor = () => {
 				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
 				additionalMessages,
 			} );
-		} else {
-			console.warn( 'not running thread', {
-				running,
-				isAssistantAvailable,
-				additionalInstructions,
-				additionalMessages,
-				messageLength: messages.length,
-				instructions,
-				isAwaitingUserInput,
-				isThreadRunComplete,
-			} );
 		}
 	}, [
 		running,
