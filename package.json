@@ -27,7 +27,8 @@
     "./eval": {
       "import": "./dist/eval.js",
       "require": "./dist/eval.cjs"
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
   "types": "dist/index.d.ts",
   "husky": {

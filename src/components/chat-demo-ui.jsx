@@ -76,6 +76,7 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		<>
 			<Flex direction="row" align="stretch" justify="center">
 				<div className="big-sky__agent-column">
+					<ChatHistory />
 					<AgentUI />
 				</div>
 				<div className="big-sky__current-preview-wrapper">
@@ -95,7 +96,6 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 					</div>
 				) }
 			</Flex>
-			<ChatHistory />
 			<PopUpControls setApiKey={ onApiKeyChanged } />
 		</>
 	);

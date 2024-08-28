@@ -29,6 +29,7 @@ const AllInOneDemo = () => {
 
 	return (
 		<>
+			<ChatHistory />
 			{ assistantMessage && (
 				<>
 					<MessageContent content={ assistantMessage } />
@@ -36,7 +37,6 @@ const AllInOneDemo = () => {
 				</>
 			) }
 			<PopUpControls />
-			<ChatHistory />
 		</>
 	);
 };

@@ -1492,6 +1492,12 @@ export const selectors = {
 			const runningToolCalls = selectors.getRunningToolCallIds( state );
 			const toolOutputs = getToolOutputs( state );
 
+			console.warn( 'getPendingToolCalls', {
+				toolCalls,
+				runningToolCalls,
+				toolOutputs,
+			} );
+
 			const result = toolCalls.filter(
 				( toolCall ) =>
 					! runningToolCalls.includes( toolCall.id ) &&
@@ -1500,6 +1506,8 @@ export const selectors = {
 							toolOutput.tool_call_id === toolCall.id
 					)
 			);
+
+			console.warn( 'getPendingToolCalls result', result );
 
 			return result;
 		},

@@ -71,12 +71,12 @@ function AgentUI() {
 		toolRunning,
 		assistantMessage,
 		userSay,
-		pendingToolRequests,
+		pendingToolCalls,
 		reset: onResetChat,
 	} = useChat();
 
 	const [ userMessage, setUserMessage ] = useState( '' );
-
+	console.warn( 'pendingToolCalls', pendingToolCalls );
 	return (
 		<div
 			className={ `big-sky__agent-ui big-sky__agent-ui-${
@@ -94,10 +94,19 @@ function AgentUI() {
 					{ error }
 				</Notice>
 			) }
+
 			<Flex align="flex-start" justify="stretch">
 				<FlexBlock className="big-sky__agent-ui-content">
 					<div className="big-sky__agent-name">{ agentName }</div>
 
+					{ ! assistantMessage && ! pendingToolCalls?.length && (
+						<AgentThinking
+							enabled={ enabled }
+							loading={ loading }
+							running={ running }
+							toolRunning={ toolRunning }
+						/>
+					) }
 					{ agentThought && (
 						<AgentThought message={ agentThought } />
 					) }
@@ -120,14 +129,6 @@ function AgentUI() {
 					) }
 					<AskUserComponent />
 					<ConfirmComponent />
-					{ ! assistantMessage && ! pendingToolRequests?.length && (
-						<AgentThinking
-							enabled={ enabled }
-							loading={ loading }
-							running={ running }
-							toolRunning={ toolRunning }
-						/>
-					) }
 				</FlexBlock>
 			</Flex>
 		</div>

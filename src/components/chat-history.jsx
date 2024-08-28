@@ -1,28 +1,56 @@
 /**
  * Internal dependencies
  */
-import MessageContent from './message-content.jsx';
-import useChat from './chat-provider/use-chat.js';
+import MessageContent from './message-content';
+import useChat from './chat-provider/use-chat';
+import { useEffect, useRef } from '@wordpress/element';
+import { Notice, Spinner } from '@wordpress/components';
 import './chat-history.scss';
 
-function ChatHistory() {
-	const { messages, toolOutputs } = useChat();
+function ChatHistory( { avatarUrl } ) {
+	const { error, messages, toolOutputs, isThreadDataLoaded } = useChat();
+	const chatHistoryRef = useRef( null );
+
+	const scrollToBottom = () => {
+		if ( chatHistoryRef.current ) {
+			chatHistoryRef.current.scrollTop =
+				chatHistoryRef.current.scrollHeight;
+		}
+	};
+
+	useEffect( () => {
+		scrollToBottom();
+	}, [ messages, toolOutputs ] );
+
 	return (
-		<div className="big-sky__chat-history">
+		<div className="big-sky__messages" ref={ chatHistoryRef }>
+			{ error && <Notice status="error">{ error }</Notice> }
+			{ ! isThreadDataLoaded && (
+				<Notice>
+					<Spinner />
+					Loading History
+				</Notice>
+			) }
 			{ messages
-				?.map( ( message, rowId ) => {
+				?.filter( ( message ) =>
+					[ 'user', 'assistant' ].includes( message.role )
+				)
+				.map( ( message, rowId ) => {
 					return (
 						<div
 							key={ `chat-message-${ rowId }` }
-							className={ `big-sky__chat-history-message big-sky__chat-history-message big-sky__chat-history-message-role-${ message.role }` }
+							className={ `big-sky__messages-message big-sky__messages-message big-sky__messages-message-role-${ message.role }` }
 						>
-							{ [ 'user', 'assistant' ].includes(
-								message.role
-							) && (
-								<MessageContent
-									content={ message.content || '' }
+							{ message.role === 'user' && avatarUrl && (
+								<img
+									className="big-sky__messages-user-avatar"
+									src={ avatarUrl }
+									alt="User Avatar"
 								/>
 							) }
+
+							<MessageContent content={ message.content || '' } />
+
 							{ message.tool_calls?.map( ( tool_call, i ) => {
 								const toolCallResult = toolOutputs.find(
 									( toolOutput ) =>
@@ -31,39 +59,60 @@ function ChatHistory() {
 								return (
 									<div
 										key={ `tool-call-${ i }` }
-										className="big-sky__chat-history-tool-call"
+										className={ `big-sky__messages-tool-call big-sky__messages-tool-call-${
+											toolCallResult
+												? 'complete'
+												: 'pending'
+										}` }
 									>
-										<em>Request:</em>{ ' ' }
-										{ tool_call.function.name }(
-										{ JSON.stringify(
-											tool_call.function.arguments
+										⚙️ { tool_call.function.name }
+										<pre>
+											Request:
+											<br />
+											<br />
+											{ JSON.stringify(
+												tool_call.function.arguments,
+												null,
+												2
+											) }
+										</pre>
+										{ toolCallResult ? (
+											<pre>
+												Result:
+												<br />
+												<br />
+												{ ( () => {
+													try {
+														const parsedContent =
+															JSON.parse(
+																toolCallResult.output
+															);
+														return JSON.stringify(
+															parsedContent,
+															null,
+															2
+														);
+													} catch ( e ) {
+														return toolCallResult.output;
+													}
+												} )() }
+											</pre>
+										) : (
+											' (pending)'
 										) }
-										)<br />
-										<em>Response:</em>{ ' ' }
-										{ toolCallResult
-											? toolCallResult.output
-											: 'Waiting' }
 									</div>
 								);
 							} ) }
-							{ message.role === 'tool' && (
-								<>
-									ID: { message.tool_call_id }
-									<br />
-									Output:{ ' ' }
-									{ JSON.stringify( message.content ) }
-								</>
+							{ message.created_at && (
+								<div className="big-sky__messages-message-date">
+									{ new Date(
+										message.created_at * 1000
+									).toLocaleString() }
+								</div>
 							) }
-							<pre>{ JSON.stringify( message, null, 4 ) }</pre>
-							<div className="big-sky__chat-history-message-date">
-								{ new Date(
-									message.created_at * 1000
-								).toLocaleString() }
-							</div>
 						</div>
 					);
-				} )
-				.reverse() }
+				} ) }
 		</div>
 	);
 }
