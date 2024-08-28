@@ -23,39 +23,6 @@ const AgentThought = ( { message, ...props } ) => (
 	</div>
 );
 
-const AgentMessage = ( { message, children, ...props } ) => (
-	<div { ...props }>
-		<blockquote className="big-sky__oval-speech big-sky__agent-question">
-			<MessageContent content={ message } />
-		</blockquote>
-		{ children }
-	</div>
-);
-
-const AgentThinking = ( {
-	running,
-	toolRunning,
-	loading,
-	enabled,
-	...props
-} ) => (
-	<div { ...props }>
-		<div
-			className={ `big-sky__agent-thinking ${
-				running ? 'big-sky__agent-thinking-running' : ''
-			} ${ toolRunning ? 'big-sky__agent-thinking-tool-running' : '' } ${
-				enabled
-					? 'big-sky__agent-thinking-enabled'
-					: 'big-sky__agent-thinking-disabled'
-			} ${
-				loading
-					? 'big-sky__agent-thinking-loading'
-					: 'big-sky__agent-thinking-loaded'
-			}` }
-		></div>
-	</div>
-);
-
 function AgentUI() {
 	const {
 		name: agentName,
@@ -65,18 +32,14 @@ function AgentUI() {
 
 	const {
 		error,
-		enabled,
 		loading,
 		running,
-		toolRunning,
 		assistantMessage,
 		userSay,
-		pendingToolCalls,
 		reset: onResetChat,
 	} = useChat();
 
 	const [ userMessage, setUserMessage ] = useState( '' );
-	console.warn( 'pendingToolCalls', pendingToolCalls );
 	return (
 		<div
 			className={ `big-sky__agent-ui big-sky__agent-ui-${
@@ -98,37 +61,25 @@ function AgentUI() {
 			<Flex align="flex-start" justify="stretch">
 				<FlexBlock className="big-sky__agent-ui-content">
 					<div className="big-sky__agent-name">{ agentName }</div>
-
-					{ ! assistantMessage && ! pendingToolCalls?.length && (
-						<AgentThinking
-							enabled={ enabled }
-							loading={ loading }
-							running={ running }
-							toolRunning={ toolRunning }
-						/>
-					) }
 					{ agentThought && (
 						<AgentThought message={ agentThought } />
 					) }
-					{ assistantMessage && (
-						<AgentMessage message={ assistantMessage }>
-							<MessageInput
-								value={ userMessage }
-								onChange={ setUserMessage }
-								onSubmit={ ( value, files ) => {
-									userSay( value, files );
-									setUserMessage( '' );
-								} }
-								onCancel={ () => {
-									informUser( 'Canceled!' );
-									onResetChat();
-								} }
-								fileUploadEnabled={ true }
-							/>
-						</AgentMessage>
-					) }
 					<AskUserComponent />
 					<ConfirmComponent />
+					<MessageInput
+						disabled={ ! assistantMessage }
+						value={ userMessage }
+						onChange={ setUserMessage }
+						onSubmit={ ( value, files ) => {
+							userSay( value, files );
+							setUserMessage( '' );
+						} }
+						onCancel={ () => {
+							informUser( 'Canceled!' );
+							onResetChat();
+						} }
+						fileUploadEnabled={ true }
+					/>
 				</FlexBlock>
 			</Flex>
 		</div>

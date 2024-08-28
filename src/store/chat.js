@@ -159,7 +159,7 @@ const chatMessageToThreadMessage = ( message ) => {
  */
 function filterChatMessage( message ) {
 	let filteredContent = message.content;
-	let filteredToolCalls = message.tool_calls;
+	// let filteredToolCalls = message.tool_calls;
 
 	if ( typeof filteredContent === 'undefined' || filteredContent === null ) {
 		filteredContent = '';
@@ -184,31 +184,31 @@ function filterChatMessage( message ) {
 		} );
 	}
 
-	if ( message.role === 'assistant' && filteredToolCalls ) {
-		// replace with message.map rather than modifying in-place
-		filteredToolCalls = message.tool_calls.map( ( toolCall ) => ( {
-			...toolCall,
-			function: {
-				...toolCall.function,
-				arguments:
-					typeof toolCall.function?.arguments === 'string'
-						? ( () => {
-								try {
-									return JSON.parse(
-										toolCall.function.arguments
-									);
-								} catch ( e ) {
-									return toolCall.function.arguments;
-								}
-						  } )()
-						: toolCall.function.arguments,
-			},
-		} ) );
-	}
+	// if ( message.role === 'assistant' && filteredToolCalls ) {
+	// 	// replace with message.map rather than modifying in-place
+	// 	filteredToolCalls = message.tool_calls.map( ( toolCall ) => ( {
+	// 		...toolCall,
+	// 		function: {
+	// 			...toolCall.function,
+	// 			arguments:
+	// 				typeof toolCall.function?.arguments === 'string'
+	// 					? ( () => {
+	// 							try {
+	// 								return JSON.parse(
+	// 									toolCall.function.arguments
+	// 								);
+	// 							} catch ( e ) {
+	// 								return toolCall.function.arguments;
+	// 							}
+	// 					  } )()
+	// 					: toolCall.function.arguments,
+	// 		},
+	// 	} ) );
+	// }
 
 	return {
 		...message,
-		tool_calls: filteredToolCalls,
+		// tool_calls: filteredToolCalls,
 		content: filteredContent,
 	};
 }
@@ -317,6 +317,9 @@ const updateThreadRuns =
 			} );
 		} catch ( error ) {
 			console.error( 'Get Thread Runs Error', error );
+			if ( error.message === 'Not found' ) {
+				dispatch( deleteThread() );
+			}
 			dispatch( { type: 'GET_THREAD_RUNS_ERROR', error: error.message } );
 		}
 	};
@@ -800,6 +803,7 @@ const addMessageReducer = ( state, message ) => {
 					state: message.state,
 					content: message.content,
 					additional_kwargs: message.additional_kwargs,
+					tool_calls: message.tool_calls,
 				},
 				...state.messages.slice( existingMessageIndex + 1 ),
 			],
@@ -922,7 +926,7 @@ const updateThreadRunReducer = ( state, action ) => {
 		state = addMessageReducer( state, {
 			id: `tr:${ threadRun.id }`,
 			role: 'assistant',
-			created_at: action.ts,
+			created_at: action.ts / 1000,
 			tool_calls,
 		} );
 	}
@@ -1396,7 +1400,10 @@ const getActiveThreadRun = createSelector(
 
 const shouldSyncToolCalls = ( state ) => {
 	// if the service is langgraph-cloud, return true
-	return state.service === AssistantModelService.LANGGRAPH_CLOUD;
+	return (
+		! state.assistantEnabled ||
+		state.service === AssistantModelService.LANGGRAPH_CLOUD
+	);
 };
 
 export const selectors = {
@@ -1495,12 +1502,6 @@ export const selectors = {
 			const runningToolCalls = selectors.getRunningToolCallIds( state );
 			const toolOutputs = getToolOutputs( state );
 
-			console.warn( 'getPendingToolCalls', {
-				toolCalls,
-				runningToolCalls,
-				toolOutputs,
-			} );
-
 			const result = toolCalls.filter(
 				( toolCall ) =>
 					! runningToolCalls.includes( toolCall.id ) &&
@@ -1509,8 +1510,6 @@ export const selectors = {
 							toolOutput.tool_call_id === toolCall.id
 					)
 			);
-
-			console.warn( 'getPendingToolCalls result', result );
 
 			return result;
 		},
@@ -1722,7 +1721,7 @@ export const actions = {
 		type: 'ADD_MESSAGE',
 		message: {
 			id: uuidv4(),
-			created_at: Date.now(),
+			created_at: Date.now() / 1000,
 			role: 'assistant',
 			tool_calls: [
 				{
@@ -1730,7 +1729,7 @@ export const actions = {
 					type: 'function',
 					function: {
 						name,
-						arguments: args,
+						arguments: JSON.stringify( args ),
 					},
 				},
 			],

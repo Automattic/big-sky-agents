@@ -174,7 +174,15 @@ const useAgentExecutor = () => {
 			pendingToolCalls.forEach( ( tool_call ) => {
 				const args =
 					typeof tool_call.function.arguments === 'string'
-						? JSON.parse( tool_call.function.arguments )
+						? ( () => {
+								try {
+									return JSON.parse(
+										tool_call.function.arguments
+									);
+								} catch ( e ) {
+									return tool_call.function.arguments;
+								}
+						  } )()
 						: tool_call.function.arguments;
 
 				// see: https://community.openai.com/t/model-tries-to-call-unknown-function-multi-tool-use-parallel/490653/7
@@ -330,6 +338,17 @@ const useAgentExecutor = () => {
 				additionalInstructions,
 				// this will always be empty right now because we sync messages to the thread first, but we could use it to send additional messages
 				additionalMessages,
+			} );
+		} else {
+			console.warn( 'not running thread', {
+				running,
+				isAssistantAvailable,
+				additionalInstructions,
+				additionalMessages,
+				messageLength: messages.length,
+				instructions,
+				isAwaitingUserInput,
+				isThreadRunComplete,
 			} );
 		}
 	}, [

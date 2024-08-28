@@ -70,11 +70,21 @@ function ChatHistory( { avatarUrl } ) {
 											Request:
 											<br />
 											<br />
-											{ JSON.stringify(
-												tool_call.function.arguments,
-												null,
-												2
-											) }
+											{ ( () => {
+												try {
+													return JSON.stringify(
+														JSON.parse(
+															tool_call.function
+																.arguments
+														),
+														null,
+														2
+													);
+												} catch ( e ) {
+													return tool_call.function
+														.arguments;
+												}
+											} )() }
 										</pre>
 										{ toolCallResult ? (
 											<pre>
