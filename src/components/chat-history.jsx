@@ -1,7 +1,7 @@
 /**
  * Internal dependencies
  */
-import MessageContent from './message-content';
+import MessageContent from './message-content.jsx';
 import useChat from './chat-provider/use-chat';
 import { useEffect, useRef } from '@wordpress/element';
 import { Notice, Spinner } from '@wordpress/components';

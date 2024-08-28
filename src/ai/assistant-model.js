@@ -367,6 +367,8 @@ class AssistantModel {
 			throw new Error( 'Unauthorized' );
 		} else if ( request.status === 404 ) {
 			throw new Error( 'Not found' );
+		} else if ( request.status === 422 ) {
+			throw new Error( 'Unprocessable entity' );
 		} else if ( request.status === 429 ) {
 			throw new Error( 'Rate limit exceeded' );
 		} else if ( request.status === 500 ) {

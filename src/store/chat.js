@@ -371,7 +371,10 @@ const updateThreadMessages =
 		} catch ( error ) {
 			console.error( 'Get Thread Messages Error', error );
 			// if the message is "not found", dispatch the delete thread action
-			if ( error.message === 'Not Found' ) {
+			if (
+				error.message === 'Not Found' ||
+				error.message === 'Unprocessable entity'
+			) {
 				dispatch( deleteThread() );
 			}
 			dispatch( {
