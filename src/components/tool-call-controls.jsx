@@ -20,9 +20,9 @@ const ToolCallControls = () => {
 						label="Assistant Message"
 						labelPosition="side"
 					>
-						<span className="big-sky__assistant-message">
+						<div className="big-sky__assistant-message">
 							<MessageContent content={ assistantMessage } />
-						</span>
+						</div>
 					</BaseControl>
 				) }
 				{ pendingToolCalls.map( ( toolCall, index ) => (
