@@ -11,7 +11,6 @@ import SiteSpecPreview from './site-spec-preview.jsx';
 import PageSpecPreview from './page-spec-preview.jsx';
 import AgentUI from './agent-ui.jsx';
 import PopUpControls from './popup-controls.jsx';
-import ChatHistory from './chat-history.jsx';
 import PageList from './page-list.jsx';
 import { store as siteSpecStore } from '../store/index.js';
 import { useSelect } from '@wordpress/data';
@@ -76,7 +75,6 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		<>
 			<Flex direction="row" align="stretch" justify="center">
 				<div className="big-sky__agent-column">
-					<ChatHistory />
 					<AgentUI />
 				</div>
 				<div className="big-sky__current-preview-wrapper">

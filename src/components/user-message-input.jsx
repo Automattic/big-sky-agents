@@ -4,9 +4,10 @@ import useChat from './chat-provider/use-chat.js';
 
 function UserMessageInput() {
 	const [ userMessage, setUserMessage ] = useState( '' );
-	const { userSay, reset } = useChat();
+	const { userSay, reset, running } = useChat();
 	return (
 		<MessageInput
+			disabled={ running }
 			value={ userMessage }
 			onChange={ setUserMessage }
 			onSubmit={ ( value, files ) => {

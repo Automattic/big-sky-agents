@@ -317,7 +317,10 @@ const updateThreadRuns =
 			} );
 		} catch ( error ) {
 			console.error( 'Get Thread Runs Error', error );
-			if ( error.message === 'Not found' ) {
+			if (
+				error.message === 'Not found' ||
+				error.message === 'Unprocessable entity'
+			) {
 				dispatch( deleteThread() );
 			}
 			dispatch( { type: 'GET_THREAD_RUNS_ERROR', error: error.message } );

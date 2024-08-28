@@ -31,7 +31,6 @@ const SingleAssistantDemoUI = () => {
 
 	return (
 		<>
-			<ChatHistory />
 			<AgentUI />
 			<PopUpControls />
 		</>

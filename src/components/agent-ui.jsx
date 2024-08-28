@@ -14,6 +14,7 @@ import MessageInput from './message-input.jsx';
 import useChat from './chat-provider/use-chat.js';
 import useAgents from './agents-provider/use-agents.js';
 import './agent-ui.scss';
+import ChatHistory from './chat-history.jsx';
 
 const AgentThought = ( { message, ...props } ) => (
 	<div { ...props }>
@@ -61,6 +62,7 @@ function AgentUI() {
 			<Flex align="flex-start" justify="stretch">
 				<FlexBlock className="big-sky__agent-ui-content">
 					<div className="big-sky__agent-name">{ agentName }</div>
+					<ChatHistory />
 					{ agentThought && (
 						<AgentThought message={ agentThought } />
 					) }
