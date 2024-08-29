@@ -184,31 +184,8 @@ function filterChatMessage( message ) {
 		} );
 	}
 
-	// if ( message.role === 'assistant' && filteredToolCalls ) {
-	// 	// replace with message.map rather than modifying in-place
-	// 	filteredToolCalls = message.tool_calls.map( ( toolCall ) => ( {
-	// 		...toolCall,
-	// 		function: {
-	// 			...toolCall.function,
-	// 			arguments:
-	// 				typeof toolCall.function?.arguments === 'string'
-	// 					? ( () => {
-	// 							try {
-	// 								return JSON.parse(
-	// 									toolCall.function.arguments
-	// 								);
-	// 							} catch ( e ) {
-	// 								return toolCall.function.arguments;
-	// 							}
-	// 					  } )()
-	// 					: toolCall.function.arguments,
-	// 		},
-	// 	} ) );
-	// }
-
 	return {
 		...message,
-		// tool_calls: filteredToolCalls,
 		content: filteredContent,
 	};
 }
