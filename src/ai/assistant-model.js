@@ -560,7 +560,7 @@ const filterLangGraphMessages = ( messages, thread_id ) => {
 			tool_call_id: message.tool_call_id,
 			tool_calls: message.additional_kwargs?.tool_calls,
 			created_at:
-				message.additional_kwargs?.created_at || Date.now() / 1000,
+				message.additional_kwargs?.created_at ?? Date.now() / 1000,
 		};
 	} );
 };
