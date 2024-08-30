@@ -232,7 +232,7 @@ const writeHTMLReport = async ( evaluationOutput ) => {
 			.join( '' ) }
 
 		${
-			evaluationOutput.comparativeResult?.results.length > 0
+			evaluationOutput.comparativeResult?.results?.length > 0
 				? `
 		<h2>Comparative Results</h2>
 		<p>Experiment: ${ evaluationOutput.comparativeResult?.experimentName }</p>
