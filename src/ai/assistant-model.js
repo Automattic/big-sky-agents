@@ -367,6 +367,8 @@ class AssistantModel {
 			throw new Error( 'Unauthorized' );
 		} else if ( request.status === 404 ) {
 			throw new Error( 'Not found' );
+		} else if ( request.status === 422 ) {
+			throw new Error( 'Unprocessable entity' );
 		} else if ( request.status === 429 ) {
 			throw new Error( 'Rate limit exceeded' );
 		} else if ( request.status === 500 ) {
@@ -557,13 +559,13 @@ const filterLangGraphMessages = ( messages, thread_id ) => {
 			name: message.name,
 			tool_call_id: message.tool_call_id,
 			tool_calls: message.additional_kwargs?.tool_calls,
-			created_at: message.additional_kwargs?.created_at,
+			created_at:
+				message.additional_kwargs?.created_at ?? Date.now() / 1000,
 		};
 	} );
 };
 
 const filterOpenAIMessagesForLangGraph = ( message ) => {
-	console.warn( 'filterOpenAIMessagesForLangGraph', message );
 	let langgraphRole;
 	if ( message.role === 'assistant' ) {
 		langgraphRole = 'ai';

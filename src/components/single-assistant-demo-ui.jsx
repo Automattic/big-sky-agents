@@ -33,7 +33,6 @@ const SingleAssistantDemoUI = () => {
 		<>
 			<AgentUI />
 			<PopUpControls />
-			<ChatHistory />
 		</>
 	);
 };

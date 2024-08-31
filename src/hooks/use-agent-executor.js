@@ -174,7 +174,15 @@ const useAgentExecutor = () => {
 			pendingToolCalls.forEach( ( tool_call ) => {
 				const args =
 					typeof tool_call.function.arguments === 'string'
-						? JSON.parse( tool_call.function.arguments )
+						? ( () => {
+								try {
+									return JSON.parse(
+										tool_call.function.arguments
+									);
+								} catch ( e ) {
+									return tool_call.function.arguments;
+								}
+						  } )()
 						: tool_call.function.arguments;
 
 				// see: https://community.openai.com/t/model-tries-to-call-unknown-function-multi-tool-use-parallel/490653/7

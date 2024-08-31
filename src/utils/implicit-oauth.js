@@ -151,7 +151,6 @@ wpOAuth.checkUrlForAccessToken = function ( fn ) {
 	fn( JSON.parse( wpOAuth.getLocalStorageValue( OAUTH_TOKEN_KEY ) ) );
 };
 
-
 /**
  * Clean authentication from store
  *

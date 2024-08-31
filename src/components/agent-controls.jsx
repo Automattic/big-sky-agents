@@ -279,7 +279,7 @@ const ChatAgentControls = () => {
 					<Icon
 						icon={ starFilled }
 						style={ {
-							fill: isAwaitingUserInput ? 'green' : 'orange',
+							fill: isAwaitingUserInput ? 'orange' : 'green',
 						} }
 					/>
 				</Tooltip>

@@ -1,6 +1,6 @@
 {
   "name": "@automattic/big-sky-agents",
-  "version": "1.1.61",
+  "version": "1.1.63",
   "description": "The Big Sky Agents SDK",
   "repository": {
     "type": "git",
@@ -27,7 +27,8 @@
     "./eval": {
       "import": "./dist/eval.js",
       "require": "./dist/eval.cjs"
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
   "types": "dist/index.d.ts",
   "husky": {

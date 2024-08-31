@@ -7,7 +7,7 @@ import { Flex } from '@wordpress/components';
 /**
  * Internal dependencies
  */
-import ChatHistory from './chat-history.jsx';
+import ChatHistory from '../chat-history.jsx';
 import ArtifactList from './artifact-list.jsx';
 import { useSelect } from '@wordpress/data';
 import useChatSettings from '../../hooks/use-chat-settings.js';
@@ -67,7 +67,7 @@ const ChatWithArtifacts = ( {
 		feature: 'big-sky',
 		assistantEnabled: true,
 		service: AssistantModelService.LANGGRAPH_CLOUD,
-		model: AssistantModelType.GPT_4O,
+		model: AssistantModelType.GPT_4O, // this is actually no longer relevant for graphs
 		baseUrl,
 		initialAgentId: GraphAgent.id,
 		autoCreateAssistant: true,

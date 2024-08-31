@@ -100,6 +100,9 @@ export { default as InformToolkit } from './ai/toolkits/inform-toolkit.js';
 export { default as GoalToolkit } from './ai/toolkits/goal-toolkit.js';
 export { default as AgentsToolkit } from './ai/toolkits/agents-toolkit.js';
 
+/** WPCOM Authentication utility functions */
+export { default as withImplicitOauth } from './hooks/with-implicit-oauth.jsx';
+
 /**
  * Prompt Templates
  */

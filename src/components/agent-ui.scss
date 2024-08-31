@@ -212,66 +212,6 @@
 		@include big-sky__agent-icon;
 	}
 
-	.big-sky__agent-thinking {
-		position: relative;
-		width: 70px;
-		height: 70px;
-		top: 35px;
-		border-radius: 50%;
-		background-color: rgba(#fff, 0.5);
-		margin-bottom: 35px;
-
-		@include big-sky__agent-icon;
-
-		&.big-sky__agent-thinking-running {
-			background: linear-gradient(90deg, #007bff, #fff);
-			background-size: 200% 200%;
-			animation: innerPulse 2s infinite;
-
-			@keyframes innerPulse {
-				0% {
-					background-position: 0% 50%;
-				}
-
-				50% {
-					background-position: 100% 50%;
-				}
-
-				100% {
-					background-position: 0% 50%;
-				}
-			}
-		}
-
-		&.big-sky__agent-thinking-tool-running {
-			box-shadow: 0 0 10px #ff0;
-			animation: outerPulse 2s infinite;
-
-			@keyframes outerPulse {
-				0% {
-					box-shadow: 0 0 10px #ff0;
-				}
-
-				50% {
-					box-shadow: none;
-				}
-
-				100% {
-					box-shadow: 0 0 10px #ff0;
-				}
-			}
-		}
-
-		&.big-sky__agent-thinking-loading {
-			background: linear-gradient(90deg, #fa5, #fff);
-		}
-
-		&.big-sky__agent-thinking-disabled {
-			// make it gray
-			background: linear-gradient(90deg, #999, #fff);
-		}
-	}
-
 	.big-sky__agent-input {
 		// max-width: 500px;
 		margin: 0 auto;
