@@ -732,8 +732,8 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 			headers,
 			body: JSON.stringify( {
 				stream_mode: [
-					// 'updates',
-					// 'values',
+					'updates',
+					'values',
 					'messages',
 					// 'events',
 					// 'debug',
