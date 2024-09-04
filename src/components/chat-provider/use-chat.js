@@ -93,6 +93,7 @@ export default function useChat() {
 		running,
 		enabled,
 		messages,
+		documents,
 		assistantMessage,
 		pendingToolCalls,
 		additionalMessages,
@@ -128,6 +129,7 @@ export default function useChat() {
 		running: select( agentStore ).isRunning(),
 		enabled: select( agentStore ).isEnabled(),
 		messages: select( agentStore ).getMessages(),
+		documents: select( agentStore ).getDocuments(),
 		assistantMessage: select( agentStore ).getAssistantMessage(),
 		pendingToolCalls: select( agentStore ).getPendingToolCalls(),
 		additionalMessages: select( agentStore ).getAdditionalMessages(),
@@ -199,6 +201,9 @@ export default function useChat() {
 		userSay,
 		assistantMessage,
 		agentSay,
+
+		// documents
+		documents,
 
 		// tools
 		call,
