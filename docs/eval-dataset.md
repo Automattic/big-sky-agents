@@ -25,6 +25,12 @@ The main JSON object contains the following top-level keys:
 - `comparativeEvaluators`: Array of objects
 - `summaryEvaluators`: Array of objects
 
+### Evaluators
+
+- evaluators operate per example
+- summaryEvaluators operate per experiment
+- comparativeEvaluators operate across experiments, to compare models
+
 ### Root Object
 
 ```json

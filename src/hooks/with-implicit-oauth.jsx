@@ -3,6 +3,7 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { Button, Modal } from '@wordpress/components';
 import wpOAuth from '../utils/implicit-oauth.js';
 import { store as tokenStore } from '../store/index.js';
+import './with-implicit-oauth.scss';
 
 // Utility functions to handle localStorage
 const setLocalStorageItem = ( key, value ) => {
@@ -21,7 +22,6 @@ const withImplicitOauth = ( Component ) => {
 		wpcomOauthToken: wpcomOauthTokenProp,
 		...props
 	} ) => {
-		console.log( 'wpcomOauthTokenProp', wpcomOauthTokenProp );
 		const cachedUser = useMemo(
 			() => getLocalStorageItem( 'wp_user' ),
 			[]
@@ -193,7 +193,7 @@ const withImplicitOauth = ( Component ) => {
 					user={ wpcomUserInfo }
 					{ ...props }
 				/>
-				<p style={ { textAlign: 'center' } }>
+				<div className="big-sky__oauth-user-info">
 					<img
 						style={ { width: '24px', verticalAlign: 'middle' } }
 						src={ wpcomUserInfo.avatar_URL }
@@ -207,7 +207,7 @@ const withImplicitOauth = ( Component ) => {
 					>
 						Logout
 					</Button>
-				</p>
+				</div>
 			</>
 		);
 	};

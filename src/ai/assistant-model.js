@@ -618,15 +618,16 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 		);
 		const getMessagesResponse =
 			await this.getResponse( getMessagesRequest );
-		if ( getMessagesResponse.values.messages ) {
-			return {
-				data: filterLangGraphMessages(
+		const messages = getMessagesResponse.values.messages
+			? filterLangGraphMessages(
 					getMessagesResponse.values.messages,
 					threadId
-				),
-			};
-		}
-		return { data: [] };
+			  )
+			: [];
+		const documents = getMessagesResponse.values.documents
+			? getMessagesResponse.values.documents
+			: [];
+		return { data: messages, documents };
 	}
 
 	async getThreadRuns( threadId ) {

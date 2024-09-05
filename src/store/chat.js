@@ -63,6 +63,7 @@ const initialState = {
 
 	// Chat-API-related
 	messages: [],
+	documents: [],
 	tool_calls: [],
 	isToolRunning: false,
 	isFetchingChatCompletion: false,
@@ -350,6 +351,7 @@ const updateThreadMessages =
 				type: 'GET_THREAD_MESSAGES_END_REQUEST',
 				ts: Date.now(),
 				threadMessages: threadMessagesResponse.data,
+				threadDocuments: threadMessagesResponse.documents,
 			} );
 		} catch ( error ) {
 			console.error( 'Get Thread Messages Error', error );
@@ -1311,12 +1313,14 @@ export const reducer = ( state = initialState, action ) => {
 			} );
 			return {
 				...state,
+				documents: action.threadDocuments,
 				isFetchingThreadMessages: false,
 				threadMessagesUpdated: action.ts,
 			};
 		case 'GET_THREAD_MESSAGES_ERROR':
 			return {
 				...state,
+				documents: [],
 				isFetchingThreadMessages: false,
 				error: action.error,
 			};
@@ -1468,6 +1472,7 @@ export const selectors = {
 	getBaseUrl: ( state ) => state.baseUrl,
 	getError: ( state ) => state.error,
 	getMessages: ( state ) => state.messages,
+	getDocuments: ( state ) => state.documents,
 	getAssistantMessage: ( state ) => {
 		// return the last message only if it's an assistant message with content
 		const lastMessage = state.messages[ state.messages.length - 1 ];
