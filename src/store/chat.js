@@ -235,14 +235,17 @@ const getChatModel = ( select ) => {
 const runChatCompletion =
 	( request ) =>
 	async ( { select, dispatch } ) => {
-		const { model, temperature, messages, feature } = select( ( state ) => {
-			return {
-				model: state.root.model,
-				temperature: state.root.temperature,
-				messages: state.root.messages,
-				feature: state.root.feature,
-			};
-		} );
+		const { stream, model, temperature, messages, feature } = select(
+			( state ) => {
+				return {
+					model: state.root.model,
+					temperature: state.root.temperature,
+					messages: state.root.messages,
+					feature: state.root.feature,
+					stream: state.root.stream,
+				};
+			}
+		);
 
 		// dispatch an error if service or apiKey are missing
 		if ( ! model || ! temperature ) {
@@ -261,6 +264,91 @@ const runChatCompletion =
 
 		dispatch( { type: 'CHAT_BEGIN_REQUEST' } );
 		try {
+			if ( stream ) {
+				dispatch( { type: 'CHAT_BEGIN_REQUEST' } );
+				const chatCompletionThreadStream = await getChatModel(
+					select
+				).runStream( {
+					...request,
+					messages,
+					model,
+					temperature,
+					feature,
+					// graphConfig,
+				} );
+				const message = {
+					created: Date.now() / 1000,
+					role: 'assistant',
+					content: '',
+					tool_calls: [],
+				};
+				for await ( const event of chatCompletionThreadStream ) {
+					switch ( event.event ) {
+						case 'chat.message.partial':
+							// handle tool_calls
+							message.id = event.data.id; // redundant but oh well
+							if ( event.data.choices[ 0 ].delta.tool_calls ) {
+								for ( const toolCall of event.data.choices[ 0 ]
+									.delta.tool_calls ) {
+									const existingToolCall = message.tool_calls[
+										toolCall.index
+									] ?? {
+										function: {
+											name: '',
+											arguments: '',
+										},
+									};
+
+									const updatedToolCall = {
+										...existingToolCall,
+									};
+
+									if ( toolCall.id ) {
+										updatedToolCall.id = toolCall.id;
+									}
+
+									if ( toolCall.type ) {
+										updatedToolCall.type = toolCall.type;
+									}
+
+									if ( toolCall.function.name ) {
+										updatedToolCall.function.name +=
+											toolCall.function.name;
+									}
+
+									if ( toolCall.function.arguments ) {
+										updatedToolCall.function.arguments +=
+											toolCall.function.arguments;
+									}
+
+									message.tool_calls[ toolCall.index ] =
+										updatedToolCall;
+								}
+							}
+
+							// handle content
+							if ( event.data.choices[ 0 ].delta.content ) {
+								message.content +=
+									event.data.choices[ 0 ].delta.content;
+							}
+
+							if ( event.data.finish_reason ) {
+								message.finish_reason =
+									event.data.finish_reason;
+							}
+
+							dispatch( {
+								type: 'ADD_MESSAGE',
+								message,
+							} );
+							break;
+						case 'done':
+							dispatch( { type: 'CHAT_END_REQUEST' } );
+							break;
+					}
+				}
+				return;
+			}
 			const assistantMessage = await getChatModel( select ).run( {
 				...request,
 				messages,
@@ -765,6 +853,7 @@ const addMessageToThread =
  */
 
 const addMessageReducer = ( state, message ) => {
+	console.warn( 'addMessageReducer', message );
 	message = filterChatMessage( message );
 
 	// if the message has the same ID as an existing message, update it

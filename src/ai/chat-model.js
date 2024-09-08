@@ -309,6 +309,7 @@ class ChatModel {
 	 * @param {Array<Object>} request.messages    The messages to use
 	 * @param {Array<Object>} request.tools       The tools to use
 	 * @param {string}        request.tool_choice The tool to use
+	 * @param {boolean}       request.stream      Whether to stream the response
 	 *
 	 * @return {Promise<Object>} The response object
 	 */
@@ -373,6 +374,134 @@ class ChatModel {
 		}
 
 		return response;
+	}
+
+	/**
+	 *
+	 * @param {*}      request
+	 * @param {string} request.threadId
+	 * @param {string} request.assistantId
+	 * @param {string} request.model
+	 * @param {string} request.instructions
+	 * @param {string} request.additionalInstructions
+	 * @param {Array}  request.additionalMessages
+	 * @param {Array}  request.tools
+	 * @param {Array}  request.metadata
+	 * @param {number} request.temperature
+	 * @param {number} request.maxPromptTokens
+	 * @param {number} request.maxCompletionTokens
+	 * @param {Object} request.truncationStrategy
+	 * @param {Object} request.responseFormat
+	 * @return {*} An async iterable of events
+	 */
+	async *runStream( {
+		model,
+		messages,
+		tools,
+		instructions,
+		additionalInstructions,
+		temperature,
+		maxTokens,
+		// graphConfig,
+	} ) {
+		if ( ! messages || ! messages.length ) {
+			throw new Error( 'Missing history' );
+		}
+		this.abortController = new AbortController();
+		const headers = this.getHeaders();
+		model = model ?? this.getDefaultModel();
+		messages = formatMessages(
+			messages,
+			instructions ?? DEFAULT_SYSTEM_PROMPT,
+			additionalInstructions,
+			this.maxHistoryLength,
+			model
+		);
+		temperature = temperature ?? this.getDefaultTemperature( model );
+		const max_tokens = maxTokens ?? this.getDefaultMaxTokens( model );
+
+		log.info(
+			`🤖 Streaming ${ this.constructor.name } with model ${ model }, temperature ${ temperature }, max_tokens ${ max_tokens }`
+		);
+
+		const response = await fetch( this.getServiceUrl(), {
+			method: 'POST',
+			headers,
+			body: JSON.stringify( {
+				model,
+				temperature,
+				max_tokens,
+				messages,
+				tools,
+				stream: true,
+			} ),
+			signal: this.abortController.signal,
+		} );
+
+		if ( response.status === 401 ) {
+			throw new Error( 'Unauthorized' );
+		} else if ( response.status === 429 ) {
+			throw new Error( 'Rate limit exceeded' );
+		} else if ( response.status === 500 ) {
+			const responseText = await response.text();
+			throw new Error( `Internal server error: ${ responseText }` );
+		}
+
+		const reader = response.body.getReader();
+		const decoder = new TextDecoder( 'utf-8' );
+		let buffer = '';
+
+		try {
+			while ( true ) {
+				const { done, value } = await reader.read();
+				if ( done ) {
+					break;
+				}
+
+				buffer += decoder.decode( value, { stream: true } );
+
+				let boundary = buffer.indexOf( '\n\n' );
+				while ( boundary !== -1 ) {
+					const chunk = buffer.slice( 0, boundary );
+					buffer = buffer.slice( boundary + 2 );
+
+					const event = this.parseEvent( chunk );
+					if ( event ) {
+						yield event;
+					}
+
+					boundary = buffer.indexOf( '\n\n' );
+				}
+			}
+		} catch ( err ) {
+			console.error( 'Stream reading error:', err );
+		} finally {
+			reader.releaseLock();
+		}
+	}
+
+	parseEvent( chunk ) {
+
+		if ( ! chunk.startsWith( 'data:' ) ) {
+			throw new Error( 'Invalid response format' );
+		}
+
+		const event = 'chat.message.partial';
+		const data = chunk.slice( 5 ).trim();
+
+		if ( event && data ) {
+			if ( data === '[DONE]' ) {
+				return { event: 'done' };
+			}
+			try {
+				const parsedData = JSON.parse( data );
+				return { event, data: parsedData };
+			} catch ( e ) {
+				console.error( 'Error parsing JSON message:', e, data );
+			}
+		}
+
+		return null;
 	}
 
 	abortRequest() {
