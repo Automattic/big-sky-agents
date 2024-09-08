@@ -853,7 +853,6 @@ const addMessageToThread =
  */
 
 const addMessageReducer = ( state, message ) => {
-	console.warn( 'addMessageReducer', message );
 	message = filterChatMessage( message );
 
 	// if the message has the same ID as an existing message, update it
