@@ -49,19 +49,19 @@ class BasicAgent extends Agent {
 	}
 
 	onGoalChange( goal ) {
-		console.log( 'onGoalChange', goal );
+		console.debug( 'onGoalChange', goal );
 	}
 
 	onAskUser( value, callbacks, context ) {
-		console.log( 'onAskUser', value, callbacks, context );
+		console.debug( 'onAskUser', value, callbacks, context );
 	}
 
 	onInformUser( value, callbacks, context ) {
-		console.log( 'onInformUser', value, callbacks, context );
+		console.debug( 'onInformUser', value, callbacks, context );
 	}
 
 	onAgentChange( agentId ) {
-		console.log( 'onAgentChange', agentId );
+		console.debug( 'onAgentChange', agentId );
 	}
 
 	instructions( context ) {
