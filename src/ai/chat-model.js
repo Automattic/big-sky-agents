@@ -13,6 +13,7 @@ export const ChatModelService = {
 	LMSTUDIO: 'lmstudio',
 	LOCALAI: 'localai',
 	LOCAL_GRAPH: 'local-graph',
+	WPCOM_GRAPH: 'wpcom-graph',
 	getAvailable: () => {
 		const services = [
 			ChatModelService.WPCOM_JETPACK_AI,
@@ -23,6 +24,7 @@ export const ChatModelService = {
 			ChatModelService.OPENAI,
 			ChatModelService.GROQ,
 			ChatModelService.LOCAL_GRAPH,
+			ChatModelService.WPCOM_GRAPH,
 		];
 		return services;
 	},
@@ -65,6 +67,7 @@ export const ChatModelType = {
 			ChatModelType.MISTRAL_03,
 			ChatModelType.HERMES_2_PRO_MISTRAL,
 			ChatModelType.LOCAL_GRAPH,
+			ChatModelType.WPCOM_GRAPH,
 		].includes( model ),
 	getAvailable: ( service ) => {
 		if ( service === ChatModelService.GROQ ) {
@@ -563,6 +566,8 @@ class ChatModel {
 				return new LocalAIChatModel( params );
 			case ChatModelService.LOCAL_GRAPH:
 				return new LocalGraphChatModel( params );
+			case ChatModelService.WPCOM_GRAPH:
+				return new WPCOMGraphChatModel( params );
 			default:
 				throw new Error( `Unknown service: ${ service }` );
 		}
@@ -665,6 +670,35 @@ export class LocalGraphChatModel extends ChatModel {
 	}
 }
 
+export class WPCOMGraphChatModel extends ChatModel {
+	constructor( { apiKey, feature, sessionId } ) {
+		super( { apiKey, feature, sessionId } );
+		this.streamSeparator = '\r\n\r\n';
+	}
+
+	getHeaders() {
+		const headers = super.getHeaders();
+		if ( this.feature ) {
+			headers[ 'X-WPCOM-AI-Feature' ] = this.feature;
+			headers[ 'Access-Control-Request-Headers' ] =
+				'authorization,content-type,X-WPCOM-AI-Feature';
+		}
+
+		if ( this.sessionId ) {
+			headers[ 'X-WPCOM-Session-ID' ] = this.sessionId;
+		}
+
+		return headers;
+	}
+
+	getDefaultModel() {
+		return ChatModelType.GPT_4O;
+	}
+
+	getServiceUrl() {
+		return 'https://public-api.wordpress.com/wpcom/v2/graphs/v1/chat/completions';
+	}
+}
 export class OpenAIChatModel extends ChatModel {
 	getDefaultModel() {
 		return ChatModelType.GPT_4O;
