@@ -43,7 +43,7 @@ const useChatSettings = ( options ) => {
 
 	// if chat.stream !== stream, set it
 	useEffect( () => {
-		if ( options.stream && options.stream !== stream ) {
+		if ( options.stream !== undefined && options.stream !== stream ) {
 			setStream( options.stream );
 		}
 	}, [ options, stream, setStream ] );
