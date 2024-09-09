@@ -12,6 +12,7 @@ export const ChatModelService = {
 	OLLAMA: 'ollama',
 	LMSTUDIO: 'lmstudio',
 	LOCALAI: 'localai',
+	LOCAL_GRAPH: 'local-graph',
 	getAvailable: () => {
 		const services = [
 			ChatModelService.WPCOM_JETPACK_AI,
@@ -21,6 +22,7 @@ export const ChatModelService = {
 			ChatModelService.LOCALAI,
 			ChatModelService.OPENAI,
 			ChatModelService.GROQ,
+			ChatModelService.LOCAL_GRAPH,
 		];
 		return services;
 	},
@@ -62,6 +64,7 @@ export const ChatModelType = {
 			ChatModelType.LLAMA3_70B_8192,
 			ChatModelType.MISTRAL_03,
 			ChatModelType.HERMES_2_PRO_MISTRAL,
+			ChatModelType.LOCAL_GRAPH,
 		].includes( model ),
 	getAvailable: ( service ) => {
 		if ( service === ChatModelService.GROQ ) {
@@ -223,6 +226,7 @@ class ChatModel {
 		this.feature = feature;
 		this.sessionId = sessionId;
 		this.abortController = null;
+		this.streamSeparator = '\n\n';
 	}
 
 	getApiKey() {
@@ -449,7 +453,6 @@ class ChatModel {
 
 		const reader = response.body.getReader();
 		const decoder = new TextDecoder( 'utf-8' );
-		let buffer = '';
 
 		try {
 			while ( true ) {
@@ -457,20 +460,22 @@ class ChatModel {
 				if ( done ) {
 					break;
 				}
-
-				buffer += decoder.decode( value, { stream: true } );
-
-				let boundary = buffer.indexOf( '\n\n' );
-				while ( boundary !== -1 ) {
-					const chunk = buffer.slice( 0, boundary );
-					buffer = buffer.slice( boundary + 2 );
-
-					const event = this.parseEvent( chunk );
-					if ( event ) {
-						yield event;
+				const chunk = decoder.decode( value, { stream: true } );
+				const dataObjects = chunk.split( 'data: ' ).slice( 1 );
+				for ( const dataObject of dataObjects ) {
+					if ( dataObject.trim() === '[DONE]' ) {
+						yield {
+							event: 'done',
+						};
+						break;
 					}
-
-					boundary = buffer.indexOf( '\n\n' );
+					const data = JSON.parse( dataObject );
+					if ( data ) {
+						yield {
+							event: 'chat.message.partial',
+							data,
+						};
+					}
 				}
 			}
 		} catch ( err ) {
@@ -478,29 +483,6 @@ class ChatModel {
 		} finally {
 			reader.releaseLock();
 		}
-	}
-
-	parseEvent( chunk ) {
-		if ( ! chunk.startsWith( 'data:' ) ) {
-			throw new Error( 'Invalid response format' );
-		}
-
-		const event = 'chat.message.partial';
-		const data = chunk.slice( 5 ).trim();
-
-		if ( event && data ) {
-			if ( data === '[DONE]' ) {
-				return { event: 'done' };
-			}
-			try {
-				const parsedData = JSON.parse( data );
-				return { event, data: parsedData };
-			} catch ( e ) {
-				console.error( 'Error parsing JSON message:', e, data );
-			}
-		}
-
-		return null;
 	}
 
 	abortRequest() {
@@ -579,6 +561,8 @@ class ChatModel {
 				return new LMStudioChatModel( params );
 			case ChatModelService.LOCALAI:
 				return new LocalAIChatModel( params );
+			case ChatModelService.LOCAL_GRAPH:
+				return new LocalGraphChatModel( params );
 			default:
 				throw new Error( `Unknown service: ${ service }` );
 		}
@@ -660,6 +644,24 @@ export class LocalAIChatModel extends ChatModel {
 
 	getServiceUrl() {
 		return 'http://localhost:1234/v1/chat/completions';
+	}
+}
+
+export class LocalGraphChatModel extends ChatModel {
+	constructor( { apiKey, feature, sessionId } ) {
+		super( { apiKey, feature, sessionId } );
+		this.streamSeparator = '\r\n\r\n';
+	}
+
+	getApiKey() {
+		return this.apiKey;
+	}
+	getDefaultModel() {
+		return ChatModelType.GPT_4O;
+	}
+
+	getServiceUrl() {
+		return 'http://localhost:8000/ai-services/graphs/chat/completions';
 	}
 }
 

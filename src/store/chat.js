@@ -283,6 +283,7 @@ const runChatCompletion =
 					tool_calls: [],
 				};
 				for await ( const event of chatCompletionThreadStream ) {
+					console.log( 'event', event );
 					switch ( event.event ) {
 						case 'chat.message.partial':
 							// handle tool_calls
@@ -290,6 +291,7 @@ const runChatCompletion =
 							if ( event.data.choices[ 0 ].delta.tool_calls ) {
 								for ( const toolCall of event.data.choices[ 0 ]
 									.delta.tool_calls ) {
+									console.warn( 'toolCall', toolCall );
 									const existingToolCall = message.tool_calls[
 										toolCall.index
 									] ?? {
