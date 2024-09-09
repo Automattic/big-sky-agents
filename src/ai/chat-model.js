@@ -481,7 +481,6 @@ class ChatModel {
 	}
 
 	parseEvent( chunk ) {
-
 		if ( ! chunk.startsWith( 'data:' ) ) {
 			throw new Error( 'Invalid response format' );
 		}
