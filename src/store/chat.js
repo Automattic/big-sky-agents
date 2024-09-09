@@ -277,7 +277,7 @@ const runChatCompletion =
 					// graphConfig,
 				} );
 				const message = {
-					created: Date.now() / 1000,
+					created_at: Date.now() / 1000,
 					role: 'assistant',
 					content: '',
 					tool_calls: [],
