@@ -35,7 +35,7 @@ import useInformToolkit from '../hooks/use-inform-toolkit.js';
  * @param {Object}   root0                 The component props.
  * @param {string}   root0.apiKey          The token to use for the chat model.
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
- * @param {bool}     root0.stream          Stream
+ * @param {boolean}  root0.stream          Stream
  */
 const AgentsDemoUI = ( { apiKey, onApiKeyChanged, stream } ) => {
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
