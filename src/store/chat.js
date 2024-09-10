@@ -291,7 +291,6 @@ const runChatCompletion =
 							if ( event.data.choices[ 0 ].delta.tool_calls ) {
 								for ( const toolCall of event.data.choices[ 0 ]
 									.delta.tool_calls ) {
-									console.warn( 'toolCall', toolCall );
 									const existingToolCall = message.tool_calls[
 										toolCall.index
 									] ?? {

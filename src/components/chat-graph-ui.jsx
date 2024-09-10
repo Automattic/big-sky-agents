@@ -30,9 +30,8 @@ import useInformToolkit from '../hooks/use-inform-toolkit.js';
 import withImplicitOauth from '../hooks/with-implicit-oauth.jsx';
 
 /**
- * Renders the Chat Demo UI component - a simple chat without persistence.
+ * A chat UI that uses a "Chat Completions" endpoint that is powered by LangGraph.
  *
- * This component displays the user interface for the Agents Demo, which allows users to interact with agents and preview generated content.
  * @param {Object}   root0                 The component props.
  * @param {string}   root0.apiKey          The token to use for the chat model.
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
@@ -46,15 +45,8 @@ const ChatGraphUI = ( {
 	onApiKeyChanged,
 	stream,
 	service,
-	...props
 } ) => {
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
-
-	console.log( 'apiKey', {
-		apiKey,
-		service,
-		props,
-	} );
 
 	useChatSettings( {
 		apiKey: apiKey ?? wpcomOauthToken,

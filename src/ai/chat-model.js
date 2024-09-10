@@ -338,6 +338,8 @@ class ChatModel {
 
 		if ( serviceRequest.status === 401 ) {
 			throw new Error( 'Unauthorized' );
+		} else if ( serviceRequest.status === 403 ) {
+			throw new Error( 'Forbidden' );
 		} else if ( serviceRequest.status === 429 ) {
 			throw new Error( 'Rate limit exceeded' );
 		} else if ( serviceRequest.status === 500 ) {
@@ -447,6 +449,8 @@ class ChatModel {
 
 		if ( response.status === 401 ) {
 			throw new Error( 'Unauthorized' );
+		} else if ( response.status === 403 ) {
+			throw new Error( 'Forbidden' );
 		} else if ( response.status === 429 ) {
 			throw new Error( 'Rate limit exceeded' );
 		} else if ( response.status === 500 ) {
@@ -472,12 +476,20 @@ class ChatModel {
 						};
 						break;
 					}
-					const data = JSON.parse( dataObject );
-					if ( data ) {
-						yield {
-							event: 'chat.message.partial',
-							data,
-						};
+					try {
+						const data = JSON.parse( dataObject );
+						if ( data ) {
+							yield {
+								event: 'chat.message.partial',
+								data,
+							};
+						}
+					} catch ( error ) {
+						console.error(
+							'Error parsing chunk',
+							error,
+							dataObject
+						);
 					}
 				}
 			}
