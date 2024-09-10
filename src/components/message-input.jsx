@@ -5,9 +5,11 @@ import {
 	__experimentalInputControl as InputControl,
 	__experimentalItem as Item,
 	__experimentalItemGroup as ItemGroup,
+	__experimentalText as Text,
 } from '@wordpress/components';
 import { close } from '@wordpress/icons';
 import useChatIcon from '../hooks/use-chat-icon';
+import './message-input.scss';
 
 const sendSVG = (
 	<svg
@@ -103,10 +105,12 @@ function MessageInput( {
 
 	return (
 		<div className="user-message-input">
+			<Text as="p" size="small">
+				{ label }
+			</Text>
 			<InputControl
 				ref={ inputRef }
 				size="__unstable-large"
-				label={ label }
 				prefix={
 					<RiveComponent
 						style={ { width: '32px', height: '32px' } }

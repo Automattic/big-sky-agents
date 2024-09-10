@@ -1,9 +1,9 @@
-import ChatGraphUI from './chat-graph-ui.jsx';
+import ChatGraphDemoUI from './chat-graph-demo-ui.jsx';
 import { ChatModelService } from '../ai/chat-model.js';
 
 export default {
-	title: 'Example/LocalChatGraph',
-	component: ChatGraphUI,
+	title: 'Chat/Graph/Local/Stream',
+	component: ChatGraphDemoUI,
 	argTypes: {
 		apiKey: {
 			control: 'text',
@@ -19,11 +19,12 @@ export default {
 	],
 };
 
-const Template = ( args ) => <ChatGraphUI { ...args } />;
+const Template = ( args ) => <ChatGraphDemoUI { ...args } />;
 
 export const ChatGraphDemo = Template.bind( {} );
 
 ChatGraphDemo.args = {
 	service: ChatModelService.LOCAL_GRAPH,
 	apiKey: 'none',
+	stream: true,
 };

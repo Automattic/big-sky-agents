@@ -31,13 +31,14 @@ import useInformToolkit from '../hooks/use-inform-toolkit.js';
 /**
  * Renders the Chat Demo UI component - a simple chat without persistence.
  *
- * This component displays the user interface for the Agents Demo, which allows users to interact with agents and preview generated content.
+ * <!--
  * @param {Object}   root0                 The component props.
  * @param {string}   root0.apiKey          The token to use for the chat model.
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  * @param {boolean}  root0.stream          Stream
+ *                                         -->
  */
-const AgentsDemoUI = ( { apiKey, onApiKeyChanged, stream } ) => {
+const ChatDemoUI = ( { apiKey, onApiKeyChanged, stream } ) => {
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
 	useChatSettings( {
@@ -99,4 +100,4 @@ const AgentsDemoUI = ( { apiKey, onApiKeyChanged, stream } ) => {
 	);
 };
 
-export default AgentsDemoUI;
+export default ChatDemoUI;

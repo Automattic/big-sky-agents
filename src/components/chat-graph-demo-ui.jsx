@@ -32,14 +32,16 @@ import withImplicitOauth from '../hooks/with-implicit-oauth.jsx';
 /**
  * A chat UI that uses a "Chat Completions" endpoint that is powered by LangGraph.
  *
+ * <!--
  * @param {Object}   root0                 The component props.
  * @param {string}   root0.apiKey          The token to use for the chat model.
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  * @param {string}   root0.service         The service to use for the chat model.
  * @param {string}   root0.wpcomOauthToken The token to use for the chat model.
  * @param {boolean}  root0.stream          Stream
+ *                                         -->
  */
-const ChatGraphUI = ( {
+const ChatGraphDemoUI = ( {
 	apiKey,
 	wpcomOauthToken,
 	onApiKeyChanged,
@@ -107,6 +109,6 @@ const ChatGraphUI = ( {
 	);
 };
 
-export const WPCOMChatGraph = withImplicitOauth( ChatGraphUI );
+export const WPCOMChatGraph = withImplicitOauth( ChatGraphDemoUI );
 
-export default ChatGraphUI;
+export default ChatGraphDemoUI;

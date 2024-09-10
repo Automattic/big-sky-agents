@@ -283,7 +283,6 @@ const runChatCompletion =
 					tool_calls: [],
 				};
 				for await ( const event of chatCompletionThreadStream ) {
-					// console.log( 'event', event );
 					switch ( event.event ) {
 						case 'chat.message.partial':
 							// handle tool_calls
