@@ -4,20 +4,6 @@
 import log from '../utils/log-debug.js';
 import { EventSourceParserStream } from 'eventsource-parser/stream';
 
-function onParse( event ) {
-	if ( event.type === 'event' ) {
-		console.log( 'Received event!' );
-		console.log( 'id: %s', event.id || '<none>' );
-		console.log( 'name: %s', event.name || '<none>' );
-		console.log( 'data: %s', event.data );
-	} else if ( event.type === 'reconnect-interval' ) {
-		console.log(
-			'We should set reconnect interval to %d milliseconds',
-			event.value
-		);
-	}
-}
-
 // TODO: extract all this to a JSON configuration file
 export const ChatModelService = {
 	WPCOM_JETPACK_AI: 'wpcom-jetpack-ai',
