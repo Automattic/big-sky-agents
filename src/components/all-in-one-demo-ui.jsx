@@ -19,23 +19,22 @@ import { ToolkitsProvider } from './toolkits-provider/index.js';
 import useAgentExecutor from '../hooks/use-agent-executor.js';
 import PopUpControls from './popup-controls.jsx';
 import UserMessageInput from './user-message-input.jsx';
-import MessageContent from './message-content.jsx';
-import useChat from './chat-provider/use-chat.js';
 
+/**
+ * This demo uses ToolkitsProvider, AgentsProvider, ChatProvider, and PopUpControls to provide a completely standlone
+ * agent environment which does not use tools, toolkits, agents or context from any other components in the browser.
+ *
+ * It demonstrates a "Weather Agent" which can look up the weather.
+ *
+ * @return {JSX.Element}  The AllInOneDemo component
+ */
 const AllInOneDemo = () => {
 	useAgent( WeatherAgent );
 	useAgentExecutor();
-	const { assistantMessage } = useChat();
-
 	return (
 		<>
 			<ChatHistory />
-			{ assistantMessage && (
-				<>
-					<MessageContent content={ assistantMessage } />
-					<UserMessageInput />
-				</>
-			) }
+			<UserMessageInput />
 			<PopUpControls />
 		</>
 	);

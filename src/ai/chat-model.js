@@ -418,7 +418,7 @@ class ChatModel {
 		}
 		this.abortController = new AbortController();
 		const headers = this.getHeaders();
-		headers[ 'Content-Type' ] = 'text/event-stream';
+		// headers[ 'Content-Type' ] = 'text/event-stream';
 		model = model ?? this.getDefaultModel();
 		messages = formatMessages(
 			messages,
