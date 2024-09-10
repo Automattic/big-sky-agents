@@ -93,6 +93,10 @@ wpOAuth.setLocalStorageValue = function ( key, value ) {
 
 wpOAuth.getCurrentUrl = function () {
 	if ( typeof window !== 'undefined' ) {
+		// special handling for storybook
+		if ( window.parent ) {
+			return window.parent.location.href;
+		}
 		return window.location.href;
 	}
 	return '';
@@ -106,6 +110,9 @@ wpOAuth.getCurrentUrl = function () {
 
 wpOAuth.setCurrentUrl = function ( url ) {
 	if ( typeof window !== 'undefined' ) {
+		if ( window.parent ) {
+			return ( window.parent.location = url );
+		}
 		window.location = url;
 	}
 };
@@ -193,10 +200,10 @@ wpOAuth.request = function () {
 	);
 
 	// Listen for postMessage events
-	window.addEventListener( 'message', function ( event ) {
-		console.log( 'Received postMessage:', event.data );
-		// You might want to handle the received data here
-	} );
+	// window.addEventListener( 'message', function ( event ) {
+	// 	console.log( 'Received postMessage:', event.data );
+	// 	// You might want to handle the received data here
+	// } );
 
 	// Check if the window has been closed
 	const checkWindowClosed = setInterval( () => {

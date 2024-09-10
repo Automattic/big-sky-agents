@@ -21,7 +21,7 @@ const withImplicitOauth = ( Component ) => {
 		wpcomClientId: wpcomClientIdProp,
 		redirectUri: redirectUriProp,
 		wpcomOauthToken: wpcomOauthTokenProp,
-		service: serviceProp,
+		service,
 		...props
 	} ) => {
 		const cachedUser = useMemo(
@@ -50,10 +50,10 @@ const withImplicitOauth = ( Component ) => {
 		} );
 		const scope = useMemo( () => {
 			// if the service is WPCOM Jetpack, use blog scope, otherwise global
-			return serviceProp === ChatModelService.WPCOM_JETPACK_AI
-				? ''
+			return service === ChatModelService.WPCOM_JETPACK_AI
+				? 'auth users sites posts comments read'
 				: 'global';
-		}, [ serviceProp ] );
+		}, [ service ] );
 
 		const {
 			setWpcomOauthToken,
@@ -92,6 +92,13 @@ const withImplicitOauth = ( Component ) => {
 			}
 		}, [ cachedUser, setWpcomUserInfo, wpcomUserInfo ] );
 
+		const handleLogout = useCallback( () => {
+			wpOAuth.clean();
+			setLocalStorageItem( 'wp_user', null );
+			setWpcomOauthToken( null );
+			setWpcomUserInfo( null );
+		}, [ setWpcomOauthToken, setWpcomUserInfo ] );
+
 		const fetchUser = useCallback(
 			( accessToken ) => {
 				fetch( 'https://public-api.wordpress.com/rest/v1.1/me', {
@@ -116,29 +123,28 @@ const withImplicitOauth = ( Component ) => {
 					} )
 					.catch( ( error ) => {
 						console.error( 'Error fetching user data:', error );
+						handleLogout();
 					} );
 			},
-			[ setWpcomOauthToken, setWpcomUserInfo ]
+			[ setWpcomOauthToken, setWpcomUserInfo, handleLogout ]
 		);
-
-		const handleLogout = useCallback( () => {
-			wpOAuth.clean();
-			setLocalStorageItem( 'wp_user', null );
-			setWpcomOauthToken( null );
-			setWpcomUserInfo( null );
-		}, [ setWpcomOauthToken, setWpcomUserInfo ] );
 
 		// this occurs in a popup, so it's ok to close the window when done
 		// it stores the token in OAUTH_TOKEN_KEY
 		useEffect( () => {
 			if ( ! wpcomClientId ) {
+				console.warn( 'no wpcomClientId' );
 				return;
 			}
 			// Attempt to get the auth token - this will save the token in localstorage, where it's accessible by the parent
 			wpOAuth.checkUrlForAccessToken( ( auth ) => {
 				if ( auth && auth.access_token ) {
 					// close the popup
-					window.close();
+					if ( window.parent ) {
+						window.parent.close();
+					} else {
+						window.close();
+					}
 				}
 			} );
 		}, [ wpcomClientId, setWpcomOauthToken ] );
@@ -174,8 +180,7 @@ const withImplicitOauth = ( Component ) => {
 
 		const handleAuth = useCallback( () => {
 			setIsAuthenticating( true );
-			const response = wpOAuth.request();
-			console.log( 'auth response', response );
+			wpOAuth.request();
 		}, [] );
 
 		if ( ! wpcomClientId ) {
@@ -205,6 +210,7 @@ const withImplicitOauth = ( Component ) => {
 				<Component
 					wpcomOauthToken={ wpcomOauthToken }
 					user={ wpcomUserInfo }
+					service={ service }
 					{ ...props }
 				/>
 				<div className="big-sky__oauth-user-info">

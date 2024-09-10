@@ -1037,6 +1037,8 @@ export const reducer = ( state = initialState, action ) => {
 		// LLM-related
 		case 'SET_ENABLED':
 			return { ...state, enabled: action.enabled };
+		case 'SET_ERROR':
+			return { ...state, error: action.error };
 		case 'SET_ASSISTANT_ENABLED':
 			return { ...state, assistantEnabled: action.enabled };
 		case 'SET_AUTO_CREATE_ASSISTANT':
@@ -1710,6 +1712,12 @@ export const actions = {
 		return {
 			type: 'SET_ENABLED',
 			enabled,
+		};
+	},
+	setError: ( error ) => {
+		return {
+			type: 'SET_ERROR',
+			error,
 		};
 	},
 	setAssistantEnabled: ( enabled ) => {

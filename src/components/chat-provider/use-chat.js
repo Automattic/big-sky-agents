@@ -78,6 +78,7 @@ export default function useChat() {
 		setBaseUrl,
 		setStream,
 		setGraphConfig,
+		setError,
 	} = useDispatch( agentStore );
 
 	const {
@@ -168,6 +169,7 @@ export default function useChat() {
 		running,
 		// started,
 		error,
+		setError,
 
 		// graph config
 		graphConfig,

@@ -32,7 +32,6 @@ function AgentUI() {
 	} = useAgents();
 
 	const {
-		error,
 		loading,
 		running,
 		assistantMessage,
@@ -47,18 +46,6 @@ function AgentUI() {
 				running ? 'active' : 'inactive'
 			} big-sky__agent-ui-${ loading ? 'loading' : 'loaded ' }` }
 		>
-			{ error && (
-				<Notice
-					status="error"
-					isDismissible={ true }
-					onRemove={ () => {
-						onResetChat();
-					} }
-				>
-					{ error }
-				</Notice>
-			) }
-
 			<Flex align="flex-start" justify="stretch">
 				<FlexBlock className="big-sky__agent-ui-content">
 					<div className="big-sky__agent-name">{ agentName }</div>
