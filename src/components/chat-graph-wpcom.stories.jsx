@@ -1,9 +1,9 @@
-import ChatGraphUI from './chat-graph-ui.jsx';
+import { WPCOMChatGraph } from './chat-graph-ui.jsx';
 import { ChatModelService } from '../ai/chat-model.js';
 
 export default {
-	title: 'Example/LocalChatGraph',
-	component: ChatGraphUI,
+	title: 'Example/WPCOMChatGraph',
+	component: WPCOMChatGraph,
 	argTypes: {
 		apiKey: {
 			control: 'text',
@@ -19,11 +19,12 @@ export default {
 	],
 };
 
-const Template = ( args ) => <ChatGraphUI { ...args } />;
+const Template = ( args ) => <WPCOMChatGraph { ...args } />;
 
 export const ChatGraphDemo = Template.bind( {} );
 
 ChatGraphDemo.args = {
-	apiKey: 'none',
-	service: ChatModelService.LOCAL_GRAPH,
+	service: ChatModelService.WPCOM_GRAPH,
+	wpcomClientId: import.meta.env.STORYBOOK_WPCOM_CLIENT_ID,
+	redirectUri: import.meta.env.STORYBOOK_WPCOM_REDIRECT_URI,
 };

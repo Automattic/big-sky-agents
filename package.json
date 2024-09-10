@@ -137,5 +137,8 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
+  },
+  "dependencies": {
+    "eventsource-parser": "^2.0.1"
   }
 }

@@ -49,6 +49,19 @@ const withImplicitOauth = ( Component ) => {
 			setWpcomUserInfo,
 		} = useDispatch( tokenStore );
 
+		// set default from props
+		useEffect( () => {
+			if ( wpcomClientIdProp ) {
+				setWpcomClientId( wpcomClientIdProp );
+			}
+		}, [ wpcomClientIdProp, setWpcomClientId ] );
+
+		useEffect( () => {
+			if ( wpcomOauthTokenProp ) {
+				setWpcomOauthToken( wpcomOauthTokenProp );
+			}
+		}, [ wpcomOauthTokenProp, setWpcomOauthToken ] );
+
 		useEffect( () => {
 			// Initialize wpOAuth
 			if ( wpcomClientId ) {
@@ -65,18 +78,6 @@ const withImplicitOauth = ( Component ) => {
 				setWpcomUserInfo( cachedUser );
 			}
 		}, [ cachedUser, setWpcomUserInfo, wpcomUserInfo ] );
-
-		useEffect( () => {
-			if ( wpcomClientIdProp ) {
-				setWpcomClientId( wpcomClientIdProp );
-			}
-		}, [ wpcomClientIdProp, setWpcomClientId ] );
-
-		useEffect( () => {
-			if ( wpcomOauthTokenProp ) {
-				setWpcomOauthToken( wpcomOauthTokenProp );
-			}
-		}, [ wpcomOauthTokenProp, setWpcomOauthToken ] );
 
 		const fetchUser = useCallback(
 			( accessToken ) => {

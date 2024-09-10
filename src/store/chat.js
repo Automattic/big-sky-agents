@@ -343,6 +343,17 @@ const runChatCompletion =
 								message,
 							} );
 							break;
+						case 'chat.completion.error':
+							console.error(
+								'Chat completion error',
+								event.data
+							);
+							dispatch( {
+								type: 'CHAT_ERROR',
+								error: event.data.error,
+							} );
+							dispatch( { type: 'CHAT_END_REQUEST' } );
+							break;
 						case 'done':
 							dispatch( { type: 'CHAT_END_REQUEST' } );
 							break;

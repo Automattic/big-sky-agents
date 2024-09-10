@@ -2,6 +2,21 @@
  * Internal dependencies
  */
 import log from '../utils/log-debug.js';
+import { EventSourceParserStream } from 'eventsource-parser/stream';
+
+function onParse( event ) {
+	if ( event.type === 'event' ) {
+		console.log( 'Received event!' );
+		console.log( 'id: %s', event.id || '<none>' );
+		console.log( 'name: %s', event.name || '<none>' );
+		console.log( 'data: %s', event.data );
+	} else if ( event.type === 'reconnect-interval' ) {
+		console.log(
+			'We should set reconnect interval to %d milliseconds',
+			event.value
+		);
+	}
+}
 
 // TODO: extract all this to a JSON configuration file
 export const ChatModelService = {
@@ -418,6 +433,7 @@ class ChatModel {
 		}
 		this.abortController = new AbortController();
 		const headers = this.getHeaders();
+		headers[ 'Content-Type' ] = 'text/event-stream';
 		model = model ?? this.getDefaultModel();
 		messages = formatMessages(
 			messages,
@@ -458,8 +474,10 @@ class ChatModel {
 			throw new Error( `Internal server error: ${ responseText }` );
 		}
 
-		const reader = response.body.getReader();
-		const decoder = new TextDecoder( 'utf-8' );
+		const reader = response.body
+			.pipeThrough( new TextDecoderStream() )
+			.pipeThrough( new EventSourceParserStream() )
+			.getReader();
 
 		try {
 			while ( true ) {
@@ -467,31 +485,25 @@ class ChatModel {
 				if ( done ) {
 					break;
 				}
-				const chunk = decoder.decode( value, { stream: true } );
-				const dataObjects = chunk.split( 'data: ' ).slice( 1 );
-				for ( const dataObject of dataObjects ) {
-					if ( dataObject.trim() === '[DONE]' ) {
-						yield {
-							event: 'done',
-						};
-						break;
-					}
-					try {
-						const data = JSON.parse( dataObject );
-						if ( data ) {
-							yield {
-								event: 'chat.message.partial',
-								data,
-							};
-						}
-					} catch ( error ) {
-						console.error(
-							'Error parsing chunk',
-							error,
-							dataObject
-						);
-					}
+
+				if ( value.data === '[DONE]' ) {
+					yield {
+						event: 'done',
+					};
+					break;
 				}
+
+				if ( value.object === 'chat.completion.error' ) {
+					yield {
+						event: 'chat.completion.error',
+						data: JSON.parse( value.data ),
+					};
+					break;
+				}
+				yield {
+					event: 'chat.message.partial',
+					data: JSON.parse( value.data ),
+				};
 			}
 		} catch ( err ) {
 			console.error( 'Stream reading error:', err );
