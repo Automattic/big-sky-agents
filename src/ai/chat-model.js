@@ -230,7 +230,6 @@ class ChatModel {
 		this.feature = feature;
 		this.sessionId = sessionId;
 		this.abortController = null;
-		this.streamSeparator = '\n\n';
 	}
 
 	getApiKey() {
@@ -665,7 +664,6 @@ export class LocalAIChatModel extends ChatModel {
 export class LocalGraphChatModel extends ChatModel {
 	constructor( { apiKey, feature, sessionId } ) {
 		super( { apiKey, feature, sessionId } );
-		this.streamSeparator = '\r\n\r\n';
 	}
 
 	getApiKey() {
@@ -683,7 +681,6 @@ export class LocalGraphChatModel extends ChatModel {
 export class WPCOMGraphChatModel extends ChatModel {
 	constructor( { apiKey, feature, sessionId } ) {
 		super( { apiKey, feature, sessionId } );
-		this.streamSeparator = '\r\n\r\n';
 	}
 
 	getHeaders() {
