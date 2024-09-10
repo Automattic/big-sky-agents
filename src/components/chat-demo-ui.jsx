@@ -27,6 +27,7 @@ import useAgentExecutor from '../hooks/use-agent-executor.js';
 import useSiteToolkit from '../hooks/use-site-toolkit.js';
 import useGoalToolkit from '../hooks/use-goal-toolkit.js';
 import useInformToolkit from '../hooks/use-inform-toolkit.js';
+import withImplicitOauth from '../hooks/with-implicit-oauth.jsx';
 
 /**
  * Renders the Chat Demo UI component - a simple chat without persistence.
@@ -36,16 +37,24 @@ import useInformToolkit from '../hooks/use-inform-toolkit.js';
  * @param {string}   root0.apiKey          The token to use for the chat model.
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  * @param {boolean}  root0.stream          Stream
+ * @param {string}   root0.wpcomOauthToken The token to use for the chat model.
+ * @param {string}   root0.service         The service to use for the chat model.
  *                                         -->
  */
-const ChatDemoUI = ( { apiKey, onApiKeyChanged, stream } ) => {
+const ChatDemoUI = ( {
+	apiKey,
+	onApiKeyChanged,
+	stream,
+	wpcomOauthToken,
+	service,
+} ) => {
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
 	useChatSettings( {
-		apiKey,
+		apiKey: apiKey ?? wpcomOauthToken,
 		stream,
 		feature: 'big-sky',
-		service: ChatModelService.OPENAI,
+		service: service ?? ChatModelService.OPENAI,
 		model: ChatModelType.GPT_4O,
 		initialAgentId: WAPUU_AGENT_ID,
 		defaultAssistantId: WAPUU_ASSISTANT_ID,
@@ -99,5 +108,7 @@ const ChatDemoUI = ( { apiKey, onApiKeyChanged, stream } ) => {
 		</>
 	);
 };
+
+export const WPCOMChatDemoUI = withImplicitOauth( ChatDemoUI );
 
 export default ChatDemoUI;

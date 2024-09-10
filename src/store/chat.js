@@ -1520,7 +1520,7 @@ export const selectors = {
 	isAssistantAvailable: ( state ) =>
 		selectors.isServiceAvailable( state ) &&
 		state.assistantEnabled &&
-		selectors.getAssistantId( state ),
+		!! selectors.getAssistantId( state ),
 	isAvailable: ( state ) =>
 		selectors.isChatAvailable( state ) ||
 		selectors.isAssistantAvailable( state ),

@@ -3,6 +3,7 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { Button, Modal } from '@wordpress/components';
 import wpOAuth from '../utils/implicit-oauth.js';
 import { store as tokenStore } from '../store/index.js';
+import { ChatModelService } from '../ai/chat-model.js';
 import './with-implicit-oauth.scss';
 
 // Utility functions to handle localStorage
@@ -20,12 +21,18 @@ const withImplicitOauth = ( Component ) => {
 		wpcomClientId: wpcomClientIdProp,
 		redirectUri: redirectUriProp,
 		wpcomOauthToken: wpcomOauthTokenProp,
+		service: serviceProp,
 		...props
 	} ) => {
 		const cachedUser = useMemo(
 			() => getLocalStorageItem( 'wp_user' ),
 			[]
 		);
+
+		// const service = useSelect( ( select ) =>
+		// 	select( tokenStore ).getService()
+		// );
+
 		const [ isAuthenticating, setIsAuthenticating ] = useState( false );
 		const {
 			wpcomUserInfo,
@@ -41,6 +48,12 @@ const withImplicitOauth = ( Component ) => {
 					select( tokenStore ).getWpcomOauthRedirectUri(),
 			};
 		} );
+		const scope = useMemo( () => {
+			// if the service is WPCOM Jetpack, use blog scope, otherwise global
+			return serviceProp === ChatModelService.WPCOM_JETPACK_AI
+				? ''
+				: 'global';
+		}, [ serviceProp ] );
 
 		const {
 			setWpcomOauthToken,
@@ -68,10 +81,10 @@ const withImplicitOauth = ( Component ) => {
 				wpOAuth( wpcomClientId, {
 					response_type: 'token',
 					redirect: wpcomOauthRedirectUri,
-					scope: 'global',
+					scope,
 				} );
 			}
-		}, [ wpcomClientId, wpcomOauthRedirectUri ] );
+		}, [ wpcomClientId, wpcomOauthRedirectUri, scope ] );
 
 		useEffect( () => {
 			if ( cachedUser && ! wpcomUserInfo ) {

@@ -1,8 +1,8 @@
-import ChatWithArtifacts from './index.jsx';
+import { WPCOMChatWithGutenberg } from './index.jsx';
 
 export default {
-	title: 'Example/ChatWithArtifacts',
-	component: ChatWithArtifacts,
+	title: 'Features/Gutenberg/WPCOM',
+	component: WPCOMChatWithGutenberg,
 	argTypes: {
 		apiKey: {
 			control: 'text',
@@ -18,11 +18,14 @@ export default {
 	],
 };
 
-const Template = ( args ) => <ChatWithArtifacts { ...args } />;
+const Template = ( args ) => <WPCOMChatWithGutenberg { ...args } />;
 
 export const ChatWithArtifactsDemo = Template.bind( {} );
 
 ChatWithArtifactsDemo.args = {
 	apiKey: import.meta.env.STORYBOOK_LANGCHAIN_API_KEY,
 	baseUrl: import.meta.env.STORYBOOK_LANGGRAPH_CLOUD_BASE_URL,
+	wpcomClientId: import.meta.env.STORYBOOK_WPCOM_CLIENT_ID,
+	wpcomOauthToken: import.meta.env.STORYBOOK_WPCOM_ACCESS_TOKEN,
+	redirectUri: import.meta.env.STORYBOOK_WPCOM_REDIRECT_URI,
 };

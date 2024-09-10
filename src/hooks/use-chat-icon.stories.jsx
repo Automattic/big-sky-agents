@@ -8,7 +8,7 @@ const ChatIcon = () => {
 };
 
 export default {
-	title: 'Example/useChatIcon',
+	title: 'Components/useChatIcon',
 	component: ChatIcon,
 };
 

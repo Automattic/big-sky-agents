@@ -101,7 +101,7 @@ function MessageInput( {
 		if ( inputRef.current ) {
 			inputRef.current.focus();
 		}
-	}, [ value ] );
+	}, [] );
 
 	return (
 		<div className="user-message-input">

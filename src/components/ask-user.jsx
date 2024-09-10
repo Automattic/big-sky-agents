@@ -98,12 +98,14 @@ function AskUser( { args, respond } ) {
 		( answer ) => {
 			setThought( '' );
 			respond( answer, `The user answered: "${ answer }"` );
+			setCurrentAnswer( '' );
 		},
 		[ setThought, respond ]
 	);
 
 	const onCancel = useCallback( () => {
 		setThought( '' );
+		setCurrentAnswer( '' );
 		respond( 'User canceled' );
 	}, [ setThought, respond ] );
 

@@ -25,6 +25,6 @@ export const AssistantsDemoUIOpenAI = Template.bind( {} );
 
 AssistantsDemoUIOpenAI.args = {
 	apiKey: import.meta.env.STORYBOOK_OPENAI_API_KEY,
-	provider: ChatModelType.OPENAI,
+	service: ChatModelType.OPENAI,
 	stream: true,
 };

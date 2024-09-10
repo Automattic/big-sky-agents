@@ -21,9 +21,9 @@ import useAgentExecutor from '../../hooks/use-agent-executor.js';
 import useAgentsToolkit from '../../hooks/use-agents-toolkit.js';
 import AskUserToolkit from '../../ai/toolkits/ask-user-toolkit.js';
 import InformToolkit from '../../ai/toolkits/inform-toolkit.js';
-import { useChat } from '../chat-provider';
+import { useChat } from '../chat-provider/index.js';
 import MessageInput from '../message-input.jsx';
-import { useAgent } from '../agents-provider';
+import { useAgent } from '../agents-provider/index.js';
 // for now, hack this in
 import withImplicitOauth from '../../hooks/with-implicit-oauth.jsx';
 
@@ -53,7 +53,7 @@ const GraphAgent = {
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
  *                                         -->
  */
-const ChatWithArtifacts = ( {
+const ChatWithGutenberg = ( {
 	baseUrl,
 	apiKey,
 	onApiKeyChanged,
@@ -134,6 +134,6 @@ const ChatWithArtifacts = ( {
 	);
 };
 
-export const WPCOMChatWithArtifacts = withImplicitOauth( ChatWithArtifacts );
+export const WPCOMChatWithGutenberg = withImplicitOauth( ChatWithGutenberg );
 
-export default ChatWithArtifacts;
+export default ChatWithGutenberg;

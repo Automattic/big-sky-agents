@@ -6,7 +6,6 @@
  * Internal dependencies
  */
 import AgentUI from './agent-ui.jsx';
-import ChatHistory from './chat-history.jsx';
 import { ChatModelService, ChatModelType } from '../ai/chat-model.js';
 import './chat-demo-ui.scss';
 
@@ -95,6 +94,16 @@ const WeatherAgent = {
 	},
 };
 
+/**
+ * This demo uses ToolkitsProvider, AgentsProvider, ChatProvider, and PopUpControls to add a custom agent and toolkit to the chat.
+ *
+ * It demonstrates a "Weather Agent" which can look up the weather.using the weather toolkit and ask structured questions to the user using the AskUserToolkit.
+ * <!--
+ * @param {Object} root0
+ * @param {string} root0.apiKey
+ * @return {JSX.Element}  The AllInOneDemo component
+ * -->
+ */
 const DemoWithSingleAgent = ( { apiKey } ) => {
 	return (
 		<ToolkitsProvider toolkits={ [ AskUserToolkit, GetWeatherToolkit ] }>

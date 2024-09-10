@@ -1,7 +1,7 @@
 import SingleAssistantDemoUI from './single-assistant-demo-ui';
 
 export default {
-	title: 'Example/SingleAssistantDemoUI',
+	title: 'Features/Shared Toolkits',
 	component: SingleAssistantDemoUI,
 	argTypes: {
 		apiKey: {
