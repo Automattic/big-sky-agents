@@ -169,7 +169,6 @@ const withImplicitOauth = ( Component ) => {
 		// it stores the token in OAUTH_TOKEN_KEY
 		useEffect( () => {
 			if ( ! wpcomClientId ) {
-				console.warn( 'no wpcomClientId' );
 				return;
 			}
 			// Attempt to get the auth token - this will save the token in localstorage, where it's accessible by the parent
