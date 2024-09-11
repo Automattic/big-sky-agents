@@ -477,18 +477,30 @@ class ChatModel {
 					};
 					break;
 				}
+				const data = JSON.parse( value.data );
 
-				if ( value.object === 'chat.completion.error' ) {
+				if ( data.object === 'chat.completion.error' ) {
 					yield {
 						event: 'chat.completion.error',
-						data: JSON.parse( value.data ),
+						data,
 					};
 					break;
+				} else if ( data.object === 'chat.completion.chunk' ) {
+					yield {
+						event: 'chat.message.partial',
+						data,
+					};
+				} else if (
+					data.object === 'moderation.result.combined' &&
+					Object.keys( data.result ).length > 0
+				) {
+					yield {
+						event: 'moderation.result.combined',
+						data: data.result,
+					};
+				} else {
+					console.error( 'Unknown object type', value );
 				}
-				yield {
-					event: 'chat.message.partial',
-					data: JSON.parse( value.data ),
-				};
 			}
 		} catch ( err ) {
 			console.error( 'Stream reading error:', err );
