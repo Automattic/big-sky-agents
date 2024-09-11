@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { Flex, FlexBlock, Notice } from '@wordpress/components';
+import { Flex, FlexBlock } from '@wordpress/components';
 import { useState } from '@wordpress/element';
 
 /**

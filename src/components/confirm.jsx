@@ -4,7 +4,7 @@ import { CONFIRM_TOOL_NAME } from '../ai/tools/confirm.js';
 import { useCallback } from '@wordpress/element';
 import withToolCall from './with-tool-call.jsx';
 
-export function Confirm( { args, respond, onConfirm, ...rest } ) {
+export function Confirm( { args, respond, onConfirm } ) {
 	const onSubmit = useCallback(
 		( value ) => {
 			respond(
