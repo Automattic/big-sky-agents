@@ -24,6 +24,7 @@ export const ChatDemoWPCOM = Template.bind( {} );
 
 ChatDemoWPCOM.args = {
 	service: ChatModelService.WPCOM_JETPACK_AI,
+	wpcomSiteId: import.meta.env.STORYBOOK_WPCOM_BLOG_ID,
 	wpcomClientId: import.meta.env.STORYBOOK_WPCOM_CLIENT_ID,
 	redirectUri: import.meta.env.STORYBOOK_WPCOM_REDIRECT_URI,
 	stream: true,

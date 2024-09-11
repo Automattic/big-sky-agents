@@ -21,6 +21,7 @@ const withImplicitOauth = ( Component ) => {
 		wpcomClientId: wpcomClientIdProp,
 		redirectUri: redirectUriProp,
 		wpcomOauthToken: wpcomOauthTokenProp,
+		wpcomSiteId,
 		service,
 		...props
 	} ) => {
@@ -34,6 +35,7 @@ const withImplicitOauth = ( Component ) => {
 		// );
 
 		const [ isAuthenticating, setIsAuthenticating ] = useState( false );
+		const [ apiKey, setApiKey ] = useState( null );
 		const {
 			wpcomUserInfo,
 			wpcomOauthToken,
@@ -48,12 +50,47 @@ const withImplicitOauth = ( Component ) => {
 					select( tokenStore ).getWpcomOauthRedirectUri(),
 			};
 		} );
-		const scope = useMemo( () => {
-			// if the service is WPCOM Jetpack, use blog scope, otherwise global
-			return service === ChatModelService.WPCOM_JETPACK_AI
-				? 'auth users sites posts comments read'
-				: 'global';
-		}, [ service ] );
+
+		// const scope = useMemo( () => {
+		// 	// if the service is WPCOM Jetpack, use blog scope, otherwise global
+		// 	return service === ChatModelService.WPCOM_JETPACK_AI
+		// 		? 'ai auth users sites posts comments read'
+		// 		: 'global';
+		// }, [ service ] );
+
+		useEffect( () => {
+			// if service === ChatModelService.WPCOM_JETPACK_AI then fetch the JWT
+			if (
+				wpcomOauthToken &&
+				wpcomSiteId &&
+				service === ChatModelService.WPCOM_JETPACK_AI
+			) {
+				fetch(
+					'https://public-api.wordpress.com/wpcom/v2/sites/' +
+						wpcomSiteId +
+						'/jetpack-openai-query/jwt',
+					{
+						method: 'POST',
+						headers: {
+							Authorization: `Bearer ${ wpcomOauthToken }`,
+						},
+					}
+				)
+					.then( ( response ) => response.json() )
+					.then( ( jwt ) => {
+						console.log( 'jwt', jwt );
+						if ( jwt.error ) {
+							setApiKey( null );
+							console.error( 'Error fetching jwt:', jwt.error );
+							return;
+						}
+						setApiKey( jwt.token );
+					} )
+					.catch( ( error ) => {
+						console.error( 'Error fetching jwt:', error );
+					} );
+			}
+		}, [ service, wpcomOauthToken, wpcomSiteId ] );
 
 		const {
 			setWpcomOauthToken,
@@ -81,10 +118,10 @@ const withImplicitOauth = ( Component ) => {
 				wpOAuth( wpcomClientId, {
 					response_type: 'token',
 					redirect: wpcomOauthRedirectUri,
-					scope,
+					scope: 'global',
 				} );
 			}
-		}, [ wpcomClientId, wpcomOauthRedirectUri, scope ] );
+		}, [ wpcomClientId, wpcomOauthRedirectUri ] );
 
 		useEffect( () => {
 			if ( cachedUser && ! wpcomUserInfo ) {
@@ -211,6 +248,7 @@ const withImplicitOauth = ( Component ) => {
 					wpcomOauthToken={ wpcomOauthToken }
 					user={ wpcomUserInfo }
 					service={ service }
+					apiKey={ apiKey }
 					{ ...props }
 				/>
 				<div className="big-sky__oauth-user-info">
