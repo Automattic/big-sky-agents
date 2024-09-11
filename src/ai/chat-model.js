@@ -316,8 +316,6 @@ class ChatModel {
 	 * @param {Array<Object>} request.messages    The messages to use
 	 * @param {Array<Object>} request.tools       The tools to use
 	 * @param {string}        request.tool_choice The tool to use
-	 * @param {boolean}       request.stream      Whether to stream the response
-	 *
 	 * @return {Promise<Object>} The response object
 	 */
 	async call( request ) {
@@ -512,9 +510,10 @@ class ChatModel {
 		messages,
 		tools,
 		tool_choice = null,
+		stream = false,
 	} ) {
 		const params = {
-			stream: false,
+			stream,
 			model,
 			temperature,
 			messages,
