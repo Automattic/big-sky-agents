@@ -78,7 +78,6 @@ const withImplicitOauth = ( Component ) => {
 				)
 					.then( ( response ) => response.json() )
 					.then( ( jwt ) => {
-						console.log( 'jwt', jwt );
 						if ( jwt.error ) {
 							setApiKey( null );
 							console.error( 'Error fetching jwt:', jwt.error );
