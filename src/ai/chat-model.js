@@ -434,17 +434,19 @@ class ChatModel {
 			`🤖 Streaming ${ this.constructor.name } with model ${ model }, temperature ${ temperature }, max_tokens ${ max_tokens }`
 		);
 
+		const params = this.getParams( {
+			model,
+			temperature,
+			max_tokens,
+			messages,
+			tools,
+			stream: true,
+		} );
+
 		const response = await fetch( this.getServiceUrl(), {
 			method: 'POST',
 			headers,
-			body: JSON.stringify( {
-				model,
-				temperature,
-				max_tokens,
-				messages,
-				tools,
-				stream: true,
-			} ),
+			body: JSON.stringify( params ),
 			signal: this.abortController.signal,
 		} );
 

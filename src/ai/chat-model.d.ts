@@ -7,6 +7,8 @@ export declare class ChatModelService {
 	static readonly OLLAMA: 'ollama';
 	static readonly LMSTUDIO: 'lmstudio';
 	static readonly LOCALAI: 'localai';
+	static readonly LOCAL_GRAPH: 'local-graph';
+	static readonly WPCOM_GRAPH: 'wpcom-graph';
 
 	static getAvailable: () => string[];
 	static getDefault: () => string;
@@ -70,6 +72,8 @@ declare class OllamaChatModel extends ChatModel {}
 declare class LocalAIChatModel extends ChatModel {}
 declare class WPCOMJetpackAIChatModel extends ChatModel {}
 declare class WPCOMOpenAIChatModel extends ChatModel {}
+declare class LocalGraphChatModel extends ChatModel {}
+declare class WPCOMGraphChatModel extends ChatModel {}
 
 export default ChatModel;
 export {
@@ -79,4 +83,6 @@ export {
 	LocalAIChatModel,
 	WPCOMJetpackAIChatModel,
 	WPCOMOpenAIChatModel,
+	LocalGraphChatModel,
+	WPCOMGraphChatModel,
 };

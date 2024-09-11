@@ -56,7 +56,7 @@ const initialState = {
 	service: null,
 	temperature: 0.1,
 	apiKey: null,
-	stream: true,
+	stream: false,
 
 	// graph related (langgraph)
 	graphConfig: {},
