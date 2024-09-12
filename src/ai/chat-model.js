@@ -298,7 +298,7 @@ class ChatModel {
 		} else if ( choice.finish_reason === 'length' ) {
 			throw new Error( 'Finish reason length not implemented' );
 		} else if ( choice.finish_reason === 'content_filter' ) {
-			throw new Error( 'Finish reason content_filter not implemented' );
+			throw new Error( 'The server rejected the request' );
 		} else if ( choice.finish_reason === 'stop' ) {
 		}
 
