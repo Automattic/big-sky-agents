@@ -1,7 +1,7 @@
 import AllInOneDemoUI from './all-in-one-demo-ui.jsx';
 
 export default {
-	title: 'Example/AllInOneDemoUI',
+	title: 'Features/Standalone Chat',
 	component: AllInOneDemoUI,
 	argTypes: {
 		apiKey: {
@@ -20,8 +20,8 @@ export default {
 
 const Template = ( args ) => <AllInOneDemoUI { ...args } />;
 
-export const AssistantsDemoUIOpenAI = Template.bind( {} );
+export const AllInOneDemo = Template.bind( {} );
 
-AssistantsDemoUIOpenAI.args = {
+AllInOneDemo.args = {
 	apiKey: import.meta.env.STORYBOOK_OPENAI_API_KEY,
 };

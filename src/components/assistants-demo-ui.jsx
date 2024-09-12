@@ -31,26 +31,28 @@ import useSiteToolkit from '../hooks/use-site-toolkit.js';
 import useGoalToolkit from '../hooks/use-goal-toolkit.js';
 import useInformToolkit from '../hooks/use-inform-toolkit.js';
 import useAskUserToolkit from '../hooks/use-ask-user-toolkit.js';
+import withImplicitOauth from '../hooks/with-implicit-oauth.jsx';
 
 /**
- * An "Assistant" is just a server-side version of an Agent. We should probably come up with better names for these.
+ * An "Assistant" is an agent with server-side tools, messages, and context.
  *
- * This component displays the user interface for the Assistants Demo, which allows users to interact with assistants and preview generated content.
+ * This demo shows an Assistant using OpenAI's Assistant API.
  *
  * <!--
- * @param {Object}   root0                 The component props.
- * @param {string}   root0.apiKey          The token to use for the chat model.
- * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
- *                                         -->
+ * @param {Object}                root0                 The component props.
+ * @param {string}                root0.apiKey          The token to use for the chat model.
+ * @param {Function}              root0.onApiKeyChanged Callback function to call when the token changes.
+ * @param {AssistantModelService} root0.service         The service to use for the assistant model.
+ *                                                      -->
  */
-const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
+const AssistantsDemoUI = ( { apiKey, onApiKeyChanged, service } ) => {
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
 	useChatSettings( {
 		apiKey,
 		feature: 'big-sky',
 		assistantEnabled: true,
-		service: AssistantModelService.OPENAI,
+		service: service ?? AssistantModelService.OPENAI,
 		model: AssistantModelType.GPT_4O_MINI,
 		initialAgentId: WAPUU_AGENT_ID,
 		defaultAssistantId: WAPUU_ASSISTANT_ID,
@@ -105,5 +107,7 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged } ) => {
 		</>
 	);
 };
+
+export const WPCOMAssistantsDemoUI = withImplicitOauth( AssistantsDemoUI );
 
 export default AssistantsDemoUI;

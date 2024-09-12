@@ -8,7 +8,8 @@ import { Notice, Spinner } from '@wordpress/components';
 import './chat-history.scss';
 
 function ChatHistory( { avatarUrl } ) {
-	const { error, messages, toolOutputs, isThreadDataLoaded } = useChat();
+	const { error, messages, toolOutputs, isThreadDataLoaded, setError } =
+		useChat();
 	const chatHistoryRef = useRef( null );
 
 	const scrollToBottom = () => {
@@ -24,7 +25,11 @@ function ChatHistory( { avatarUrl } ) {
 
 	return (
 		<div className="big-sky__messages" ref={ chatHistoryRef }>
-			{ error && <Notice status="error">{ error }</Notice> }
+			{ error && (
+				<Notice status="error" onRemove={ () => setError( null ) }>
+					{ error }
+				</Notice>
+			) }
 			{ ! isThreadDataLoaded && (
 				<Notice>
 					<Spinner />

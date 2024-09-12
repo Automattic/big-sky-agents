@@ -11,6 +11,8 @@ export {
 	LocalAIChatModel,
 	WPCOMJetpackAIChatModel,
 	WPCOMOpenAIChatModel,
+	LocalGraphChatModel,
+	WPCOMGraphChatModel,
 } from './ai/chat-model.js';
 export {
 	AssistantModelService,

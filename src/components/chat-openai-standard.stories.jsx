@@ -1,7 +1,7 @@
 import ChatDemoUI from './chat-demo-ui';
-
+import { ChatModelService } from '../ai/chat-model';
 export default {
-	title: 'Example/ChatDemoUI - Stream',
+	title: 'Chat/OpenAI/Standard',
 	component: ChatDemoUI,
 	argTypes: {
 		apiKey: {
@@ -24,5 +24,6 @@ export const ChatDemoUIOpenAI = Template.bind( {} );
 
 ChatDemoUIOpenAI.args = {
 	apiKey: import.meta.env.STORYBOOK_OPENAI_API_KEY,
-	stream: true,
+	service: ChatModelService.OPENAI,
+	stream: false,
 };

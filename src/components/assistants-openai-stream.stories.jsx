@@ -1,8 +1,9 @@
-import SingleAssistantDemoUI from './single-assistant-demo-ui';
+import AssistantsDemoUI from './assistants-demo-ui';
+import { ChatModelType } from '../ai/chat-model';
 
 export default {
-	title: 'Features/Shared Toolkits',
-	component: SingleAssistantDemoUI,
+	title: 'Assistants/OpenAI/Stream',
+	component: AssistantsDemoUI,
 	argTypes: {
 		apiKey: {
 			control: 'text',
@@ -18,10 +19,12 @@ export default {
 	],
 };
 
-const Template = ( args ) => <SingleAssistantDemoUI { ...args } />;
+const Template = ( args ) => <AssistantsDemoUI { ...args } />;
 
 export const AssistantsDemoUIOpenAI = Template.bind( {} );
 
 AssistantsDemoUIOpenAI.args = {
 	apiKey: import.meta.env.STORYBOOK_OPENAI_API_KEY,
+	service: ChatModelType.OPENAI,
+	stream: true,
 };

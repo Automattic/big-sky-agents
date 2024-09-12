@@ -30,22 +30,22 @@ import useInformToolkit from '../hooks/use-inform-toolkit.js';
 import withImplicitOauth from '../hooks/with-implicit-oauth.jsx';
 
 /**
- * Renders the Chat Demo UI component - a simple chat without persistence.
+ * A chat UI that uses a "Chat Completions" endpoint that is powered by LangGraph.
  *
  * <!--
  * @param {Object}   root0                 The component props.
  * @param {string}   root0.apiKey          The token to use for the chat model.
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
- * @param {boolean}  root0.stream          Stream
- * @param {string}   root0.wpcomOauthToken The token to use for the chat model.
  * @param {string}   root0.service         The service to use for the chat model.
+ * @param {string}   root0.wpcomOauthToken The token to use for the chat model.
+ * @param {boolean}  root0.stream          Stream
  *                                         -->
  */
-const ChatDemoUI = ( {
+const ChatGraphDemoUI = ( {
 	apiKey,
+	wpcomOauthToken,
 	onApiKeyChanged,
 	stream,
-	wpcomOauthToken,
 	service,
 } ) => {
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
@@ -53,8 +53,8 @@ const ChatDemoUI = ( {
 	useChatSettings( {
 		apiKey: apiKey ?? wpcomOauthToken,
 		stream,
-		feature: 'big-sky',
-		service: service ?? ChatModelService.OPENAI,
+		feature: 'big-sky-plugin',
+		service: service ?? ChatModelService.WPCOM_GRAPH,
 		model: ChatModelType.GPT_4O,
 		initialAgentId: WAPUU_AGENT_ID,
 		defaultAssistantId: WAPUU_ASSISTANT_ID,
@@ -109,6 +109,6 @@ const ChatDemoUI = ( {
 	);
 };
 
-export const WPCOMChatDemoUI = withImplicitOauth( ChatDemoUI );
+export const WPCOMChatGraph = withImplicitOauth( ChatGraphDemoUI );
 
-export default ChatDemoUI;
+export default ChatGraphDemoUI;

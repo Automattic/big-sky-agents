@@ -2,6 +2,7 @@
  * Internal dependencies
  */
 import log from '../utils/log-debug.js';
+import { EventSourceParserStream } from 'eventsource-parser/stream';
 
 // TODO: extract all this to a JSON configuration file
 export const ChatModelService = {
@@ -12,6 +13,8 @@ export const ChatModelService = {
 	OLLAMA: 'ollama',
 	LMSTUDIO: 'lmstudio',
 	LOCALAI: 'localai',
+	LOCAL_GRAPH: 'local-graph',
+	WPCOM_GRAPH: 'wpcom-graph',
 	getAvailable: () => {
 		const services = [
 			ChatModelService.WPCOM_JETPACK_AI,
@@ -21,6 +24,8 @@ export const ChatModelService = {
 			ChatModelService.LOCALAI,
 			ChatModelService.OPENAI,
 			ChatModelService.GROQ,
+			ChatModelService.LOCAL_GRAPH,
+			ChatModelService.WPCOM_GRAPH,
 		];
 		return services;
 	},
@@ -62,6 +67,8 @@ export const ChatModelType = {
 			ChatModelType.LLAMA3_70B_8192,
 			ChatModelType.MISTRAL_03,
 			ChatModelType.HERMES_2_PRO_MISTRAL,
+			ChatModelType.LOCAL_GRAPH,
+			ChatModelType.WPCOM_GRAPH,
 		].includes( model ),
 	getAvailable: ( service ) => {
 		if ( service === ChatModelService.GROQ ) {
@@ -291,7 +298,7 @@ class ChatModel {
 		} else if ( choice.finish_reason === 'length' ) {
 			throw new Error( 'Finish reason length not implemented' );
 		} else if ( choice.finish_reason === 'content_filter' ) {
-			throw new Error( 'Finish reason content_filter not implemented' );
+			// throw new Error( 'The server rejected the request' );
 		} else if ( choice.finish_reason === 'stop' ) {
 		}
 
@@ -309,8 +316,6 @@ class ChatModel {
 	 * @param {Array<Object>} request.messages    The messages to use
 	 * @param {Array<Object>} request.tools       The tools to use
 	 * @param {string}        request.tool_choice The tool to use
-	 * @param {boolean}       request.stream      Whether to stream the response
-	 *
 	 * @return {Promise<Object>} The response object
 	 */
 	async call( request ) {
@@ -331,6 +336,8 @@ class ChatModel {
 
 		if ( serviceRequest.status === 401 ) {
 			throw new Error( 'Unauthorized' );
+		} else if ( serviceRequest.status === 403 ) {
+			throw new Error( 'Forbidden' );
 		} else if ( serviceRequest.status === 429 ) {
 			throw new Error( 'Rate limit exceeded' );
 		} else if ( serviceRequest.status === 500 ) {
@@ -409,6 +416,7 @@ class ChatModel {
 		}
 		this.abortController = new AbortController();
 		const headers = this.getHeaders();
+		// headers[ 'Content-Type' ] = 'text/event-stream';
 		model = model ?? this.getDefaultModel();
 		messages = formatMessages(
 			messages,
@@ -424,22 +432,26 @@ class ChatModel {
 			`🤖 Streaming ${ this.constructor.name } with model ${ model }, temperature ${ temperature }, max_tokens ${ max_tokens }`
 		);
 
+		const params = this.getParams( {
+			model,
+			temperature,
+			max_tokens,
+			messages,
+			tools,
+			stream: true,
+		} );
+
 		const response = await fetch( this.getServiceUrl(), {
 			method: 'POST',
 			headers,
-			body: JSON.stringify( {
-				model,
-				temperature,
-				max_tokens,
-				messages,
-				tools,
-				stream: true,
-			} ),
+			body: JSON.stringify( params ),
 			signal: this.abortController.signal,
 		} );
 
 		if ( response.status === 401 ) {
 			throw new Error( 'Unauthorized' );
+		} else if ( response.status === 403 ) {
+			throw new Error( 'Forbidden' );
 		} else if ( response.status === 429 ) {
 			throw new Error( 'Rate limit exceeded' );
 		} else if ( response.status === 500 ) {
@@ -447,9 +459,10 @@ class ChatModel {
 			throw new Error( `Internal server error: ${ responseText }` );
 		}
 
-		const reader = response.body.getReader();
-		const decoder = new TextDecoder( 'utf-8' );
-		let buffer = '';
+		const reader = response.body
+			.pipeThrough( new TextDecoderStream() )
+			.pipeThrough( new EventSourceParserStream() )
+			.getReader();
 
 		try {
 			while ( true ) {
@@ -458,19 +471,35 @@ class ChatModel {
 					break;
 				}
 
-				buffer += decoder.decode( value, { stream: true } );
+				if ( value.data === '[DONE]' ) {
+					yield {
+						event: 'done',
+					};
+					break;
+				}
+				const data = JSON.parse( value.data );
 
-				let boundary = buffer.indexOf( '\n\n' );
-				while ( boundary !== -1 ) {
-					const chunk = buffer.slice( 0, boundary );
-					buffer = buffer.slice( boundary + 2 );
-
-					const event = this.parseEvent( chunk );
-					if ( event ) {
-						yield event;
-					}
-
-					boundary = buffer.indexOf( '\n\n' );
+				if ( data.object === 'chat.completion.error' ) {
+					yield {
+						event: 'chat.completion.error',
+						data,
+					};
+					break;
+				} else if ( data.object === 'chat.completion.chunk' ) {
+					yield {
+						event: 'chat.message.partial',
+						data,
+					};
+				} else if (
+					data.object === 'moderation.result.combined' &&
+					Object.keys( data.result ).length > 0
+				) {
+					yield {
+						event: 'moderation.result.combined',
+						data: data.result,
+					};
+				} else {
+					console.error( 'Unknown object type', value );
 				}
 			}
 		} catch ( err ) {
@@ -478,29 +507,6 @@ class ChatModel {
 		} finally {
 			reader.releaseLock();
 		}
-	}
-
-	parseEvent( chunk ) {
-		if ( ! chunk.startsWith( 'data:' ) ) {
-			throw new Error( 'Invalid response format' );
-		}
-
-		const event = 'chat.message.partial';
-		const data = chunk.slice( 5 ).trim();
-
-		if ( event && data ) {
-			if ( data === '[DONE]' ) {
-				return { event: 'done' };
-			}
-			try {
-				const parsedData = JSON.parse( data );
-				return { event, data: parsedData };
-			} catch ( e ) {
-				console.error( 'Error parsing JSON message:', e, data );
-			}
-		}
-
-		return null;
 	}
 
 	abortRequest() {
@@ -516,9 +522,10 @@ class ChatModel {
 		messages,
 		tools,
 		tool_choice = null,
+		stream = false,
 	} ) {
 		const params = {
-			stream: false,
+			stream,
 			model,
 			temperature,
 			messages,
@@ -579,6 +586,10 @@ class ChatModel {
 				return new LMStudioChatModel( params );
 			case ChatModelService.LOCALAI:
 				return new LocalAIChatModel( params );
+			case ChatModelService.LOCAL_GRAPH:
+				return new LocalGraphChatModel( params );
+			case ChatModelService.WPCOM_GRAPH:
+				return new WPCOMGraphChatModel( params );
 			default:
 				throw new Error( `Unknown service: ${ service }` );
 		}
@@ -663,6 +674,51 @@ export class LocalAIChatModel extends ChatModel {
 	}
 }
 
+export class LocalGraphChatModel extends ChatModel {
+	constructor( { apiKey, feature, sessionId } ) {
+		super( { apiKey, feature, sessionId } );
+	}
+
+	getApiKey() {
+		return this.apiKey;
+	}
+	getDefaultModel() {
+		return ChatModelType.GPT_4O;
+	}
+
+	getServiceUrl() {
+		return 'http://localhost:8000/ai-services/graphs/chat/completions';
+	}
+}
+
+export class WPCOMGraphChatModel extends ChatModel {
+	constructor( { apiKey, feature, sessionId } ) {
+		super( { apiKey, feature, sessionId } );
+	}
+
+	getHeaders() {
+		const headers = super.getHeaders();
+		if ( this.feature ) {
+			headers[ 'X-WPCOM-AI-Feature' ] = this.feature;
+			headers[ 'Access-Control-Request-Headers' ] =
+				'authorization,content-type,X-WPCOM-AI-Feature';
+		}
+
+		if ( this.sessionId ) {
+			headers[ 'X-WPCOM-Session-ID' ] = this.sessionId;
+		}
+
+		return headers;
+	}
+
+	getDefaultModel() {
+		return ChatModelType.GPT_4O;
+	}
+
+	getServiceUrl() {
+		return 'https://public-api.wordpress.com/wpcom/v2/graphs/v1/chat/completions';
+	}
+}
 export class OpenAIChatModel extends ChatModel {
 	getDefaultModel() {
 		return ChatModelType.GPT_4O;

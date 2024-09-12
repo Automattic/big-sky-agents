@@ -8,6 +8,8 @@ export type {
 	LocalAIChatModel,
 	WPCOMJetpackAIChatModel,
 	WPCOMOpenAIChatModel,
+	LocalGraphChatModel,
+	WPCOMGraphChatModel,
 } from './ai/chat-model';
 
 export type { AssistantModelService } from './ai/assistant-model';

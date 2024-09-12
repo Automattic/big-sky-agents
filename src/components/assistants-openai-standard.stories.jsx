@@ -1,7 +1,8 @@
 import AssistantsDemoUI from './assistants-demo-ui';
+import { ChatModelType } from '../ai/chat-model';
 
 export default {
-	title: 'Example/AssistantsDemoUI',
+	title: 'Assistants/OpenAI/Standard',
 	component: AssistantsDemoUI,
 	argTypes: {
 		apiKey: {
@@ -24,4 +25,6 @@ export const AssistantsDemoUIOpenAI = Template.bind( {} );
 
 AssistantsDemoUIOpenAI.args = {
 	apiKey: import.meta.env.STORYBOOK_OPENAI_API_KEY,
+	service: ChatModelType.OPENAI,
+	stream: false,
 };

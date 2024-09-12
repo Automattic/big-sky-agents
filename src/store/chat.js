@@ -56,7 +56,7 @@ const initialState = {
 	service: null,
 	temperature: 0.1,
 	apiKey: null,
-	stream: true,
+	stream: false,
 
 	// graph related (langgraph)
 	graphConfig: {},
@@ -341,6 +341,17 @@ const runChatCompletion =
 								type: 'ADD_MESSAGE',
 								message,
 							} );
+							break;
+						case 'chat.completion.error':
+							console.error(
+								'Chat completion error',
+								event.data
+							);
+							dispatch( {
+								type: 'CHAT_ERROR',
+								error: event.data.error,
+							} );
+							dispatch( { type: 'CHAT_END_REQUEST' } );
 							break;
 						case 'done':
 							dispatch( { type: 'CHAT_END_REQUEST' } );
@@ -1026,6 +1037,8 @@ export const reducer = ( state = initialState, action ) => {
 		// LLM-related
 		case 'SET_ENABLED':
 			return { ...state, enabled: action.enabled };
+		case 'SET_ERROR':
+			return { ...state, error: action.error };
 		case 'SET_ASSISTANT_ENABLED':
 			return { ...state, assistantEnabled: action.enabled };
 		case 'SET_AUTO_CREATE_ASSISTANT':
@@ -1509,7 +1522,7 @@ export const selectors = {
 	isAssistantAvailable: ( state ) =>
 		selectors.isServiceAvailable( state ) &&
 		state.assistantEnabled &&
-		selectors.getAssistantId( state ),
+		!! selectors.getAssistantId( state ),
 	isAvailable: ( state ) =>
 		selectors.isChatAvailable( state ) ||
 		selectors.isAssistantAvailable( state ),
@@ -1699,6 +1712,12 @@ export const actions = {
 		return {
 			type: 'SET_ENABLED',
 			enabled,
+		};
+	},
+	setError: ( error ) => {
+		return {
+			type: 'SET_ERROR',
+			error,
 		};
 	},
 	setAssistantEnabled: ( enabled ) => {
