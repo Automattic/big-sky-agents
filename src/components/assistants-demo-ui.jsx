@@ -43,15 +43,17 @@ import withImplicitOauth from '../hooks/with-implicit-oauth.jsx';
  * @param {string}                root0.apiKey          The token to use for the chat model.
  * @param {Function}              root0.onApiKeyChanged Callback function to call when the token changes.
  * @param {AssistantModelService} root0.service         The service to use for the assistant model.
+ * @param {boolean}               root0.stream          Whether to stream the assistant model.
  *                                                      -->
  */
-const AssistantsDemoUI = ( { apiKey, onApiKeyChanged, service } ) => {
+const AssistantsDemoUI = ( { apiKey, onApiKeyChanged, service, stream } ) => {
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
 	useChatSettings( {
 		apiKey,
 		feature: 'big-sky',
 		assistantEnabled: true,
+		stream: stream ?? false,
 		service: service ?? AssistantModelService.OPENAI,
 		model: AssistantModelType.GPT_4O_MINI,
 		initialAgentId: WAPUU_AGENT_ID,

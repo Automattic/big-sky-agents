@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from '@wordpress/element';
 import useAgents from '../components/agents-provider/use-agents.js';
 import useChat from '../components/chat-provider/use-chat.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
-import { toOpenAITool } from '../ai/utils/openai.js';
+import { toAssistantOpenAITool, toOpenAITool } from '../ai/utils/openai.js';
 
 const useAgentExecutor = () => {
 	const { activeAgent, started, setAgentStarted } = useAgents();
@@ -327,17 +327,10 @@ const useAgentExecutor = () => {
 			isThreadRunComplete &&
 			isThreadDataLoaded &&
 			! isAwaitingUserInput &&
-			additionalMessages.length > 0 &&
-			messages.length > 0
+			( additionalMessages.length > 0 || pendingToolCalls.length > 0 )
 		) {
-			console.warn( '🧠 creating thread run', {
-				instructions,
-				additionalInstructions,
-				additionalMessages,
-				messages,
-			} );
 			// deduplicate and convert to OpenAI format
-			const openAITools = tools.map( toOpenAITool );
+			const openAITools = tools.map( toAssistantOpenAITool );
 			createThreadRun( {
 				tools: openAITools,
 				instructions,
@@ -351,7 +344,6 @@ const useAgentExecutor = () => {
 		isAssistantAvailable,
 		additionalInstructions,
 		additionalMessages,
-		messages.length,
 		instructions,
 		isAwaitingUserInput,
 		isThreadRunComplete,
@@ -359,6 +351,7 @@ const useAgentExecutor = () => {
 		tools,
 		isThreadDataLoaded,
 		messages,
+		pendingToolCalls,
 	] );
 
 	/**

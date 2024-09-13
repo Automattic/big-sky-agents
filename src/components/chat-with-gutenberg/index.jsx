@@ -52,6 +52,7 @@ const GraphAgent = {
  * @param {boolean}  root0.stream          Whether to stream the response from the assistant.
  * @param {string}   root0.wpcomOauthToken The WP.com OAuth token.
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
+ *                                         -->
  */
 const ChatWithGutenberg = ( {
 	baseUrl,
