@@ -12,6 +12,7 @@ export const THREAD_RUN_ACTIVE_STATUSES = [
 	'requires_action',
 	'cancelling',
 	'completed',
+	'success', // langgraph cloud
 ];
 
 export const THREAD_RUN_EXPIRED_STATUSES = [
@@ -41,6 +42,7 @@ export const THREAD_RUN_COMPLETED_STATUSES = [
 	// 'cancelled',
 	// 'failed',
 	'completed',
+	'success', // langgraph cloud
 ];
 
 const initialState = {
@@ -901,7 +903,10 @@ const addMessageReducer = ( state, message ) => {
 		);
 
 		if ( existingToolCallResultMessage ) {
-			console.warn( 'tool call result already exists', message );
+			console.warn( 'tool call result already exists', {
+				message,
+				existingToolCallResultMessage,
+			} );
 			return state;
 		}
 	}
@@ -1372,6 +1377,7 @@ export const reducer = ( state = initialState, action ) => {
 		case 'GET_THREAD_RUNS_BEGIN_REQUEST':
 			return { ...state, isFetchingThreadRuns: true };
 		case 'GET_THREAD_RUNS_END_REQUEST':
+			console.warn( '🧠 GET_THREAD_RUNS_END_REQUEST', action );
 			const threadsRequiringAction = action.threadRuns.filter(
 				( tr ) =>
 					tr.status === 'requires_action' &&
@@ -1534,7 +1540,7 @@ export const selectors = {
 	isThreadRunInProgress: ( state ) => {
 		return (
 			state.threadId &&
-			[ 'queued', 'in_progress' ].includes(
+			THREAD_RUN_RUNNING_STATUSES.includes(
 				selectors.getActiveThreadRunStatus( state )
 			)
 		);

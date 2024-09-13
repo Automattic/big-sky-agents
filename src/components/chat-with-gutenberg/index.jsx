@@ -49,9 +49,9 @@ const GraphAgent = {
  * @param {string}   root0.baseUrl         The base URL for the LangGraph Cloud API.
  * @param {string}   root0.apiKey          The token to use for the chat model.
  * @param {Object}   root0.user            The user object.
+ * @param {boolean}  root0.stream          Whether to stream the response from the assistant.
  * @param {string}   root0.wpcomOauthToken The WP.com OAuth token.
  * @param {Function} root0.onApiKeyChanged Callback function to call when the token changes.
- *                                         -->
  */
 const ChatWithGutenberg = ( {
 	baseUrl,
@@ -59,6 +59,7 @@ const ChatWithGutenberg = ( {
 	onApiKeyChanged,
 	user,
 	wpcomOauthToken,
+	stream,
 } ) => {
 	const [ selectedArtifactId, setSelectedArtifactId ] = useState( null );
 
@@ -71,6 +72,7 @@ const ChatWithGutenberg = ( {
 		baseUrl,
 		initialAgentId: GraphAgent.id,
 		autoCreateAssistant: true,
+		stream: stream ?? false,
 		graphConfig: {
 			user_id: user?.ID,
 			user_name: user?.display_name,
