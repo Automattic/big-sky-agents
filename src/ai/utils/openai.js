@@ -22,3 +22,10 @@ export const toOpenAITool = ( tool ) => {
 		strict: !! tool.strict,
 	};
 };
+
+export const toAssistantOpenAITool = ( tool ) => {
+	const openAITool = toOpenAITool( tool );
+	// remove "strict" prop
+	delete openAITool.strict;
+	return openAITool;
+};

@@ -1,3 +1,5 @@
+import { EventSourceParserStream } from 'eventsource-parser/stream';
+
 // TODO: extract all this to a JSON configuration file
 export const AssistantModelService = {
 	WPCOM_OPENAI: 'wpcom-openai', // the wpcom OpenAI proxy
@@ -164,7 +166,6 @@ class AssistantModel {
 			truncation_strategy: request.truncationStrategy,
 			response_format: request.responseFormat,
 		};
-		// console.warn( 'createThreadRun', params );
 		const headers = this.getHeaders();
 		const createRunRequest = await fetch(
 			`${ this.getServiceUrl() }/threads/${ request.threadId }/runs`,
@@ -228,9 +229,10 @@ class AssistantModel {
 			);
 		}
 
-		const reader = response.body.getReader();
-		const decoder = new TextDecoder( 'utf-8' );
-		let buffer = '';
+		const reader = response.body
+			.pipeThrough( new TextDecoderStream() )
+			.pipeThrough( new EventSourceParserStream() )
+			.getReader();
 
 		try {
 			while ( true ) {
@@ -239,19 +241,20 @@ class AssistantModel {
 					break;
 				}
 
-				buffer += decoder.decode( value, { stream: true } );
+				if ( value.data === '[DONE]' ) {
+					yield {
+						event: 'done',
+					};
+					break;
+				}
 
-				let boundary = buffer.indexOf( '\n\n' );
-				while ( boundary !== -1 ) {
-					const chunk = buffer.slice( 0, boundary );
-					buffer = buffer.slice( boundary + 2 );
+				const data = JSON.parse( value.data );
 
-					const event = this.parseEvent( chunk );
-					if ( event ) {
-						yield event;
-					}
-
-					boundary = buffer.indexOf( '\n\n' );
+				if ( data ) {
+					yield {
+						event: value.event,
+						data,
+					};
 				}
 			}
 		} catch ( err ) {
@@ -259,34 +262,6 @@ class AssistantModel {
 		} finally {
 			reader.releaseLock();
 		}
-	}
-
-	parseEvent( chunk ) {
-		const lines = chunk.split( '\n' );
-		let event = null;
-		let data = '';
-
-		for ( const line of lines ) {
-			if ( line.startsWith( 'event:' ) ) {
-				event = line.slice( 6 ).trim();
-			} else if ( line.startsWith( 'data:' ) ) {
-				data += line.slice( 5 ).trim();
-			}
-		}
-
-		if ( event && data ) {
-			if ( data === '[DONE]' ) {
-				return { event: 'done' };
-			}
-			try {
-				const parsedData = JSON.parse( data );
-				return { event, data: parsedData };
-			} catch ( e ) {
-				console.error( 'Error parsing JSON message:', e, data );
-			}
-		}
-
-		return null;
 	}
 
 	async createThreadMessage( threadId, message ) {
@@ -685,21 +660,7 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 					filterOpenAIMessagesForLangGraph
 				),
 			},
-			// config: {
-			// 	configurable: {},
-			// },
-			// instructions: request.instructions,
-			// additional_instructions: request.additionalInstructions,
-			// additional_messages: request.additionalMessages,
-			// tools: request.tools,
-			// model: request.model ?? this.getDefaultModel(),
-			// temperature: request.temperature ?? this.getDefaultTemperature(),
-			// max_completion_tokens:
-			// 	request.maxCompletionTokens ?? this.getDefaultMaxTokens(),
-			// truncation_strategy: request.truncationStrategy,
-			// response_format: request.responseFormat,
 		};
-		// console.warn( 'createThreadRun', params );
 		const headers = this.getHeaders();
 		const createRunRequest = await fetch(
 			`${ this.getServiceUrl() }/threads/${ request.threadId }/runs`,
@@ -732,13 +693,7 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 			method: 'POST',
 			headers,
 			body: JSON.stringify( {
-				stream_mode: [
-					// 'updates',
-					// 'values',
-					'messages',
-					// 'events',
-					// 'debug',
-				], // also: values, messages, events, debug
+				stream_mode: [ 'messages' ],
 				assistant_id: request.assistantId,
 				metadata: {},
 				input: {
@@ -758,9 +713,11 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 			);
 		}
 
-		const reader = response.body.getReader();
-		const decoder = new TextDecoder( 'utf-8' );
-		let buffer = '';
+		const reader = response.body
+			.pipeThrough( new TextDecoderStream() )
+			.pipeThrough( new EventSourceParserStream() )
+			.getReader();
+
 		let threadRunId = null;
 
 		try {
@@ -777,57 +734,51 @@ export class LangGraphCloudAssistantModel extends AssistantModel {
 					break;
 				}
 
-				buffer += decoder.decode( value, { stream: true } );
-
-				// Split the buffer by double newline, accounting for different newline characters
-				const chunks = buffer.split( /\r?\n\r?\n/ );
-
-				// Process all complete chunks
-				for ( let i = 0; i < chunks.length - 1; i++ ) {
-					const chunk = chunks[ i ].trim();
-					if ( chunk ) {
-						const event = this.parseEvent( chunk );
-						if ( event ) {
-							console.debug( 'event', event );
-							if (
-								[
-									'thread.run.created',
-									'thread.run.in_progress',
-								].includes( event.event )
-							) {
-								threadRunId = event.data.id;
-								yield event;
-							}
-							if ( event.event === 'messages/complete' ) {
-								const messages = filterLangGraphMessages(
-									event.data,
-									request.threadId
-								);
-								for ( const message of messages ) {
-									yield {
-										event: 'thread.message.completed',
-										data: message,
-									};
-								}
-							}
-							if ( event.event === 'messages/partial' ) {
-								const messages = filterLangGraphMessages(
-									event.data,
-									request.threadId
-								);
-								for ( const message of messages ) {
-									yield {
-										event: 'thread.message.partial',
-										data: message,
-									};
-								}
-							}
-						}
-					}
+				if ( value.data === '[DONE]' ) {
+					yield {
+						event: 'done',
+					};
+					break;
 				}
 
-				// Keep the last (possibly incomplete) chunk in the buffer
-				buffer = chunks[ chunks.length - 1 ];
+				const data = JSON.parse( value.data );
+
+				console.debug( 'data', data );
+				if (
+					[ 'thread.run.created', 'thread.run.in_progress' ].includes(
+						value.event
+					)
+				) {
+					threadRunId = data.id;
+					yield {
+						event: 'thread.run.created',
+						data,
+					};
+				}
+				if ( value.event === 'messages/complete' ) {
+					const messages = filterLangGraphMessages(
+						data,
+						request.threadId
+					);
+					for ( const message of messages ) {
+						yield {
+							event: 'thread.message.completed',
+							data: message,
+						};
+					}
+				}
+				if ( value.event === 'messages/partial' ) {
+					const messages = filterLangGraphMessages(
+						data,
+						request.threadId
+					);
+					for ( const message of messages ) {
+						yield {
+							event: 'thread.message.partial',
+							data: message,
+						};
+					}
+				}
 			}
 		} catch ( err ) {
 			console.error( 'Stream reading error:', err );

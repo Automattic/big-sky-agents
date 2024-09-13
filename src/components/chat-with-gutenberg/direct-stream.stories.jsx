@@ -1,8 +1,8 @@
-import { WPCOMChatWithGutenberg } from './index.jsx';
+import ChatWithGutenberg from './index.jsx';
 
 export default {
-	title: 'Features/Gutenberg/WPCOM',
-	component: WPCOMChatWithGutenberg,
+	title: 'Features/Gutenberg/Direct/Stream',
+	component: ChatWithGutenberg,
 	argTypes: {
 		apiKey: {
 			control: 'text',
@@ -18,14 +18,12 @@ export default {
 	],
 };
 
-const Template = ( args ) => <WPCOMChatWithGutenberg { ...args } />;
+const Template = ( args ) => <ChatWithGutenberg { ...args } />;
 
 export const ChatWithArtifactsDemo = Template.bind( {} );
 
 ChatWithArtifactsDemo.args = {
+	stream: true,
 	apiKey: import.meta.env.STORYBOOK_LANGCHAIN_API_KEY,
 	baseUrl: import.meta.env.STORYBOOK_LANGGRAPH_CLOUD_BASE_URL,
-	wpcomClientId: import.meta.env.STORYBOOK_WPCOM_CLIENT_ID,
-	wpcomOauthToken: import.meta.env.STORYBOOK_WPCOM_ACCESS_TOKEN,
-	redirectUri: import.meta.env.STORYBOOK_WPCOM_REDIRECT_URI,
 };
