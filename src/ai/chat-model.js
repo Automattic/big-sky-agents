@@ -498,6 +498,14 @@ class ChatModel {
 						event: 'moderation.result.combined',
 						data: data.result,
 					};
+				} else if (
+					[
+						'moderation.result.custom',
+						'moderation.result.openai',
+					].includes( data.object )
+				) {
+					// silently ignore
+					console.log( data.object, data );
 				} else {
 					console.error( 'Unknown object type', value );
 				}
