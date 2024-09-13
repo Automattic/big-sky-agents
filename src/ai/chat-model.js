@@ -385,20 +385,16 @@ class ChatModel {
 
 	/**
 	 *
-	 * @param {*}      request
-	 * @param {string} request.threadId
-	 * @param {string} request.assistantId
-	 * @param {string} request.model
-	 * @param {string} request.instructions
-	 * @param {string} request.additionalInstructions
-	 * @param {Array}  request.additionalMessages
-	 * @param {Array}  request.tools
-	 * @param {Array}  request.metadata
-	 * @param {number} request.temperature
-	 * @param {number} request.maxPromptTokens
-	 * @param {number} request.maxCompletionTokens
-	 * @param {Object} request.truncationStrategy
-	 * @param {Object} request.responseFormat
+	 * @param {*}             request
+	 * @param {string}        request.model                  The model to use
+	 * @param {Array<Object>} request.messages               The messages to use
+	 * @param {Array<Object>} request.tools                  The tools to use
+	 * @param {string}        request.instructions           The system prompt
+	 * @param {string}        request.additionalInstructions The agent loop prompt
+	 * @param {number}        request.temperature            The temperature to use
+	 * @param {number}        request.maxTokens              The maximum number of tokens to generate
+	 * @param {Array<string>} request.tags                   The tags to use for analytics
+	 * @param {Function}      request.middleware             The middleware to use
 	 * @return {*} An async iterable of events
 	 */
 	async *runStream( {
