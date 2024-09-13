@@ -498,6 +498,7 @@ class ChatModel {
 					[
 						'moderation.result.custom',
 						'moderation.result.openai',
+						'moderation.result.classifications',
 					].includes( data.object )
 				) {
 					// silently ignore
