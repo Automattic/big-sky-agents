@@ -50,7 +50,8 @@ export const SetSiteTypeTool = createSimpleTool(
 
 export const SetSiteColorsTool = {
 	name: SET_SITE_COLORS_TOOL_NAME,
-	description: 'Set the text, background, or accent colors of the site.',
+	description:
+		'Set the text, background, or accent colors of the site. Always use this tool for setting colors.',
 	parameters: {
 		type: 'object',
 		properties: {

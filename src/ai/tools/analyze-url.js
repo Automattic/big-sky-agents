@@ -19,7 +19,11 @@ export const makeAnalyzeUrlRequest = async ( { url, apiKey } ) => {
 	if ( ! response.ok ) {
 		throw new Error( 'Failed to analyze URL' );
 	}
-	return await response.json();
+	const data = await response.json();
+	if ( data.error ) {
+		throw new Error( data.error );
+	}
+	return JSON.stringify( data );
 };
 
 export default {

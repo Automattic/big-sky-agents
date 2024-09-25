@@ -41,12 +41,19 @@ import withImplicitOauth from '../hooks/with-implicit-oauth.jsx';
  * <!--
  * @param {Object}                root0                 The component props.
  * @param {string}                root0.apiKey          The token to use for the chat model.
+ * @param {string}                root0.wpcomOauthToken The token to use for the calls to WPCOM APIs.
  * @param {Function}              root0.onApiKeyChanged Callback function to call when the token changes.
  * @param {AssistantModelService} root0.service         The service to use for the assistant model.
  * @param {boolean}               root0.stream          Whether to stream the assistant model.
  *                                                      -->
  */
-const AssistantsDemoUI = ( { apiKey, onApiKeyChanged, service, stream } ) => {
+const AssistantsDemoUI = ( {
+	apiKey,
+	wpcomOauthToken,
+	onApiKeyChanged,
+	service,
+	stream,
+} ) => {
 	const [ selectedPageId, setSelectedPageId ] = useState( null );
 
 	useChatSettings( {
@@ -61,7 +68,7 @@ const AssistantsDemoUI = ( { apiKey, onApiKeyChanged, service, stream } ) => {
 	} );
 
 	useAgentsToolkit();
-	useAnalyzeSiteToolkit( { apiKey } );
+	useAnalyzeSiteToolkit( { apiKey: apiKey ?? wpcomOauthToken } );
 	useSiteToolkit( { pageId: selectedPageId } );
 	useAskUserToolkit();
 	useGoalToolkit();

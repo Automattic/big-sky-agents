@@ -62,7 +62,7 @@ const ChatGraphDemoUI = ( {
 
 	useAgentsToolkit();
 	useSiteToolkit( { pageId: selectedPageId } );
-	useAnalyzeSiteToolkit( { apiKey } );
+	useAnalyzeSiteToolkit( { apiKey: apiKey ?? wpcomOauthToken } );
 	useGoalToolkit();
 	useInformToolkit();
 	useAgentExecutor();
