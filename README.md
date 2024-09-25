@@ -53,6 +53,8 @@ Redirect URLs:
 Javascript Origins:
  * http://localhost:6006
 
+Each client must be approved by Automattic staff before it can be used.
+
 ## Developing against this package locally
 
 These instructions show you how to incorporate this package into another project for development, for example a WordPress plugin or React app.
