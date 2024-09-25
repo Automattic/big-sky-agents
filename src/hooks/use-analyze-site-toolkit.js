@@ -22,8 +22,13 @@ const useAnalyzeSiteToolkit = ( { apiKey } ) => {
 			name: ANALYZE_SITE_TOOLKIT_ID,
 			tools: [ AnalyzeUrlTool ],
 			callbacks: {
-				[ AnalyzeUrlTool.name ]: ( { url } ) => {
-					return makeAnalyzeUrlRequest( { url, apiKey } );
+				[ AnalyzeUrlTool.name ]: async ( { url } ) => {
+					try {
+						return await makeAnalyzeUrlRequest( { url, apiKey } );
+					} catch ( error ) {
+						console.error( 'Error analyzing URL:', error );
+						return 'Error analyzing URL';
+					}
 				},
 			},
 		} );
