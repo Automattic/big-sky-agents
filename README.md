@@ -33,6 +33,26 @@ Then run Storybook:
 npm run storybook
 ```
 
+### Using Storybook with WPCOM APIs
+
+In order to authenticate to WordPress.com, the storybook client uses "implicit oauth", and in the case of Jetpack services it also needs a blog ID in order to fetch a JWT for the Jetpack AI query endpoint.
+
+```
+STORYBOOK_WPCOM_CLIENT_ID=104816 # A WPCOM client ID
+STORYBOOK_WPCOM_BLOG_ID=280895 # use a blog that you are an author on
+```
+
+If you wish to use your own WPCOM client ID, you will need to [create the OAuth client](https://developer.wordpress.com/apps/new/) with the following settings:
+
+Type: Native (not web)
+
+Redirect URLs:
+ * http://localhost:6006/iframe.html
+ * http://localhost:6006/
+
+Javascript Origins:
+ * http://localhost:6006
+
 ## Developing against this package locally
 
 These instructions show you how to incorporate this package into another project for development, for example a WordPress plugin or React app.
