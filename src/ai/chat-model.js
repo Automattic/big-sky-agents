@@ -323,8 +323,6 @@ class ChatModel {
 		const headers = this.getHeaders();
 		this.abortController = new AbortController();
 
-		console.log( 'params', params );
-
 		log.info(
 			`🤖 Calling ${ this.constructor.name } with model ${ params.model }, temperature ${ params.temperature }, max_tokens ${ params.max_tokens }`
 		);
