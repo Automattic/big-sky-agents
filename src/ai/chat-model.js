@@ -528,6 +528,7 @@ class ChatModel {
 		tools,
 		tool_choice = null,
 		stream = false,
+		response_format = 'text',
 	} ) {
 		const params = {
 			stream,
@@ -535,6 +536,7 @@ class ChatModel {
 			temperature,
 			messages,
 			max_tokens,
+			response_format,
 		};
 
 		if ( tools?.length ) {

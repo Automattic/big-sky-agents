@@ -58,6 +58,7 @@ export declare class ChatModel {
 		temperature?: number;
 		maxTokens?: number;
 		feature?: string;
+		response_format?: string;
 	} ): Promise< any >;
 	call( options: ChatCompletionRequest ): Promise< any >;
 	static getInstance(
