@@ -59,6 +59,7 @@ const initialState = {
 	temperature: 0.1,
 	apiKey: null,
 	stream: false,
+	response_format: 'text',
 
 	// graph related (langgraph)
 	graphConfig: {},
@@ -237,17 +238,23 @@ const getChatModel = ( select ) => {
 const runChatCompletion =
 	( request ) =>
 	async ( { select, dispatch } ) => {
-		const { stream, model, temperature, messages, feature } = select(
-			( state ) => {
-				return {
-					model: state.root.model,
-					temperature: state.root.temperature,
-					messages: state.root.messages,
-					feature: state.root.feature,
-					stream: state.root.stream,
-				};
-			}
-		);
+		const {
+			stream,
+			model,
+			temperature,
+			messages,
+			feature,
+			response_format,
+		} = select( ( state ) => {
+			return {
+				model: state.root.model,
+				temperature: state.root.temperature,
+				messages: state.root.messages,
+				feature: state.root.feature,
+				stream: state.root.stream,
+				response_format: state.root.response_format || '',
+			};
+		} );
 
 		// dispatch an error if service or apiKey are missing
 		if ( ! model || ! temperature ) {
@@ -368,6 +375,7 @@ const runChatCompletion =
 				model,
 				temperature,
 				feature,
+				response_format,
 			} );
 			dispatch( actions.addMessage( assistantMessage ) );
 			dispatch( { type: 'CHAT_END_REQUEST' } );
