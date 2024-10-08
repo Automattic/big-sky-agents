@@ -250,6 +250,7 @@ class ChatModel {
 	 * @param {number}        params.maxTokens              The maximum number of tokens to generate
 	 * @param {Array<string>} params.tags                   The tags to use for analytics
 	 * @param {Function}      params.middleware             The middleware to use
+	 * @param {string}        params.sessionId              The session ID
 	 * @return {Promise<Object>} The response message
 	 */
 	async run( {
@@ -262,6 +263,7 @@ class ChatModel {
 		maxTokens,
 		tags,
 		middleware,
+		sessionId,
 	} ) {
 		if ( ! messages || ! messages.length ) {
 			throw new Error( 'Missing history' );
@@ -290,6 +292,7 @@ class ChatModel {
 			max_tokens,
 			messages,
 			tools,
+			sessionId,
 		} );
 
 		const choice = response.choices[ 0 ];
@@ -526,6 +529,7 @@ class ChatModel {
 		max_tokens,
 		messages,
 		tools,
+		sessionId,
 		tool_choice = null,
 		stream = false,
 		response_format = 'text',
@@ -537,6 +541,7 @@ class ChatModel {
 			messages,
 			max_tokens,
 			response_format,
+			sessionId,
 		};
 
 		if ( tools?.length ) {

@@ -76,6 +76,7 @@ export default function useChat() {
 		setFeature,
 		setAssistantEnabled,
 		setBaseUrl,
+		setSessionId,
 		setStream,
 		setGraphConfig,
 		setError,
@@ -186,6 +187,7 @@ export default function useChat() {
 		// logging
 		feature,
 		setFeature,
+		setSessionId,
 
 		// llm
 		model,
