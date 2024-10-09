@@ -20,6 +20,8 @@ const useChatSettings = ( options ) => {
 		setDefaultAssistantId,
 		setBaseUrl,
 		setAutoCreateAssistant,
+		sessionId,
+		setSessionId,
 		stream,
 		setStream,
 		setGraphConfig,
@@ -112,6 +114,12 @@ const useChatSettings = ( options ) => {
 			setGraphConfig( options.graphConfig );
 		}
 	}, [ graphConfig, options.graphConfig, setGraphConfig ] );
+
+	useEffect( () => {
+		if ( options.sessionId && options.sessionId !== sessionId ) {
+			setSessionId( options.sessionId );
+		}
+	}, [ sessionId, options.sessionId, setSessionId ] );
 };
 
 export default useChatSettings;

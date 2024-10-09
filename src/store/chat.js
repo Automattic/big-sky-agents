@@ -212,15 +212,16 @@ const reset =
 	};
 
 const getChatModel = ( select ) => {
-	const { service, apiKey, feature } = select( ( state ) => ( {
+	const { service, apiKey, feature, sessionId } = select( ( state ) => ( {
 		service: state.root.service,
 		apiKey: state.root.apiKey,
 		feature: state.root.feature,
+		sessionId: state.root.sessionId,
 	} ) );
 	if ( ! service || ! apiKey ) {
 		throw new Error( 'Service and API key are required' );
 	}
-	return ChatModel.getInstance( service, apiKey, feature );
+	return ChatModel.getInstance( service, apiKey, feature, sessionId );
 };
 
 /**
@@ -1069,6 +1070,8 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, baseUrl: action.baseUrl };
 		case 'SET_FEATURE':
 			return { ...state, feature: action.feature };
+		case 'SET_SESSION_ID':
+			return { ...state, sessionId: action.sessionId };
 		case 'SET_MODEL':
 			return { ...state, model: action.model };
 		case 'SET_TEMPERATURE':
@@ -1783,6 +1786,10 @@ export const actions = {
 	setFeature: ( feature ) => ( {
 		type: 'SET_FEATURE',
 		feature,
+	} ),
+	setSessionId: ( sessionId ) => ( {
+		type: 'SET_SESSION_ID',
+		sessionId,
 	} ),
 	setTemperature: ( temperature ) => ( {
 		type: 'SET_TEMPERATURE',
