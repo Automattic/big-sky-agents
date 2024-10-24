@@ -739,6 +739,19 @@ export class OpenAIChatModel extends ChatModel {
 	getServiceUrl() {
 		return 'https://api.openai.com/v1/chat/completions';
 	}
+
+	getParams( request ) {
+		const params = super.getParams( request );
+
+		// make sure the response_format is in the correct format
+		if ( typeof params.response_format === 'string' ) {
+			params.response_format = {
+				type: params.response_format,
+			};
+		}
+
+		return params;
+	}
 }
 
 export class GroqChatModel extends ChatModel {
