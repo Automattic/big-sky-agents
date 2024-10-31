@@ -128,7 +128,6 @@ const useChatSettings = ( options ) => {
 			options.store !== undefined &&
 			options.store !== isStoringConversation
 		) {
-			console.log( 'store', options.store );
 			setStoreConversation( options.store );
 		}
 	}, [ isStoringConversation, options.store, setStoreConversation ] );
