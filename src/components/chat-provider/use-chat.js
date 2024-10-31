@@ -80,6 +80,7 @@ export default function useChat() {
 		setStream,
 		setGraphConfig,
 		setError,
+		setStoreConversation,
 	} = useDispatch( agentStore );
 
 	const {
@@ -118,6 +119,7 @@ export default function useChat() {
 		feature,
 		stream,
 		graphConfig,
+		isStoringConversation,
 	} = useSelect( ( select ) => ( {
 		baseUrl: select( agentStore ).getBaseUrl(),
 		autoCreateAssistant: select( agentStore ).isAutoCreateAssistant(),
@@ -155,6 +157,7 @@ export default function useChat() {
 		feature: select( agentStore ).getFeature(),
 		stream: select( agentStore ).getStream(),
 		graphConfig: select( agentStore ).getGraphConfig(),
+		isStoringConversation: select( agentStore ).isStoringConversation(),
 	} ) );
 
 	return {
@@ -248,5 +251,7 @@ export default function useChat() {
 		isThreadDataLoaded,
 		additionalMessages,
 		reset,
+		isStoringConversation,
+		setStoreConversation,
 	};
 }

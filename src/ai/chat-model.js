@@ -251,6 +251,7 @@ class ChatModel {
 	 * @param {Array<string>} params.tags                   The tags to use for analytics
 	 * @param {Function}      params.middleware             The middleware to use
 	 * @param {string}        params.sessionId              The session ID
+	 * @param {boolean}       params.store                  Whether to store the conversation for debugging in OpenAI dashboard for evaluation: https://platform.openai.com/docs/guides/evals
 	 * @return {Promise<Object>} The response message
 	 */
 	async run( {
@@ -264,6 +265,7 @@ class ChatModel {
 		tags,
 		middleware,
 		sessionId,
+		store,
 	} ) {
 		if ( ! messages || ! messages.length ) {
 			throw new Error( 'Missing history' );
@@ -293,6 +295,7 @@ class ChatModel {
 			messages,
 			tools,
 			sessionId,
+			store,
 		} );
 
 		const choice = response.choices[ 0 ];
@@ -621,6 +624,11 @@ export class WPCOMJetpackAIChatModel extends ChatModel {
 
 		if ( this.sessionId ) {
 			params.session_id = this.sessionId;
+		}
+
+		// Store is a parameter to tell OpenAI to store the conversation for debugging in OpenAI dashboard for evaluation: https://platform.openai.com/docs/guides/evals
+		if ( request.store ) {
+			params.store = request.store;
 		}
 
 		return params;
