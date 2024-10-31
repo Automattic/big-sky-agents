@@ -26,6 +26,8 @@ const useChatSettings = ( options ) => {
 		setStream,
 		setGraphConfig,
 		graphConfig,
+		isStoringConversation,
+		setStoreConversation,
 	} = useChat();
 	const { activeAgentId, setActiveAgent } = useAgents();
 
@@ -120,6 +122,15 @@ const useChatSettings = ( options ) => {
 			setSessionId( options.sessionId );
 		}
 	}, [ sessionId, options.sessionId, setSessionId ] );
+
+	useEffect( () => {
+		if (
+			options.store !== undefined &&
+			options.store !== isStoringConversation
+		) {
+			setStoreConversation( options.store );
+		}
+	}, [ isStoringConversation, options.store, setStoreConversation ] );
 };
 
 export default useChatSettings;

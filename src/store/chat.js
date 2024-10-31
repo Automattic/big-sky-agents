@@ -94,6 +94,8 @@ const initialState = {
 	isCreatingThreadMessage: false,
 	isFetchingThreadMessages: false,
 	isSubmittingToolOutputs: false,
+	// Store is a parameter to tell OpenAI to store the conversation for debugging in OpenAI dashboard for evaluation: https://platform.openai.com/docs/guides/evals
+	store: false,
 };
 
 /**
@@ -246,6 +248,7 @@ const runChatCompletion =
 			messages,
 			feature,
 			response_format,
+			store,
 		} = select( ( state ) => {
 			return {
 				model: state.root.model,
@@ -254,6 +257,7 @@ const runChatCompletion =
 				feature: state.root.feature,
 				stream: state.root.stream,
 				response_format: state.root.response_format || '',
+				store: state.root.store,
 			};
 		} );
 
@@ -284,6 +288,7 @@ const runChatCompletion =
 					model,
 					temperature,
 					feature,
+					store,
 					// graphConfig,
 				} );
 				const message = {
@@ -377,6 +382,7 @@ const runChatCompletion =
 				temperature,
 				feature,
 				response_format,
+				store,
 			} );
 			dispatch( actions.addMessage( assistantMessage ) );
 			dispatch( { type: 'CHAT_END_REQUEST' } );
@@ -1076,6 +1082,8 @@ export const reducer = ( state = initialState, action ) => {
 			return { ...state, model: action.model };
 		case 'SET_TEMPERATURE':
 			return { ...state, temperature: action.temperature };
+		case 'SET_STORE_CONVERSATION':
+			return { ...state, store: action.store };
 
 		// Chat Completion
 		case 'CHAT_BEGIN_REQUEST':
@@ -1657,6 +1665,7 @@ export const selectors = {
 	getAssistantId: ( state ) => state.assistantId ?? state.defaultAssistantId,
 	getGraphConfig: ( state ) => state.graphConfig,
 	getGraphId: ( state ) => state.graphId,
+	isStoringConversation: ( state ) => state.store,
 	updateThreadRuns: ( state ) => state.threadRun,
 	getThreadRunsUpdated: ( state ) => state.threadRunsUpdated,
 	getThreadMessagesUpdated: ( state ) => state.threadMessagesUpdated,
@@ -1798,6 +1807,10 @@ export const actions = {
 	setModel: ( model ) => ( {
 		type: 'SET_MODEL',
 		model,
+	} ),
+	setStoreConversation: ( store ) => ( {
+		type: 'SET_STORE_CONVERSATION',
+		store,
 	} ),
 	clearError,
 	setToolResult,
