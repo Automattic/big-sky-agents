@@ -16,10 +16,10 @@ export const toOpenAITool = ( tool ) => {
 		type: 'function',
 		function: {
 			name: tool.name,
+			strict: !! tool.strict,
 			description: tool.description,
 			parameters,
 		},
-		strict: !! tool.strict,
 	};
 };
 
