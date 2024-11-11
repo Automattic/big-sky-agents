@@ -10,6 +10,7 @@ import useAgents from '../components/agents-provider/use-agents.js';
 import useChat from '../components/chat-provider/use-chat.js';
 import useToolkits from '../components/toolkits-provider/use-toolkits.js';
 import { toAssistantOpenAITool, toOpenAITool } from '../ai/utils/openai.js';
+import log from '../utils/log-debug.js';
 
 const useAgentExecutor = () => {
 	const { activeAgent, started, setAgentStarted } = useAgents();
@@ -197,7 +198,7 @@ const useAgentExecutor = () => {
 						const callback = callbacks[ tool_use.recipient_name ];
 
 						if ( typeof callback === 'function' ) {
-							console.warn(
+							log.warn(
 								'🧠 Parallel tool callback',
 								tool_use.recipient_name
 							);
@@ -214,7 +215,7 @@ const useAgentExecutor = () => {
 				const callback = callbacks[ tool_call.function.name ];
 
 				if ( typeof callback === 'function' ) {
-					console.warn( '🧠 Tool callback', tool_call.function.name );
+					log.warn( '🧠 Tool callback', tool_call.function.name );
 					setToolResult( tool_call.id, callback( args ) );
 				}
 			} );
@@ -368,7 +369,7 @@ const useAgentExecutor = () => {
 			messages.length === 0 &&
 			activeAgent
 		) {
-			console.warn( '🧠 setAgentStarted', {
+			log.warn( '🧠 setAgentStarted', {
 				isAvailable,
 				toolkitsLoaded,
 				isAwaitingUserInput,
