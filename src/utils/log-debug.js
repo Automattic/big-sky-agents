@@ -1,6 +1,7 @@
-const showLogs = true;
-// TODO: switch to the following before going to production.
-// const showLogs = process.env.DEBUG;
+const showLogs =
+	( typeof window !== 'undefined' &&
+		window?.bigSkyInitialState?.isDevMode ) ||
+	false;
 
 const globalConsole = typeof window !== 'undefined' ? window.console : console;
 
