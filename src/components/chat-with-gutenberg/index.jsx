@@ -62,7 +62,7 @@ const ChatWithGutenberg = ( {
 	wpcomOauthToken,
 	stream,
 } ) => {
-	const [ selectedArtifactId, setSelectedArtifactId ] = useState( null );
+	const [ , setSelectedArtifactId ] = useState( null );
 
 	useChatSettings( {
 		apiKey,
@@ -89,7 +89,7 @@ const ChatWithGutenberg = ( {
 
 	const [ userMessage, setUserMessage ] = useState( '' );
 
-	const { artifacts } = useSelect( ( select ) => {
+	const { artifacts } = useSelect( () => {
 		return {
 			artifacts: [], //select( artifactStore ).getArtifacts(),
 		};
