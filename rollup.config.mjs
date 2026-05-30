@@ -86,11 +86,13 @@ export default [
 			{
 				file: 'dist/eval.cjs',
 				format: 'cjs',
+				inlineDynamicImports: true,
 				sourcemap: true,
 			},
 			{
 				file: 'dist/eval.js',
 				format: 'esm',
+				inlineDynamicImports: true,
 				sourcemap: true,
 			},
 		],
@@ -126,6 +128,7 @@ export default [
 			{
 				file: 'dist/eval-agents.js',
 				format: 'esm',
+				inlineDynamicImports: true,
 				sourcemap: true,
 			},
 		],
@@ -157,6 +160,7 @@ export default [
 			{
 				file: 'dist/agent-cli.js',
 				format: 'esm',
+				inlineDynamicImports: true,
 				sourcemap: true,
 			},
 		],

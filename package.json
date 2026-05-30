@@ -47,7 +47,7 @@
     "dev": "rollup -c -w",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx src",
     "lint:fix": "eslint --ext .ts,.tsx,.js,.jsx src --fix",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "prepare": "husky"
@@ -89,7 +89,6 @@
     "alias-hq": "^6.2.3",
     "autoprefixer": "^10.4.19",
     "base64-arraybuffer": "^1.0.2",
-    "browsers": "^1.0.2",
     "classnames": "^2.5.1",
     "deepmerge": "^4.3.1",
     "dotenv": "^16.4.5",
